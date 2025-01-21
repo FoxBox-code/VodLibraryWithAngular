@@ -37,7 +37,7 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             if (result.Succeeded)
             {
-                return Ok("User made with success!");
+                return Ok(model);
 
             }
             else
@@ -65,7 +65,7 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             if (result.Succeeded)
             {
-                return Ok("User was able to log In");
+                return Ok(model);
             }
             else
             {
