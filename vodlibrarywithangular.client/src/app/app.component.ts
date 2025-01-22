@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { UploadComponent } from './upload/upload.component';
+import { AuthService } from './auth.service';
 
 interface WeatherForecast {
   date: string;
@@ -17,11 +18,14 @@ interface WeatherForecast {
 })
 export class AppComponent implements OnInit {
   public forecasts: WeatherForecast[] = [];
+  userAuth = false;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private authService : AuthService) {}
 
   ngOnInit() {
     this.getForecasts();
+
+    this.userAuth = this.authService.isAuthenticated();
   }
 
   getForecasts() {
@@ -34,6 +38,8 @@ export class AppComponent implements OnInit {
       }
     );
   }
+
+  logOutUser(){}
 
   title = 'vodlibrarywithangular.client';
 }

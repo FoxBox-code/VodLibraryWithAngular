@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { AuthService } from '../auth.service';
 import { Login } from '../models/login';
+import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -17,11 +19,33 @@ export class LoginComponent
       Password : '',
       RememberMe : false
     }
+    router = inject(Router);
+
+    loginForm : FormGroup;
 
 
-    constructor(private authService : AuthService){}
+    constructor(private authService : AuthService, formBuilder : FormBuilder)
+    {
+      this.loginForm = formBuilder.group(
+        {
+          Email : ['', [Validators.email, Validators.required]],
+          Password : ['', [Validators.required]],
+          RememberMe : [false]
+        })
+    }
 
-    login()
+    onSubmit()
+    {
+        if(this.loginForm.valid)
+        {
+            this.user = this.loginForm.value;
+
+            this.loginUser();
+
+            this.router.navigate(['/']);
+        }
+    }
+    private loginUser()
     {
       this.authService.login(this.user)
       .subscribe(
