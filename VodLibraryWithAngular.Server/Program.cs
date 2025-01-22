@@ -13,11 +13,23 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
     options.User.RequireUniqueEmail = true;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireNonAlphanumeric = false;
 })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
 builder.Services.AddControllers();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin", policy =>
+    {
+        policy.WithOrigins("https://localhost:11454")
+        .AllowAnyHeader()
+        .AllowAnyMethod();
+    });
+});
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -26,6 +38,8 @@ var app = builder.Build();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
+
+app.UseCors("AllowSpecificOrigin");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

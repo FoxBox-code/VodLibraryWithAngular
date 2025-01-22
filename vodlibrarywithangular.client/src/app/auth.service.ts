@@ -16,10 +16,17 @@ export class AuthService
 
   register(user : Register) : Observable<Register>
   {
+    console.log(JSON.stringify(user));
+
       return this.httpClient.post<Register>(`${this.apiUrl}/register`, user)
       .pipe(catchError((error)=>
         {
-          console.error("Registration failed", error);
+          console.error("Registration failed",
+          {
+            message : error.message,
+            status : error.status,
+            error : error.error,
+          });
           return throwError(()=>
           {
               new Error("Registration error");

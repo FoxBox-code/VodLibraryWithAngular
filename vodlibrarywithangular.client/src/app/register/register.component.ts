@@ -1,6 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { AuthService } from '../auth.service';
 import { Register } from '../models/register';
+import {FormBuilder, Validators, FormGroup} from '@angular/forms';
+import {  Router } from '@angular/router';
+
+
 
 @Component({
   selector: 'app-register',
@@ -15,15 +19,37 @@ export class RegisterComponent
   {
     UserName : "",
     Email : "",
-    Password : ""
+    Password : "",
+    ConfirmPassword : ''
   };
 
-  constructor(private authService : AuthService)
-  {
+  registerForm : FormGroup
+  router = inject(Router);
 
+  constructor(private authService : AuthService, private formBuilder : FormBuilder)
+  {
+    this.registerForm = formBuilder.group(
+      {
+        UserName : ['', [Validators.required, Validators.minLength(3), Validators.maxLength(22)]],
+        Email : ['', [Validators.required, Validators.email]],
+        Password : ['', [Validators.required]],
+        ConfirmPassword : ['', [Validators.required]]
+      })
   }
 
-  register()
+  onSubmit()
+  {
+    if(this.registerForm.valid)
+      {
+        this.user = this.registerForm.value
+          this.registerUser();
+
+
+          this.router.navigate(['/']);
+      }
+  }
+
+  private registerUser()
   {
     this.authService.register(this.user)
     .subscribe(
@@ -40,3 +66,8 @@ export class RegisterComponent
 
 
 }
+
+
+
+
+

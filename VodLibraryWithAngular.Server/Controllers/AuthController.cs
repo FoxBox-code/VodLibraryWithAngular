@@ -23,7 +23,12 @@ namespace VodLibraryWithAngular.Server.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new { message = "Invalid model", errors = ModelState.Values.SelectMany(e => e.Errors).Select(e => e.ErrorMessage) });
+            }
+
+            if (model.Password != model.ConfirmPassword)
+            {
+                return Unauthorized("Passwords don't match");
             }
 
             IdentityUser user = new IdentityUser
@@ -42,7 +47,7 @@ namespace VodLibraryWithAngular.Server.Controllers
             }
             else
             {
-                return BadRequest(result.Errors);
+                return BadRequest(new { message = "Registration failed", errors = result.Errors.Select(e => e.Description) });
             }
         }
 
