@@ -3,7 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { UploadComponent } from './upload/upload.component';
 import { RegisterComponent } from './register/register.component';
 import { LoginComponent } from './login/login.component';
-
+import { authGuard } from './auth.guard';
 const routes: Routes = [
   // {
   //   path : '',
@@ -13,7 +13,8 @@ const routes: Routes = [
   {
     path : 'upload',
     component : UploadComponent,
-    title : "Upload Video"
+    title : "Upload Video",
+    canActivate : [authGuard]
   },
   {
     path : 'register',

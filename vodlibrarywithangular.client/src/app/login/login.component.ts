@@ -50,11 +50,19 @@ export class LoginComponent
       this.authService.login(this.user)
       .subscribe(
         {
-          next : (result) => console.log("Login successful", result),
-          error : (error) => console.log("Login failed", error),
+          next : (result) =>
+            {
+              console.log("Login successful", result);
+              this.authService.setLocalStorageToken(result.token);
+            },
+          error : (error) => console.log("Login failed", { messgae : error.message, status : error.status ,error : error.error }),
+
           complete : () => console.log("Login completed welcome")
 
         })
+
+
+
 
 
     }

@@ -7,13 +7,13 @@
     <a routerLink="upload" routerLinkActive="active" ariaCurrentWhenActive="page">
       Go to upload
     </a>
-    <a *ngIf ="!userAuth" routerLink="register" routerLinkActive="active" ariaCurrentWhenActive="page">
+    <a *ngIf="!userAuth" routerLink="register" routerLinkActive="active" ariaCurrentWhenActive="page">
       Register
     </a>
     <a *ngIf="!userAuth" routerLink="login" routerLinkActive="active" ariaCurrentWhenActive="page">
       Login
     </a>
-    <button type="button" (click)="logOutUser()">Log out </button>
+    <button *ngIf="userAuth" type="button" (click)="logOutUser()">Log out </button>
   </nav>
 </header>
 <main>

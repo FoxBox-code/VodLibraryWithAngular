@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, throwError } from 'rxjs';
 import { Register } from './models/register';
 import { Login } from './models/login';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -12,21 +13,29 @@ export class AuthService
 
   private apiUrl = 'https://localhost:7156/api/auth';
   private tokenKey = 'authtokenkey';
+  private authStatus = new BehaviorSubject(this.isAuthenticated());
   constructor(private httpClient : HttpClient) { }
 
   setLocalStorageToken(token : string)
   {
           localStorage.setItem(this.tokenKey, token);
+          console.log("Initiating token!");
+
+          this.authStatus.next(true);
+
   }
 
   getLocalStorageToken() : string | null
   {
       return localStorage.getItem(this.tokenKey);
+
+
   }
 
   clearLocalStorageToken()
   {
     localStorage.removeItem(this.tokenKey);
+    this.authStatus.next(false);
   }
 
   isAuthenticated() : boolean
@@ -36,6 +45,10 @@ export class AuthService
       return !!value
   }
 
+  getAuthStatus() : Observable<boolean>
+  {
+      return this.authStatus.asObservable();
+  }
 
   register(user : Register) : Observable<Register>
   {
@@ -60,9 +73,9 @@ export class AuthService
 
   }
 
-  login(user : Login) : Observable<Login>
+  login(user : Login) : Observable<{token : string}>
   {
-      return this.httpClient.post<Login>(`${this.apiUrl}/login`, user)
+      return this.httpClient.post<{token : string}>(`${this.apiUrl}/login`, user)
       .pipe(catchError((error)=>
       {
           console.error("Login failed", error)

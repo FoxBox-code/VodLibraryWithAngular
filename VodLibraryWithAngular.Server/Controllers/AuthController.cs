@@ -1,5 +1,9 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using VodLibraryWithAngular.Server.Models;
 
 namespace VodLibraryWithAngular.Server.Controllers
@@ -56,7 +60,7 @@ namespace VodLibraryWithAngular.Server.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new { message = "Invalid login model", errors = ModelState.Values.SelectMany(e => e.Errors).Select(e => e.ErrorMessage) });
             }
 
             var user = await _userManager.FindByEmailAsync(model.Email);
@@ -68,14 +72,41 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             var result = await _signInManager.PasswordSignInAsync(user.UserName, model.Password, model.RememberMe, false);
 
+            var token = GenerateJwtToken(user);
+
             if (result.Succeeded)
             {
-                return Ok(model);
+                return Ok(new { token });
             }
             else
             {
                 return Unauthorized("Invalid log in details");
             }
+
+        }
+        private string GenerateJwtToken(IdentityUser user)
+        {
+            JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
+
+            byte[] key = Encoding.ASCII.GetBytes("X7fL92bWk6TK7hkXZmK6u4JVLtLRcpXIkx4yqXIESGiUKxxTjghtCWyoglJ1U0G3");
+
+
+            SecurityTokenDescriptor securityTokenDescriptor = new SecurityTokenDescriptor()
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Name, user.UserName),
+                    new Claim(ClaimTypes.NameIdentifier, user.Id),
+
+                }),
+                Expires = DateTime.UtcNow.AddHours(1),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = handler.CreateToken(securityTokenDescriptor);
+
+            return handler.WriteToken(token);
+
         }
 
 

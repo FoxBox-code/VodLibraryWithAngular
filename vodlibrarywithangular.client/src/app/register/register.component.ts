@@ -55,7 +55,7 @@ export class RegisterComponent
     .subscribe(
       {
         next : (result) => console.log("Registered successful", result),
-        error : (error) => console.log("Registration failed", error),
+        error : (error) => console.error("Registration failed", error),
         complete : () => console.log("Registration  completed")
 
 

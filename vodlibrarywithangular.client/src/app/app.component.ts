@@ -18,28 +18,27 @@ interface WeatherForecast {
 })
 export class AppComponent implements OnInit {
   public forecasts: WeatherForecast[] = [];
-  userAuth = false;
+  userAuth = false; //cheks if user is loged in 
 
   constructor(private http: HttpClient, private authService : AuthService) {}
 
-  ngOnInit() {
-    this.getForecasts();
-
-    this.userAuth = this.authService.isAuthenticated();
+  ngOnInit()
+  {
+    this.authService.getAuthStatus().subscribe((authStatus)=>
+      {
+        this.userAuth = authStatus;
+      });
   }
 
-  getForecasts() {
-    this.http.get<WeatherForecast[]>('/weatherforecast').subscribe(
-      (result) => {
-        this.forecasts = result;
-      },
-      (error) => {
-        console.error(error);
-      }
-    );
-  }
 
-  logOutUser(){}
+
+
+
+  logOutUser()
+  {
+    this.authService.clearLocalStorageToken();
+
+  }
 
   title = 'vodlibrarywithangular.client';
 }
