@@ -84,6 +84,7 @@ namespace VodLibraryWithAngular.Server.Controllers
             }
 
         }
+
         private string GenerateJwtToken(IdentityUser user)
         {
             JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
