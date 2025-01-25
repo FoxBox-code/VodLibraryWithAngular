@@ -1,13 +1,16 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using VodLibraryWithAngular.Server;
 using VodLibraryWithAngular.Server.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+Xabe.FFmpeg.FFmpeg.SetExecutablesPath(@"C:\stuff\ffmpeg-2025-01-22-git-e20ee9f9ae-full_build\bin");
+
 
 // Add services to the container.
 string connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("The default connection was not found!");
-
-builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
+builder.Services.AddSingleton<WebRootConfiguration>();
+builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
 
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 {
@@ -34,7 +37,11 @@ builder.Services.AddCors(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+
 var app = builder.Build();
+
+var directoriesConfiguration = app.Services.GetRequiredService<WebRootConfiguration>();
+directoriesConfiguration.ConfigureDirectories();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();

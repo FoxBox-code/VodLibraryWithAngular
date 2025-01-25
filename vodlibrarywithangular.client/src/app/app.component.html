@@ -7,17 +7,25 @@
     <a routerLink="upload" routerLinkActive="active" ariaCurrentWhenActive="page">
       Go to upload
     </a>
-    <a *ngIf="!userAuth" routerLink="register" routerLinkActive="active" ariaCurrentWhenActive="page">
-      Register
-    </a>
-    <a *ngIf="!userAuth" routerLink="login" routerLinkActive="active" ariaCurrentWhenActive="page">
-      Login
-    </a>
-    <button *ngIf="userAuth" type="button" (click)="logOutUser()">Log out </button>
+    <ng-container *ngIf="!userAuth; else LoggedIn">
+      <a routerLink="register" routerLinkActive="active" ariaCurrentWhenActive="page">
+        Register
+      </a>
+      <a  routerLink="login" routerLinkActive="active" ariaCurrentWhenActive="page">
+        Login
+      </a>
+    </ng-container>
+    <ng-template #LoggedIn>
+      <button *ngIf="userAuth" type="button" (click)="logOutUser()">Log out </button>
+      <a *ngIf="userAuth">Hello {{userNameDynamic$ | async}}</a>
+    </ng-template>
   </nav>
 </header>
+
 <main>
   <router-outlet>
 
   </router-outlet>
 </main>
+
+

@@ -4,6 +4,8 @@ import { Observable, catchError, throwError } from 'rxjs';
 import { Register } from './models/register';
 import { Login } from './models/login';
 import { BehaviorSubject } from 'rxjs';
+import {jwtDecode} from 'jwt-decode';
+import { ApiUrls } from './api-URLS';
 
 @Injectable({
   providedIn: 'root'
@@ -11,9 +13,10 @@ import { BehaviorSubject } from 'rxjs';
 export class AuthService
 {
 
-  private apiUrl = 'https://localhost:7156/api/auth';
+
   private tokenKey = 'authtokenkey';
   private authStatus = new BehaviorSubject(this.isAuthenticated());
+  private userName = new BehaviorSubject(this.getUserNameFromToken());
   constructor(private httpClient : HttpClient) { }
 
   setLocalStorageToken(token : string)
@@ -22,6 +25,7 @@ export class AuthService
           console.log("Initiating token!");
 
           this.authStatus.next(true);
+          this.userName.next(this.getUserNameFromToken());
 
   }
 
@@ -36,6 +40,9 @@ export class AuthService
   {
     localStorage.removeItem(this.tokenKey);
     this.authStatus.next(false);
+    this.userName.next(this.getUserNameFromToken());
+    console.log(`${this.getUserNameFromToken()} has loged off`);
+
   }
 
   isAuthenticated() : boolean
@@ -54,7 +61,7 @@ export class AuthService
   {
     console.log(JSON.stringify(user));
 
-      return this.httpClient.post<Register>(`${this.apiUrl}/register`, user)
+      return this.httpClient.post<Register>(`${ApiUrls.REGISTER}`, user)
       .pipe(catchError((error)=>
         {
           console.error("Registration failed",
@@ -75,7 +82,7 @@ export class AuthService
 
   login(user : Login) : Observable<{token : string}>
   {
-      return this.httpClient.post<{token : string}>(`${this.apiUrl}/login`, user)
+      return this.httpClient.post<{token : string}>(`${ApiUrls.LOGIN}`, user)
       .pipe(catchError((error)=>
       {
           console.error("Login failed", error)
@@ -86,5 +93,26 @@ export class AuthService
       }))
   }
 
-  
+  getUserNameFromToken() : string | null
+  {
+    const token = this.getLocalStorageToken();
+
+    if(!token)
+      {
+        return null;
+      }
+
+      const decodedToken: any = jwtDecode(token);
+      const userName = decodedToken.unique_name ;
+
+
+      return userName;
+
+  }
+  getUserNameAsOservable() : Observable<string | null>
+  {
+    return this.userName.asObservable();
+  }
+
+
 }

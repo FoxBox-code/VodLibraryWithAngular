@@ -45,7 +45,7 @@ export class RegisterComponent
           this.registerUser();
 
 
-          this.router.navigate(['/login']);
+
       }
   }
 
@@ -56,7 +56,11 @@ export class RegisterComponent
       {
         next : (result) => console.log("Registered successful", result),
         error : (error) => console.error("Registration failed", error),
-        complete : () => console.log("Registration  completed")
+        complete : () =>
+          {
+            console.log("Registration  completed")
+            this.router.navigate(['/login']);
+          }
 
 
       })

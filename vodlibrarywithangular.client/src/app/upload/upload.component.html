@@ -1,1 +1,35 @@
-<p>upload works!</p>
+
+
+<form [formGroup]="uploadForm" (ngSubmit)="onSubmit()">
+
+  <label id="title">Video Title:</label>
+  <input id="title" type="text" formControlName="Title">
+  <p></p>
+
+  <label id="description">Description:</label>
+  <textarea id="description" rows="4" formControlName="Description"></textarea>
+  <p></p>
+
+
+  <label id="category">Category:</label>
+  <select id="category" formControlName="CategoryId" name="category">
+    <option *ngFor="let category of categories" [value]="category.id" >
+          {{category.name}}
+    </option>
+  </select>
+
+
+
+
+  <p></p>
+
+  <label id="videofile">Video File</label>
+  <input id="videofile" type="file" (change)="onFileSelect($event , 'videoFile')">
+  <p></p>
+
+  <label id="imagefile">Thumbnail</label>
+  <input id="imagefile" type="file" (change)="onFileSelect($event , 'imageFile')">
+
+
+  <button [disabled]="uploadForm.invalid">Upload Video</button>
+</form>

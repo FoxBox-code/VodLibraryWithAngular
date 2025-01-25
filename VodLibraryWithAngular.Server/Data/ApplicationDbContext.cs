@@ -21,7 +21,7 @@ namespace VodLibraryWithAngular.Server.Data
 
         public DbSet<Reply> Replies { get; set; }
 
-        private Category[] categories;
+        private Category[] categoriesToSeed;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -74,13 +74,13 @@ namespace VodLibraryWithAngular.Server.Data
             SeedCategories();
 
             builder.Entity<Category>()
-                .HasData(categories);
+                .HasData(categoriesToSeed);
 
         }
 
         private void SeedCategories()
         {
-            categories = new Category[]
+            categoriesToSeed = new Category[]
             {
                 new Category { Id = 1, Name = "Music"} ,
                 new Category { Id = 2, Name = "Sports"},

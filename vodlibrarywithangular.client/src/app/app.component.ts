@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { UploadComponent } from './upload/upload.component';
 import { AuthService } from './auth.service';
+import { Observable } from 'rxjs';
 
 interface WeatherForecast {
   date: string;
@@ -17,10 +18,18 @@ interface WeatherForecast {
   styleUrl: './app.component.css'
 })
 export class AppComponent implements OnInit {
-  public forecasts: WeatherForecast[] = [];
-  userAuth = false; //cheks if user is loged in 
+  constructor(private http: HttpClient, private authService : AuthService)
+  {
+    this.userNameDynamic$ = this.authService.getUserNameAsOservable();
+  }
 
-  constructor(private http: HttpClient, private authService : AuthService) {}
+  public forecasts: WeatherForecast[] = [];
+  userAuth = false; //cheks if user is loged in
+  userName : string | null = '';
+  userNameDynamic$ : Observable<string | null>
+  title = 'vodlibrarywithangular.client';
+
+
 
   ngOnInit()
   {
@@ -28,17 +37,25 @@ export class AppComponent implements OnInit {
       {
         this.userAuth = authStatus;
       });
+
+    this.getUserName();
   }
-
-
-
-
 
   logOutUser()
   {
     this.authService.clearLocalStorageToken();
 
   }
+  getUserName()
+  {
+      // this.userName = this.authService.getUserNameFromToken(); old synchronous way
+      this.userNameDynamic$ = this.authService.getUserNameAsOservable(); // better asynchronous 
+  }
 
-  title = 'vodlibrarywithangular.client';
+
+
+
+
+
+
 }

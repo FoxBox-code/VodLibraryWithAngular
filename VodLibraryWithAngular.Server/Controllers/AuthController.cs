@@ -72,10 +72,11 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             var result = await _signInManager.PasswordSignInAsync(user.UserName, model.Password, model.RememberMe, false);
 
-            var token = GenerateJwtToken(user);
+
 
             if (result.Succeeded)
             {
+                var token = GenerateJwtToken(user);
                 return Ok(new { token });
             }
             else
