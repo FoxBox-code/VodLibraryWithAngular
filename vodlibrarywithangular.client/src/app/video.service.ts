@@ -46,11 +46,15 @@ export class VideoService
   uploadVideo(formData : FormData) : Observable<any>
   {
     const token = this.authService.getLocalStorageToken();
+    console.log(`Current token : ${token}`);
 
     const headers = new HttpHeaders(
     {
       Authorization : `Bearer ${token}`
     });
+    console.log(`Header loggin ${headers.get('Authorization')}`);
+
+
       return this.httpClient.post<any>(`${ApiUrls.UPLOAD}`, formData, {headers});
   }
 }

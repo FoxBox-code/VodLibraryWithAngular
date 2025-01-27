@@ -8,3 +8,4 @@ export class ApiUrls
     static readonly CATEGORIES = `${this.BASE}/video/categories`;
     static readonly UPLOAD = `${this.BASE}/video/upload`;
   }
+  

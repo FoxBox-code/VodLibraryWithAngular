@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using VodLibraryWithAngular.Server.Data;
@@ -44,7 +45,9 @@ namespace VodLibraryWithAngular.Server.Controllers
 
         }
 
+        [Authorize]
         [HttpPost("upload")]
+        [RequestSizeLimit(104857600)] //100MB
         public async Task<IActionResult> Upload([FromForm] VideoUploadDTO videoUploadForm)
         {
             if (!ModelState.IsValid)
@@ -99,7 +102,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                 await _dbContext.VideoRecords.AddAsync(video);
                 await _dbContext.SaveChangesAsync();
 
-                return Ok("Video uploaded successfully");
+                return Ok(new { message = "Video Uploaded successfully to VODLibrary " });
             }
             catch (Exception ex)
             {
