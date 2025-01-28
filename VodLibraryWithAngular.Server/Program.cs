@@ -72,7 +72,7 @@ builder.Services.AddAuthentication(options =>
         {
             OnAuthenticationFailed = response =>
             {
-                Console.WriteLine("User Authentication failed token is invalid : ", response.Exception.Message);
+                Console.WriteLine($"User Authentication failed token is invalid : {response.Exception.Message}");
 
                 return Task.CompletedTask;
             },

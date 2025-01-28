@@ -38,10 +38,10 @@ export class AuthService
 
   clearLocalStorageToken()
   {
+    console.log(`${this.getUserNameFromToken()} has loged off`);
     localStorage.removeItem(this.tokenKey);
     this.authStatus.next(false);
     this.userName.next(this.getUserNameFromToken());
-    console.log(`${this.getUserNameFromToken()} has loged off`);
 
   }
 
