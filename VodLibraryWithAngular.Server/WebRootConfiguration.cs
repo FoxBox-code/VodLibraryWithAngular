@@ -22,11 +22,11 @@ namespace VodLibraryWithAngular.Server
                     if (!Directory.Exists(_environment.WebRootPath))
                     {
                         Directory.CreateDirectory(_environment.WebRootPath);
-                        Console.WriteLine($"WebRoot created {_environment.WebRootPath}");
+
                     }
                 }
 
-
+                Console.WriteLine($"WebRoot created {_environment.WebRootPath}");
                 var videoDirectory = Path.Combine(_environment.WebRootPath, "videos");
                 if (!Directory.Exists(videoDirectory))
                 {

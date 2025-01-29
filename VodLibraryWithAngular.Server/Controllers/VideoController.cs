@@ -113,5 +113,56 @@ namespace VodLibraryWithAngular.Server.Controllers
 
 
         }
+
+        [HttpGet("sections")]
+        public async Task<IActionResult> GetMainMenuVideos()
+        {
+            try
+            {
+                List<CategoryWithItsVideosDTO> categoryWithItsVideosDTOs = await _dbContext
+                 .Categories
+                 .Include(c => c.Videos)
+                 .ThenInclude(v => v.VideoOwner)
+
+                 .Select(c => new CategoryWithItsVideosDTO()
+                 {
+
+                     Id = c.Id,
+                     Name = c.Name,
+                     Videos = c.Videos
+                     .Take(10)
+                     .Select(v => new VideoWindowDTO()
+                     {
+                         Id = v.Id,
+                         Title = v.Title,
+                         Uploaded = v.Uploaded,
+                         Length = v.Length,
+                         Views = v.Views,
+                         VideoOwnerId = v.VideoOwnerId,
+                         VideoOwnerName = v.VideoOwner.UserName,
+                         ImagePath = $"{Request.Scheme}://{Request.Host}/thumbnail/{Path.GetFileName(v.ImagePath)}"
+                     })
+                     .ToList()
+                 })
+                 .ToListAsync();
+
+                if (categoryWithItsVideosDTOs.Count() == 0)
+                {
+                    return NotFound("Server could not find categories");
+                }
+
+                return Ok(categoryWithItsVideosDTOs);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Failed to load the gategories and its vidoes", error = ex.Message });
+            }
+
+
+
+
+
+        }
+
     }
 }

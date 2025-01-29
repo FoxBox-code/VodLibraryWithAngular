@@ -9,13 +9,15 @@ import { UploadComponent } from './upload/upload.component';
 import { RegisterComponent } from './register/register.component';
 import { LoginComponent } from './login/login.component';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { VideosSectionComponent } from './videos-section/videos-section.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     UploadComponent,
     RegisterComponent,
-    LoginComponent
+    LoginComponent,
+    VideosSectionComponent
   ],
   imports: [
     BrowserModule, HttpClientModule,

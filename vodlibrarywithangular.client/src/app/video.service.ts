@@ -1,20 +1,17 @@
 import { Injectable,inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Category } from './models/category';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { ApiUrls } from './api-URLS';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
-
+import { CategoryWithVideos } from './models/category-with-videos';
 
 @Injectable({
   providedIn: 'root'
 })
 export class VideoService
 {
-
-
-
   constructor(private httpClient : HttpClient, private authService : AuthService)
   {
 
@@ -42,7 +39,6 @@ export class VideoService
 
   }
 
-
   uploadVideo(formData : FormData) : Observable<any>
   {
     const token = this.authService.getLocalStorageToken();
@@ -57,4 +53,25 @@ export class VideoService
 
       return this.httpClient.post<any>(`${ApiUrls.UPLOAD}`, formData, {headers});
   }
+
+  getVideosSection() : Observable<CategoryWithVideos[]>
+  {
+      return this.httpClient.get<CategoryWithVideos[]>(`${ApiUrls.VIDEOSSECTIONS}`)
+      .pipe(catchError((error) =>
+      {
+          console.error('Failed back end response',
+          {
+              message: error.message,
+              status : error.status,
+              error : error.error
+          });
+          return throwError(()=> new Error('Could not provide video catalog'))
+
+      }))
+
+  }
+
 }
+
+
+

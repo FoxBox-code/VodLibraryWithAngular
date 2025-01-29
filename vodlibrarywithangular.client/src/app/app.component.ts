@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { UploadComponent } from './upload/upload.component';
 import { AuthService } from './auth.service';
 import { Observable } from 'rxjs';
+import { Router } from '@angular/router';
 
 interface WeatherForecast {
   date: string;
@@ -18,7 +19,7 @@ interface WeatherForecast {
   styleUrl: './app.component.css'
 })
 export class AppComponent implements OnInit {
-  constructor(private http: HttpClient, private authService : AuthService)
+  constructor(private http: HttpClient, private authService : AuthService, private router : Router)
   {
     this.userNameDynamic$ = this.authService.getUserNameAsOservable();
   }
@@ -28,6 +29,7 @@ export class AppComponent implements OnInit {
   userName : string | null = '';
   userNameDynamic$ : Observable<string | null>
   title = 'vodlibrarywithangular.client';
+  mainMenu : boolean = true; //Check's whether if has to render the videos section or different component 
 
 
 
@@ -39,6 +41,11 @@ export class AppComponent implements OnInit {
       });
 
     this.getUserName();
+
+    this.router.events.subscribe(() =>
+    {
+        this.mainMenu = this.router.url === '/';
+    })
   }
 
   logOutUser()
@@ -49,7 +56,7 @@ export class AppComponent implements OnInit {
   getUserName()
   {
       // this.userName = this.authService.getUserNameFromToken(); old synchronous way
-      this.userNameDynamic$ = this.authService.getUserNameAsOservable(); // better asynchronous 
+      this.userNameDynamic$ = this.authService.getUserNameAsOservable(); // better asynchronous
   }
 
 

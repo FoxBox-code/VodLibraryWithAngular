@@ -4,12 +4,13 @@ import { UploadComponent } from './upload/upload.component';
 import { RegisterComponent } from './register/register.component';
 import { LoginComponent } from './login/login.component';
 import { authGuard } from './auth.guard';
+import { AppComponent } from './app.component';
 const routes: Routes = [
   // {
   //   path : '',
   //   component : AppComponent,
   //   title : "HomeScreen"
-  // },
+  // }, //this will make the nav reprint it self 
   {
     path : 'upload',
     component : UploadComponent,

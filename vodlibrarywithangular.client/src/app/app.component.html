@@ -23,9 +23,18 @@
 </header>
 
 <main>
-  <router-outlet>
 
-  </router-outlet>
+  <ng-container *ngIf="mainMenu; else DifferentComponent">
+        <app-videos-section>
+
+        </app-videos-section>
+  </ng-container>
+  <ng-template #DifferentComponent>
+        <router-outlet>
+
+        </router-outlet>
+  </ng-template>
+
 </main>
 
 
