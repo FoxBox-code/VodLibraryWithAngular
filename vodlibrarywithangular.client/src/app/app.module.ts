@@ -10,6 +10,7 @@ import { RegisterComponent } from './register/register.component';
 import { LoginComponent } from './login/login.component';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { VideosSectionComponent } from './videos-section/videos-section.component';
+import { PlayVideoComponent } from './play-video/play-video.component';
 
 @NgModule({
   declarations: [
@@ -17,7 +18,8 @@ import { VideosSectionComponent } from './videos-section/videos-section.componen
     UploadComponent,
     RegisterComponent,
     LoginComponent,
-    VideosSectionComponent
+    VideosSectionComponent,
+    PlayVideoComponent
   ],
   imports: [
     BrowserModule, HttpClientModule,

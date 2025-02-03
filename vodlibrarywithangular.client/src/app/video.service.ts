@@ -6,6 +6,8 @@ import { ApiUrls } from './api-URLS';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 import { CategoryWithVideos } from './models/category-with-videos';
+import { PlayVideo } from './models/play-video';
+import { AddCommentDTO } from './models/add-comment';
 
 @Injectable({
   providedIn: 'root'
@@ -19,8 +21,8 @@ export class VideoService
 
   getCategorys() : Observable <Category[]>
   {
-    return this.httpClient.get<Category[]>(`${ApiUrls.CATEGORIES}`).
-    pipe(catchError((error)=>
+    return this.httpClient.get<Category[]>(`${ApiUrls.CATEGORIES}`)
+    .pipe(catchError((error)=>
       {
         console.error(
         {
@@ -69,6 +71,55 @@ export class VideoService
 
       }))
 
+  }
+  getCurrentVideo(videoId : number) : Observable<PlayVideo>
+  {
+    return this.httpClient.get<PlayVideo>(`${ApiUrls.SELECTEDVIDEO}/${videoId}`)
+    .pipe(catchError((error) =>
+    {
+        console.error('Failed to get a video from the server',
+        {
+              message : error.message,
+              status : error.status,
+              error : error.error,
+        });
+
+        return throwError(()=> new Error('Could not get the selected video'));
+
+    }))
+
+  }
+  getVideoComments(videoId : number) : Observable<Comment[]>
+  {
+      return this.httpClient.get<Comment[]>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/comments`)
+      .pipe(catchError((error)=>
+      {
+        console.error("Failed to get a comments from the server",
+        {
+            message : error.message,
+            status : error.status,
+            error : error.error
+        });
+
+        return throwError(()=> new Error("Could not get the comments from the selected video"))
+
+      }))
+  }
+  addComment(comment : AddCommentDTO) : Observable<AddCommentDTO>
+  {
+      return this.httpClient.post<AddCommentDTO>(`${ApiUrls.ADDCOMMENT}`, comment)
+      .pipe(catchError((error)=>
+        {
+          console.error("Failed to add a comments to the database",
+          {
+              message : error.message,
+              status : error.status,
+              error : error.error
+          });
+
+          return throwError(()=> new Error("The server failed to add the coment of the user to the video"))
+
+        }))
   }
 
 }

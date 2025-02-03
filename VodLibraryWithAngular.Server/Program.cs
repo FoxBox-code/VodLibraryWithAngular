@@ -16,6 +16,7 @@ Xabe.FFmpeg.FFmpeg.SetExecutablesPath(@"C:\stuff\ffmpeg-2025-01-22-git-e20ee9f9a
 string connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("The default connection was not found!");
 builder.Services.AddSingleton<WebRootConfiguration>();
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
+builder.Services.AddLogging();
 
 builder.WebHost.ConfigureKestrel(options =>
 {

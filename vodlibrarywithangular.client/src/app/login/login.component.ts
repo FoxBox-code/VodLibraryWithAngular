@@ -3,6 +3,7 @@ import { AuthService } from '../auth.service';
 import { Login } from '../models/login';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { NavigationService } from '../navigation.service';
 
 @Component({
   selector: 'app-login',
@@ -19,12 +20,13 @@ export class LoginComponent
       Password : '',
       RememberMe : false
     }
+    navigationAdress : string = '/';
     router = inject(Router);
 
     loginForm : FormGroup;
 
 
-    constructor(private authService : AuthService, formBuilder : FormBuilder)
+    constructor(private authService : AuthService, formBuilder : FormBuilder, private navigationService : NavigationService)
     {
       this.loginForm = formBuilder.group(
         {
@@ -32,6 +34,8 @@ export class LoginComponent
           Password : ['', [Validators.required]],
           RememberMe : [false]
         })
+
+        navigationService.getAdress().subscribe(result => this.navigationAdress = result)
     }
 
     onSubmit()
@@ -42,7 +46,7 @@ export class LoginComponent
 
             this.loginUser();
 
-            this.router.navigate(['/']);
+            this.router.navigate([this.navigationAdress]);
         }
     }
     private loginUser()

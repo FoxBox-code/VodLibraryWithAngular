@@ -1,0 +1,41 @@
+<p>play-video works!</p>
+
+
+  <video [src]="selectedVideo?.videoPath" controls width="640"></video>
+  <h2>{{selectedVideo?.title}}</h2>
+  <p>{{selectedVideo?.description}}</p>
+  <section>{{selectedVideo?.videoOwnerName}} Uploaded : {{selectedVideo?.uploaded}}</section>
+  <section>Views:{{selectedVideo?.views}} Lieks:{{selectedVideo?.likes}} Dislikes: {{selectedVideo?.disLikes}}</section>
+  <p>Comments : {{selectedVideo?.commentCount}}</p>
+
+<section *ngIf="userName ; else userIsNotLogged" >
+  <form [formGroup]="commentForm" (ngSubmit)="addComment()">
+    <label id="comment"></label>
+    <textarea id="comment" formControlName="Comment"></textarea>
+    <button type="submit" [disabled]="!commentForm.valid">Comment</button>
+    <button type="reset" >Cancel</button>
+  </form>
+</section>
+
+  <ng-template #userIsNotLogged>
+    <p>Register to comment on the video</p>
+    <button type="button" (click)="navigateToLogIn()">Log In</button>
+  </ng-template>
+
+<ng-container *ngIf="commentsCount  > 0; else NoComments">
+
+      <section *ngFor="let comment of selectedVideo?.comments">
+
+          <p>{{comment.userName}}: {{comment.uploaded}}</p>
+          <p>{{comment.description}}</p>
+          <p>Likes :{{comment.likes}} DisLikes :{{comment.disLikes}} Replies {{comment.repliesCount}}</p>
+
+      </section>
+  </ng-container>
+
+  <ng-template #NoComments>
+      No comments on this video yet!
+  </ng-template>
+
+
+

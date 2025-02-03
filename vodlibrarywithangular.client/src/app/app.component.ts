@@ -5,12 +5,7 @@ import { AuthService } from './auth.service';
 import { Observable } from 'rxjs';
 import { Router } from '@angular/router';
 
-interface WeatherForecast {
-  date: string;
-  temperatureC: number;
-  temperatureF: number;
-  summary: string;
-}
+
 
 @Component({
   selector: 'app-root',
@@ -24,12 +19,12 @@ export class AppComponent implements OnInit {
     this.userNameDynamic$ = this.authService.getUserNameAsOservable();
   }
 
-  public forecasts: WeatherForecast[] = [];
+
   userAuth = false; //cheks if user is loged in
   userName : string | null = '';
   userNameDynamic$ : Observable<string | null>
   title = 'vodlibrarywithangular.client';
-  mainMenu : boolean = true; //Check's whether if has to render the videos section or different component 
+  mainMenu : boolean = true; //Check's whether if has to render the videos section or different component
 
 
 

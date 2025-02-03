@@ -26,7 +26,7 @@ namespace VodLibraryWithAngular.Server.Data.Models
 
         public int RepliesCount { get; set; }
 
-        public DateTime Uploaded { get; set; } = DateTime.Now;
+        public DateTime Uploaded { get; set; } = DateTime.UtcNow;
 
         public int Likes { get; set; }
 
