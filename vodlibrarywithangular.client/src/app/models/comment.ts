@@ -1,6 +1,6 @@
 import { Reply } from "./reply";
 
-export interface Comment
+export interface VideoComment
 {
     id : number,
     userName : string,
@@ -10,7 +10,7 @@ export interface Comment
     likes : number,
     disLikes : number,
     repliesCount : number,
-    replies : Reply[]
+
 }
 
 

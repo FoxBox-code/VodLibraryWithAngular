@@ -22,9 +22,11 @@
     <button type="button" (click)="navigateToLogIn()">Log In</button>
   </ng-template>
 
-<ng-container *ngIf="commentsCount  > 0; else NoComments">
+  <button type="button" (click)="loadComments()">Load Comments</button>
 
-      <section *ngFor="let comment of selectedVideo?.comments">
+<ng-container *ngIf="commentsCount + 2 > 0; else NoComments">
+
+      <section *ngFor="let comment of videoComments">
 
           <p>{{comment.userName}}: {{comment.uploaded}}</p>
           <p>{{comment.description}}</p>

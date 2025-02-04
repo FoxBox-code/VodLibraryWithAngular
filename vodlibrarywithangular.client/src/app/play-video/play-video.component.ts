@@ -8,7 +8,7 @@ import { Observable } from 'rxjs';
 import { NavigationService } from '../navigation.service';
 import { Router } from '@angular/router';
 import { AddCommentDTO } from '../models/add-comment';
-
+import { VideoComment } from '../models/comment';
 
 
 @Component({
@@ -29,6 +29,7 @@ export class PlayVideoComponent
     userName : string | null = null;
     nagivationService = inject(NavigationService);
     router = inject(Router);
+    videoComments? : VideoComment[];
 
     constructor(private videoService : VideoService, private activatedRoute:ActivatedRoute, formBuilder : FormBuilder, private authService : AuthService)
     {
@@ -102,7 +103,10 @@ export class PlayVideoComponent
 
     loadComments()
     {
-
+        this.videoService.getVideoComments(this.selectedVideoId).subscribe(
+        {
+            next : (result) => this.videoComments = result
+        });
     }
     navigateToLogIn()
     {

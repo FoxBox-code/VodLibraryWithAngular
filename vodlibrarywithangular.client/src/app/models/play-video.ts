@@ -1,4 +1,3 @@
-import { Comment } from "./comment"
 
 export interface PlayVideo
 {
@@ -14,7 +13,7 @@ export interface PlayVideo
     likes : number,
     disLikes : number,
     commentCount : 0,
-    comments : Comment[]
+
 }
 
 

@@ -305,6 +305,7 @@ namespace VodLibraryWithAngular.Server.Controllers
 
         }
 
+        [Authorize]
         [HttpPost("addComment")]
         public async Task<IActionResult> AddComment([FromBody] AddCommentDTO model)
         {
@@ -314,9 +315,24 @@ namespace VodLibraryWithAngular.Server.Controllers
                 return BadRequest("ModelState vailed at the back end");
             }
 
+            VideoRecord? currentVideo = await _dbContext.VideoRecords.FirstOrDefaultAsync(v => v.Id == model.VideoRecordId);
+
+            if (currentVideo == null)
+            {
+                return BadRequest($"No video with the model id of {model.VideoRecordId} exists, please provide valid video id");
+            }
+
+            var userName = User.FindFirst(ClaimTypes.Name)?.Value;
+
+            if (string.IsNullOrEmpty(userName) || userName != model.UserName)
+            {
+                return Unauthorized("You are not authorized to upload videos!");
+            }
+
+
             Comment addedComment = new Comment()
             {
-                UserName = model.UserName,
+                UserName = userName,
                 Description = model.Description,
                 VideoRecordId = model.VideoRecordId,
                 Likes = 0,

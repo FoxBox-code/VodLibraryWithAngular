@@ -8,6 +8,7 @@ import { AuthService } from './auth.service';
 import { CategoryWithVideos } from './models/category-with-videos';
 import { PlayVideo } from './models/play-video';
 import { AddCommentDTO } from './models/add-comment';
+import { VideoComment } from './models/comment';
 
 @Injectable({
   providedIn: 'root'
@@ -89,9 +90,9 @@ export class VideoService
     }))
 
   }
-  getVideoComments(videoId : number) : Observable<Comment[]>
+  getVideoComments(videoId : number) : Observable<VideoComment[]>
   {
-      return this.httpClient.get<Comment[]>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/comments`)
+      return this.httpClient.get<VideoComment[]>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/comments`)
       .pipe(catchError((error)=>
       {
         console.error("Failed to get a comments from the server",
@@ -107,7 +108,16 @@ export class VideoService
   }
   addComment(comment : AddCommentDTO) : Observable<AddCommentDTO>
   {
-      return this.httpClient.post<AddCommentDTO>(`${ApiUrls.ADDCOMMENT}`, comment)
+    const token = this.authService.getLocalStorageToken();
+    console.log(`Current token : ${token}`);
+
+    const headers = new HttpHeaders(
+    {
+      Authorization : `Bearer ${token}`
+    });
+    console.log(`Header loggin ${headers.get('Authorization')}`);
+
+      return this.httpClient.post<AddCommentDTO>(`${ApiUrls.ADDCOMMENT}`, comment, {headers})
       .pipe(catchError((error)=>
         {
           console.error("Failed to add a comments to the database",
