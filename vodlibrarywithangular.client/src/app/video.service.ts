@@ -131,6 +131,10 @@ export class VideoService
 
         }))
   }
+  getCommentsCount(videoId : number) : Observable<number>
+  {
+      return this.httpClient.get<number>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/commentsCount`)
+  }
 
 }
 

@@ -6,7 +6,7 @@
   <p>{{selectedVideo?.description}}</p>
   <section>{{selectedVideo?.videoOwnerName}} Uploaded : {{selectedVideo?.uploaded}}</section>
   <section>Views:{{selectedVideo?.views}} Lieks:{{selectedVideo?.likes}} Dislikes: {{selectedVideo?.disLikes}}</section>
-  <p>Comments : {{selectedVideo?.commentCount}}</p>
+  <p>Comments : {{commentsCount }}</p>
 
 <section *ngIf="userName ; else userIsNotLogged" >
   <form [formGroup]="commentForm" (ngSubmit)="addComment()">
@@ -22,10 +22,10 @@
     <button type="button" (click)="navigateToLogIn()">Log In</button>
   </ng-template>
 
+
+
+<ng-container *ngIf="commentsCount > 0; else NoComments">
   <button type="button" (click)="loadComments()">Load Comments</button>
-
-<ng-container *ngIf="commentsCount + 2 > 0; else NoComments">
-
       <section *ngFor="let comment of videoComments">
 
           <p>{{comment.userName}}: {{comment.uploaded}}</p>

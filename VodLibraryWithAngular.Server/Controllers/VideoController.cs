@@ -341,12 +341,29 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             };
 
+            currentVideo.CommentsCount++;
+
             await _dbContext.Comments.AddAsync(addedComment);
             await _dbContext.SaveChangesAsync();
 
             return Ok(model);
             //TODO add validations for videoId and userName from the given model
 
+        }
+
+        [HttpGet("play/{videoId}/commentsCount")]
+        public async Task<IActionResult> GetCommentsCount(int videoId)
+        {
+            VideoRecord? video = await _dbContext.VideoRecords.FirstOrDefaultAsync(v => v.Id == videoId);
+
+            if (video == null)
+            {
+                return BadRequest($"No such video with {videoId} exists");
+            }
+
+            int videoCommentsCount = video.CommentsCount;
+
+            return Ok(videoCommentsCount);
         }
 
 

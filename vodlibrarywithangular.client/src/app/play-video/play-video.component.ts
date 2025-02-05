@@ -23,13 +23,14 @@ export class PlayVideoComponent
     selectedVideo : PlayVideo | null = null;
     selectedVideoId : number;
     commentForm : FormGroup;
-    commentsCount : number = 0;// this could not work with the loading of comments keep in mind
+    commentsCount : number = 0;
 
     userNameAsObservable : Observable<string | null>
     userName : string | null = null;
     nagivationService = inject(NavigationService);
     router = inject(Router);
     videoComments? : VideoComment[];
+    autoLoadComments : boolean = false;
 
     constructor(private videoService : VideoService, private activatedRoute:ActivatedRoute, formBuilder : FormBuilder, private authService : AuthService)
     {
@@ -41,9 +42,9 @@ export class PlayVideoComponent
             {
                 this.selectedVideo = result;
                 console.log(JSON.stringify(this.selectedVideo));
-                this.commentsCount = this.selectedVideo.commentCount;
-
             }
+
+
 
         })
 
@@ -60,6 +61,13 @@ export class PlayVideoComponent
 
 
           })
+
+        this.videoService.getCommentsCount(this.selectedVideoId).subscribe(
+        {
+            next : (result)=> this.commentsCount = result,
+            error : (error) => console.error("Unexpected error", error)
+
+        })
 
 
     }
@@ -95,6 +103,20 @@ export class PlayVideoComponent
                 error : (error) => console.error(`User ${addCommentDTO.userName} failed to upload comment ${error}`)
               });
 
+              this.commentForm.reset();
+
+              if(this.autoLoadComments)
+              {
+                this.loadComments();
+              }
+
+              this.videoService.getCommentsCount(this.selectedVideoId).subscribe(
+                {
+                    next : (result)=> this.commentsCount = result,
+                    error : (error) => console.error("Unexpected error", error)
+
+                })
+
         }
 
 
@@ -103,6 +125,7 @@ export class PlayVideoComponent
 
     loadComments()
     {
+        this.autoLoadComments = true;
         this.videoService.getVideoComments(this.selectedVideoId).subscribe(
         {
             next : (result) => this.videoComments = result
