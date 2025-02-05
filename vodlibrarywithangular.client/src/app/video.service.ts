@@ -19,8 +19,12 @@ export class VideoService
   {
 
   }
+
   private commentsCountSubject = new BehaviorSubject<number>(0);
   commentsCount$ = this.commentsCountSubject.asObservable();
+
+  private videoCommentsSubject = new BehaviorSubject<VideoComment[]>([]);
+  videoComment$ = this.videoCommentsSubject.asObservable();
 
   getCategorys() : Observable <Category[]>
   {
@@ -92,9 +96,9 @@ export class VideoService
     }))
 
   }
-  getVideoComments(videoId : number) : Observable<VideoComment[]>
+  getVideoComments(videoId : number) : void
   {
-      return this.httpClient.get<VideoComment[]>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/comments`)
+      this.httpClient.get<VideoComment[]>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/comments`)
       .pipe(catchError((error)=>
       {
         console.error("Failed to get a comments from the server",
@@ -106,7 +110,18 @@ export class VideoService
 
         return throwError(()=> new Error("Could not get the comments from the selected video"))
 
-      }))
+      })).subscribe(
+      {
+          next : (result) =>
+          {
+              this.videoCommentsSubject.next(result);
+          },
+          error : (error) =>
+          {
+              console.error("Could not retrive the commets from the server", error);
+
+          }
+      })
   }
   addComment(comment : AddCommentDTO) : Observable<AddCommentDTO>
   {

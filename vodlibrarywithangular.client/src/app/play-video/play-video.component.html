@@ -26,7 +26,7 @@
 
 <ng-container *ngIf="commentsCountObservable | async; else NoComments">
   <button type="button" (click)="loadComments()">Load Comments</button>
-      <section *ngFor="let comment of videoComments">
+      <section *ngFor="let comment of videoComments$ | async">
 
           <p>{{comment.userName}}: {{comment.uploaded}}</p>
           <p>{{comment.description}}</p>

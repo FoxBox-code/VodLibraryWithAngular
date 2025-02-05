@@ -29,7 +29,7 @@ export class PlayVideoComponent
     userName : string | null = null;
     nagivationService = inject(NavigationService);
     router = inject(Router);
-    videoComments? : VideoComment[];
+    videoComments$? : Observable<VideoComment[]>;
     autoLoadComments : boolean = false;
 
     constructor(private videoService : VideoService, private activatedRoute:ActivatedRoute, formBuilder : FormBuilder, private authService : AuthService)
@@ -95,19 +95,22 @@ export class PlayVideoComponent
 
               this.videoService.addComment(addCommentDTO).subscribe(
               {
-                next : (result) => {
+                next : (result) =>
+                {
                   console.log(`User ${result.userName} commented : ${result.description}`);
                   this.videoService.refreshCommentsCount(this.selectedVideoId);
+
+                  if(this.autoLoadComments)
+                    {
+                      this.loadComments();
+                    }
                 },
                 error : (error) => console.error(`User ${addCommentDTO.userName} failed to upload comment ${error}`)
               });
 
               this.commentForm.reset();
 
-              if(this.autoLoadComments)
-              {
-                this.loadComments();
-              }
+
 
 
 
@@ -121,10 +124,8 @@ export class PlayVideoComponent
     loadComments()
     {
         this.autoLoadComments = true;
-        this.videoService.getVideoComments(this.selectedVideoId).subscribe(
-        {
-            next : (result) => this.videoComments = result
-        });
+        this.videoService.getVideoComments(this.selectedVideoId);
+        this.videoComments$ = this.videoService.videoComment$;
     }
 
     navigateToLogIn()
