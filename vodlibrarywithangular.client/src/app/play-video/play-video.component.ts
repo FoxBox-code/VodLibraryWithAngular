@@ -23,9 +23,9 @@ export class PlayVideoComponent
     selectedVideo : PlayVideo | null = null;
     selectedVideoId : number;
     commentForm : FormGroup;
-    commentsCount : number = 0;
-
-    userNameAsObservable : Observable<string | null>
+    commentsCount : number = 0;//THIS WONT CUT IT
+    commentsCountObservable : Observable<number>
+    userNameAsObservable : Observable<string | null>;
     userName : string | null = null;
     nagivationService = inject(NavigationService);
     router = inject(Router);
@@ -62,12 +62,8 @@ export class PlayVideoComponent
 
           })
 
-        this.videoService.getCommentsCount(this.selectedVideoId).subscribe(
-        {
-            next : (result)=> this.commentsCount = result,
-            error : (error) => console.error("Unexpected error", error)
-
-        })
+        videoService.getCommentsCount(this.selectedVideoId);
+        this.commentsCountObservable = videoService.commentsCount$;
 
 
     }
@@ -99,7 +95,10 @@ export class PlayVideoComponent
 
               this.videoService.addComment(addCommentDTO).subscribe(
               {
-                next : (result) => console.log(`User ${result.userName} commented : ${result.description}`),
+                next : (result) => {
+                  console.log(`User ${result.userName} commented : ${result.description}`);
+                  this.videoService.refreshCommentsCount(this.selectedVideoId);
+                },
                 error : (error) => console.error(`User ${addCommentDTO.userName} failed to upload comment ${error}`)
               });
 
@@ -110,12 +109,8 @@ export class PlayVideoComponent
                 this.loadComments();
               }
 
-              this.videoService.getCommentsCount(this.selectedVideoId).subscribe(
-                {
-                    next : (result)=> this.commentsCount = result,
-                    error : (error) => console.error("Unexpected error", error)
 
-                })
+
 
         }
 
@@ -131,6 +126,7 @@ export class PlayVideoComponent
             next : (result) => this.videoComments = result
         });
     }
+
     navigateToLogIn()
     {
         this.nagivationService.updateAdress(this.router.url);

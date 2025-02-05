@@ -1,5 +1,5 @@
 import { Injectable,inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { Category } from './models/category';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { ApiUrls } from './api-URLS';
@@ -19,6 +19,8 @@ export class VideoService
   {
 
   }
+  private commentsCountSubject = new BehaviorSubject<number>(0);
+  commentsCount$ = this.commentsCountSubject.asObservable();
 
   getCategorys() : Observable <Category[]>
   {
@@ -131,9 +133,20 @@ export class VideoService
 
         }))
   }
-  getCommentsCount(videoId : number) : Observable<number>
+  getCommentsCount(videoId : number) : void
   {
-      return this.httpClient.get<number>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/commentsCount`)
+      this.httpClient.get<number>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/commentsCount`)
+      .subscribe(
+      {
+          next : (result) => this.commentsCountSubject.next(result),
+          error : (error) => console.error(`Failed to fetch the comments count from the server ${error}`)
+
+      })
+  }
+
+  refreshCommentsCount(videoId : number)
+  {
+    this.getCommentsCount(videoId);
   }
 
 }

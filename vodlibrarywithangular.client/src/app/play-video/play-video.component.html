@@ -6,7 +6,7 @@
   <p>{{selectedVideo?.description}}</p>
   <section>{{selectedVideo?.videoOwnerName}} Uploaded : {{selectedVideo?.uploaded}}</section>
   <section>Views:{{selectedVideo?.views}} Lieks:{{selectedVideo?.likes}} Dislikes: {{selectedVideo?.disLikes}}</section>
-  <p>Comments : {{commentsCount }}</p>
+  <p>Comments : {{commentsCountObservable | async }}</p>
 
 <section *ngIf="userName ; else userIsNotLogged" >
   <form [formGroup]="commentForm" (ngSubmit)="addComment()">
@@ -24,7 +24,7 @@
 
 
 
-<ng-container *ngIf="commentsCount > 0; else NoComments">
+<ng-container *ngIf="commentsCountObservable | async; else NoComments">
   <button type="button" (click)="loadComments()">Load Comments</button>
       <section *ngFor="let comment of videoComments">
 
