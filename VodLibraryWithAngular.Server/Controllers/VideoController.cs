@@ -264,7 +264,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                     .Where(c => c.VideoRecordId == videoId)
                     .Select(c => new CommentDTO()
                     {
-                        Id = c.VideoRecordId,
+                        Id = c.Id,
                         UserName = c.UserName,
                         Description = c.Description,
                         VideoRecordId = c.VideoRecordId,
@@ -312,7 +312,7 @@ namespace VodLibraryWithAngular.Server.Controllers
             if (!ModelState.IsValid)
             {
                 _logger.LogError($"The given model from the client is not valid {model}");
-                return BadRequest("ModelState vailed at the back end");
+                return BadRequest("ModelState failed at the back end");
             }
 
             VideoRecord? currentVideo = await _dbContext.VideoRecords.FirstOrDefaultAsync(v => v.Id == model.VideoRecordId);
@@ -326,7 +326,7 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             if (string.IsNullOrEmpty(userName) || userName != model.UserName)
             {
-                return Unauthorized("You are not authorized to upload videos!");
+                return Unauthorized("You are not authorized to comment on  videos!");
             }
 
 
@@ -364,6 +364,112 @@ namespace VodLibraryWithAngular.Server.Controllers
             int videoCommentsCount = video.CommentsCount;
 
             return Ok(videoCommentsCount);
+        }
+
+        [HttpGet("play/{videoId}/updateViews")]
+        public async Task<IActionResult> UpdateViews(int videoId)
+        {
+            VideoRecord? video = await _dbContext.VideoRecords.FirstOrDefaultAsync(v => v.Id == videoId);
+
+            if (video == null)
+            {
+                return BadRequest($"No such video with this id {videoId} exists");
+            }
+
+            video.Views++;
+
+            await _dbContext.SaveChangesAsync();
+
+            return Ok(video.Views);
+        }
+
+        [Authorize]
+        [HttpPost("addReply")]
+        public async Task<IActionResult> AddReplyToComment([FromBody] ReplyFormDTO model)
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogError($"The given model from the client is not valid {model}");
+                return BadRequest("ModelState failed at the back end");
+            }
+
+            VideoRecord? currentVideo = await _dbContext.VideoRecords.FirstOrDefaultAsync(v => v.Id == model.VideoId);
+
+            if (currentVideo == null)
+            {
+                return BadRequest($"No video with the model id of {model.VideoId} exists, please provide valid video id");
+            }
+
+            Comment? comment = await _dbContext.Comments.FirstOrDefaultAsync(c => c.Id == model.CommentId);
+
+            if (comment == null)
+            {
+                return BadRequest($"No comment with the model id of {model.CommentId} exists, please provide valid comment id");
+            }
+
+            var userName = User.FindFirst(ClaimTypes.Name)?.Value;
+
+            if (string.IsNullOrEmpty(userName) || userName != model.UserName)
+            {
+                return Unauthorized("You are not authorized to reply on comments!");
+            }
+
+            Reply reply = new Reply()
+            {
+                UserName = userName,
+                Description = model.ReplyContent,
+                CommentId = model.CommentId,
+                VideoRecordId = model.VideoId,
+                Likes = 0,
+                DisLikes = 0,
+
+            };
+
+            currentVideo.ReplyCount++;
+            comment.RepliesCount++;
+
+            await _dbContext.Replies.AddAsync(reply);
+            await _dbContext.SaveChangesAsync();
+
+            return Ok(model);
+
+
+
+        }
+
+        [HttpGet("play/{videoId}/{commentId}/replies")]
+        public async Task<IActionResult> GetRepliesForComment(int videoId, int commentId)
+        {
+            VideoRecord? video = await _dbContext.VideoRecords.FirstOrDefaultAsync(v => v.Id == videoId);
+
+            if (video == null)
+            {
+                return BadRequest($"Failed to find video with id {videoId}");
+            }
+
+            Comment? comment = await _dbContext.Comments.FirstOrDefaultAsync(v => v.Id == commentId);
+
+            if (comment == null)
+            {
+                return BadRequest($"Failed to find comment with id {commentId}");
+            }
+
+            List<ReplieDTO> replieDTOs = await _dbContext.Replies
+                .Where(r => r.VideoRecordId == videoId && r.CommentId == commentId)
+                .Select(r => new ReplieDTO()
+                {
+                    Id = r.Id,
+                    UserName = r.UserName,
+                    Description = r.Description,
+                    VideoRecordId = r.VideoRecordId,
+                    CommentId = r.CommentId,
+                    Uploaded = r.Uploaded,
+                    Likes = r.Likes,
+                    DisLikes = r.DisLikes
+                })
+                .ToListAsync();
+
+            return Ok(replieDTOs);
         }
 
 

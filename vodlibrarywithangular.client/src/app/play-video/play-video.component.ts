@@ -9,6 +9,8 @@ import { NavigationService } from '../navigation.service';
 import { Router } from '@angular/router';
 import { AddCommentDTO } from '../models/add-comment';
 import { VideoComment } from '../models/comment';
+import { ReplyForm } from '../models/reply-form';
+import { Reply } from '../models/reply';
 
 
 @Component({
@@ -23,16 +25,21 @@ export class PlayVideoComponent
     selectedVideo : PlayVideo | null = null;
     selectedVideoId : number;
     commentForm : FormGroup;
-    commentsCount : number = 0;//THIS WONT CUT IT
+    replyForm? : FormGroup;
+    replyCommentId? : number;
+    activeCommentId? : number;
+    activeCommentReplyId? : number;
     commentsCountObservable : Observable<number>
     userNameAsObservable : Observable<string | null>;
     userName : string | null = null;
     nagivationService = inject(NavigationService);
     router = inject(Router);
     videoComments$? : Observable<VideoComment[]>;
+    commentReplies$? : Observable<Reply[]>;
     autoLoadComments : boolean = false;
+    views$? : Observable<number>
 
-    constructor(private videoService : VideoService, private activatedRoute:ActivatedRoute, formBuilder : FormBuilder, private authService : AuthService)
+    constructor(private videoService : VideoService, private activatedRoute:ActivatedRoute, private formBuilder : FormBuilder, private authService : AuthService)
     {
         this.selectedVideoId = Number(this.activatedRoute.snapshot.paramMap.get('id'));
 
@@ -42,6 +49,7 @@ export class PlayVideoComponent
             {
                 this.selectedVideo = result;
                 console.log(JSON.stringify(this.selectedVideo));
+                videoService.getVideoViews(this.selectedVideoId);
             }
 
 
@@ -64,9 +72,11 @@ export class PlayVideoComponent
 
         videoService.getCommentsCount(this.selectedVideoId);
         this.commentsCountObservable = videoService.commentsCount$;
+        this.views$ = videoService.views$;
 
 
     }
+
     addComment()
     {
         if(this.commentForm.invalid)
@@ -98,6 +108,7 @@ export class PlayVideoComponent
                 next : (result) =>
                 {
                   console.log(`User ${result.userName} commented : ${result.description}`);
+
                   this.videoService.refreshCommentsCount(this.selectedVideoId);
 
                   if(this.autoLoadComments)
@@ -109,17 +120,10 @@ export class PlayVideoComponent
               });
 
               this.commentForm.reset();
-
-
-
-
-
-
-        }
+            }
 
 
     }
-
 
     loadComments()
     {
@@ -135,6 +139,85 @@ export class PlayVideoComponent
 
         this.router.navigate(['login']);
     }
+
+    getReplyForm(commentId : number)
+    {
+        if(this.activeCommentId !== commentId)
+        {
+          this.activeCommentId = commentId;
+          this.replyForm = this.formBuilder.group(
+            {
+              Reply : ["", [Validators.required]]
+            });
+        }
+        else
+        {
+            this.activeCommentId = undefined;
+            this.replyForm = undefined;
+        }
+
+    }
+
+    getRepliesForCommnet(commentId : number)
+    {
+      if(this.activeCommentReplyId === commentId)
+      {
+          this.commentReplies$ = undefined;
+          this.activeCommentReplyId = undefined;
+      }
+      else
+      {
+        this.activeCommentReplyId = commentId;
+        this.videoService.getCommentReplies(this.selectedVideoId, commentId)
+        this.commentReplies$ = this.videoService.commentReplies$;
+      }
+
+    }
+
+    addReply()
+    {
+        if(this.replyForm?.invalid)
+        {
+            console.error("Invalid reply form");
+
+        }
+        else
+        {
+          if(this.userName && this.activeCommentId)
+          {
+            let reply : ReplyForm =
+            {
+              userName : this.userName,
+              replyContent : this.replyForm?.value.Reply,
+              videoId : this.selectedVideoId,
+              commentId : this.activeCommentId
+            }
+
+            this.videoService.addReplyToComment(reply).subscribe(
+            {
+                next : (result) =>
+                {
+                  console.log(`User ${result.userName} replied : ${result.replyContent} to comment with id ${result.commentId} in video with id ${result.videoId}`);
+                }
+            });
+
+            this.replyForm?.reset();
+          }
+
+
+
+        }
+    }
+
+
+
+
+
+
+
+
+
+
 
 
 }

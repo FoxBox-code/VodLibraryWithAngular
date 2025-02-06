@@ -9,6 +9,8 @@ import { CategoryWithVideos } from './models/category-with-videos';
 import { PlayVideo } from './models/play-video';
 import { AddCommentDTO } from './models/add-comment';
 import { VideoComment } from './models/comment';
+import { ReplyForm } from './models/reply-form';
+import { Reply } from './models/reply';
 
 @Injectable({
   providedIn: 'root'
@@ -25,6 +27,12 @@ export class VideoService
 
   private videoCommentsSubject = new BehaviorSubject<VideoComment[]>([]);
   videoComment$ = this.videoCommentsSubject.asObservable();
+
+  private viewsSubject = new BehaviorSubject<number>(0);
+  views$ = this.viewsSubject.asObservable();
+
+  private commentRepliesSubject = new BehaviorSubject<Reply[]>([]);
+  commentReplies$ = this.commentRepliesSubject.asObservable();
 
   getCategorys() : Observable <Category[]>
   {
@@ -144,10 +152,11 @@ export class VideoService
               error : error.error
           });
 
-          return throwError(()=> new Error("The server failed to add the coment of the user to the video"))
+          return throwError(() => new Error("The server failed to add the coment of the user to the video"))
 
         }))
   }
+
   getCommentsCount(videoId : number) : void
   {
       this.httpClient.get<number>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/commentsCount`)
@@ -162,6 +171,70 @@ export class VideoService
   refreshCommentsCount(videoId : number)
   {
     this.getCommentsCount(videoId);
+  }
+
+  getVideoViews(videoId : number)
+  {
+    this.httpClient.get<number>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/updateViews`)
+    .subscribe(
+    {
+        next : (result) =>
+        {
+            this.viewsSubject.next(result);
+        },
+        error : (error) =>
+        {
+            console.error('Failed to get the video views from the server', error);
+
+        }
+    })
+  }
+
+  addReplyToComment(reply : ReplyForm) : Observable<ReplyForm>
+  {
+      const token = this.authService.getLocalStorageToken();
+
+      const headers = new HttpHeaders(
+      {
+        Authorization : `Bearer ${token}`
+      })
+
+      return this.httpClient.post<ReplyForm>(`${ApiUrls.ADDREPLY}`, reply , {headers})
+      .pipe(catchError((error)=>
+      {
+        console.error("Failed to add a reply to the database",
+          {
+              message : error.message,
+              status : error.status,
+              error : error.error
+          });
+
+          return throwError (() => new Error("The server failed to add the reply of the user to the comment"))
+      }))
+  }
+
+  getCommentReplies(videoId : number , commentId: number)
+  {
+      this.httpClient.get<Reply[]>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/${commentId}/replies`)
+      .pipe(catchError((error)=>
+      {
+          console.error(
+          {
+              message : error.message,
+              status : error.status,
+              erorr : error.error
+          });
+
+          return throwError(()=> new Error(`Failed to get the replies from the server for video with id ${videoId} in comment with id ${commentId}`))
+
+      }))
+      .subscribe(
+      {
+        next : (result) =>
+        {
+            this.commentRepliesSubject.next(result);
+        }
+      });
   }
 
 }

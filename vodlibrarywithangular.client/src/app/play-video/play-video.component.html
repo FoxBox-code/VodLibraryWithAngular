@@ -5,7 +5,10 @@
   <h2>{{selectedVideo?.title}}</h2>
   <p>{{selectedVideo?.description}}</p>
   <section>{{selectedVideo?.videoOwnerName}} Uploaded : {{selectedVideo?.uploaded}}</section>
-  <section>Views:{{selectedVideo?.views}} Lieks:{{selectedVideo?.likes}} Dislikes: {{selectedVideo?.disLikes}}</section>
+  <section>Views:{{views$ | async}}
+    <button type="button" >Likes : {{selectedVideo?.likes}}</button>
+    <button type="button" >DisLikes : {{selectedVideo?.disLikes}}</button>
+  </section>
   <p>Comments : {{commentsCountObservable | async }}</p>
 
 <section *ngIf="userName ; else userIsNotLogged" >
@@ -17,10 +20,10 @@
   </form>
 </section>
 
-  <ng-template #userIsNotLogged>
-    <p>Register to comment on the video</p>
-    <button type="button" (click)="navigateToLogIn()">Log In</button>
-  </ng-template>
+<ng-template #userIsNotLogged>
+  <p>Register to comment on the video</p>
+  <button type="button" (click)="navigateToLogIn()">Log In</button>
+</ng-template>
 
 
 
@@ -30,10 +33,39 @@
 
           <p>{{comment.userName}}: {{comment.uploaded}}</p>
           <p>{{comment.description}}</p>
-          <p>Likes :{{comment.likes}} DisLikes :{{comment.disLikes}} Replies {{comment.repliesCount}}</p>
+          <p>Likes : {{comment.likes}} DisLikes : {{comment.disLikes}} Replies {{comment.repliesCount}}</p>
+
+          <section *ngIf="userName">
+          <button type="button" (click)="getReplyForm(comment.id)">Reply</button>
+
+          <form *ngIf="replyForm && activeCommentId === comment.id" [formGroup]="replyForm" (ngSubmit)="addReply()">
+            <label id="reply"></label>
+            <textarea id="reply" formControlName="Reply"></textarea>
+            <button type="submit" [disabled]="replyForm.invalid">Reply to comment</button>
+            <button type="reset">Cancel</button>
+          </form>
+          </section>
+
+          <p></p>
+
+          <section *ngIf="comment.repliesCount > 0">
+            <button type="button" (click)="getRepliesForCommnet(comment.id)">Load replies</button>
+              <section *ngFor="let reply of commentReplies$ | async">
+                <div *ngIf="activeCommentReplyId === comment.id">
+                  <p>{{reply.userName}} : {{reply.uploaded}}</p>
+                  <p>{{reply.description}}</p>
+                  <p>Likes : {{reply.likes}} DisLikes : {{reply.disLikes}}</p>
+                </div>
+
+              </section>
+            <div>_________________________________</div>
+          </section>
+
 
       </section>
   </ng-container>
+
+
 
   <ng-template #NoComments>
       No comments on this video yet!

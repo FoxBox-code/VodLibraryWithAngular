@@ -10,7 +10,8 @@ export class ApiUrls
     static readonly CATEGORIES = `${this.BASE}/video/categories`;
     static readonly UPLOAD = `${this.BASE}/video/upload`;
     static readonly VIDEOSSECTIONS = `${this.BASE}/video/sections`;
-    static readonly SELECTEDVIDEO = `${this.BASE}/video/play`
-    static readonly ADDCOMMENT = `${this.BASE}/video/addComment`
+    static readonly SELECTEDVIDEO = `${this.BASE}/video/play`;
+    static readonly ADDCOMMENT = `${this.BASE}/video/addComment`;
+    static readonly ADDREPLY = `${this.BASE}/video/addReply`;
   }
 

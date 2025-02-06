@@ -21,7 +21,7 @@ namespace VodLibraryWithAngular.Server.Data.Models
         [JsonIgnore] // Ignore during serialization
         public Comment Comment { get; set; }
 
-        public DateTime Uploaded { get; set; } = DateTime.Now;
+        public DateTime Uploaded { get; set; } = DateTime.UtcNow;
 
         public int Likes { get; set; }
 
