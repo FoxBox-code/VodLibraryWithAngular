@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using static VodLibraryWithAngular.Server.DataConstants.ConstantsCharacteristics.VideoRecordsConstants;
 
 namespace VodLibraryWithAngular.Server.Data.Models
@@ -28,14 +27,12 @@ namespace VodLibraryWithAngular.Server.Data.Models
 
         public int Views { get; set; }
 
-        public int Likes { get; set; }
-
-        public int Dislike { get; set; }
+        public ICollection<VideoLikesDislikes> LikeDislikeStats { get; set; }
 
         [Required]
         public string VideoOwnerId { get; set; }
 
-        public IdentityUser VideoOwner { get; set; }
+        public ApplicationUser VideoOwner { get; set; }
 
         public string VideoPath { get; set; } //this is the URL for the video that will be in the DataBase
 

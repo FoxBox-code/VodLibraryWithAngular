@@ -93,12 +93,11 @@ namespace VodLibraryWithAngular.Server.Controllers
                     ImagePath = thumbnail,
                     Uploaded = DateTime.UtcNow,
                     Views = 0,
-                    Likes = 0,
-                    Dislike = 0,
                     CommentsCount = 0,
                     ReplyCount = 0,
                     Length = videoDuration,
                     VideoOwnerId = userId
+
 
                 };
 
@@ -196,8 +195,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                     VideoOwnerName = video.VideoOwner.UserName,
                     CategoryName = video.Category.Name,
                     Views = video.Views,
-                    Likes = video.Likes,
-                    DisLikes = video.Dislike,
+
                     CommentCount = video.CommentsCount,
                     Comments = video.Comments
                    .Select(c => new CommentDTO()

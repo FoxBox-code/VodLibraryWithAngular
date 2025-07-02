@@ -5,7 +5,7 @@ using VodLibraryWithAngular.Server.Data.Models;
 
 namespace VodLibraryWithAngular.Server.Data
 {
-    public class ApplicationDbContext : IdentityDbContext
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -20,6 +20,8 @@ namespace VodLibraryWithAngular.Server.Data
         public DbSet<Comment> Comments { get; set; }
 
         public DbSet<Reply> Replies { get; set; }
+
+        public DbSet<VideoLikesDislikes> VideoLikesDislikes { get; set; }
 
         private Category[] categoriesToSeed;
 
@@ -70,6 +72,16 @@ namespace VodLibraryWithAngular.Server.Data
                 .HasForeignKey(r => r.CommentId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            builder.Entity<VideoLikesDislikes>()
+                .HasOne(v => v.Video)
+                .WithMany(u => u.LikeDislikeStats)
+                .HasForeignKey(v => v.VideoId);
+
+            builder.Entity<VideoLikesDislikes>()
+                .HasOne(u => u.User)
+                .WithMany(v => v.LikeDislikesStats)
+                .HasForeignKey(u => u.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             SeedCategories();
 

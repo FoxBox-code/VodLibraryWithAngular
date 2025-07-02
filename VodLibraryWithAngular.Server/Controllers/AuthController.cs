@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using VodLibraryWithAngular.Server.Data;
 using VodLibraryWithAngular.Server.Models;
 
 namespace VodLibraryWithAngular.Server.Controllers
@@ -12,11 +13,11 @@ namespace VodLibraryWithAngular.Server.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
 
-        public AuthController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
+        public AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -35,7 +36,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                 return Unauthorized("Passwords don't match");
             }
 
-            IdentityUser user = new IdentityUser
+            ApplicationUser user = new ApplicationUser
             {
                 UserName = model.UserName,
                 Email = model.Email,
@@ -86,7 +87,7 @@ namespace VodLibraryWithAngular.Server.Controllers
 
         }
 
-        private string GenerateJwtToken(IdentityUser user)
+        private string GenerateJwtToken(ApplicationUser user)
         {
             JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
 
