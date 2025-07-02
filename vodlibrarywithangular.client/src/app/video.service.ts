@@ -237,6 +237,35 @@ export class VideoService
       });
   }
 
+  getCommentReplies2(videoId : number , commentId: number)//Will work on this for improvement
+  {
+      this.httpClient.get<Reply[]>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/${commentId}/replies`)
+      .pipe(catchError((error)=>
+      {
+          console.error(
+          {
+              message : error.message,
+              status : error.status,
+              erorr : error.error
+          });
+
+          return throwError(()=> new Error(`Failed to get the replies from the server for video with id ${videoId} in comment with id ${commentId}`))
+
+      }))
+      .subscribe(
+      {
+        next : (result) =>
+        {
+            this.commentRepliesSubject.next(result);
+        },
+        error : (error) =>
+        {
+            console.error("Failed to get the comment replies from the server", error);
+        }
+      });
+
+  }
+
 }
 
 

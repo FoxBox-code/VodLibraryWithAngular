@@ -158,7 +158,22 @@ export class PlayVideoComponent
 
     }
 
-    getRepliesForCommnet(commentId : number)
+    getRepliesForCommnet(commentId : number)//We need to remove/rework this
+    {
+      if(this.activeCommentReplyId === commentId)
+      {
+          this.commentReplies$ = undefined;
+          this.activeCommentReplyId = undefined;
+      }
+      else
+      {
+        this.activeCommentReplyId = commentId;
+        this.videoService.getCommentReplies(this.selectedVideoId, commentId)
+        this.commentReplies$ = this.videoService.commentReplies$;
+      }
+
+    }
+    getRepliesForCommnet2(commentId : number)//Will work on this for improvement
     {
       if(this.activeCommentReplyId === commentId)
       {
@@ -198,6 +213,13 @@ export class PlayVideoComponent
                 next : (result) =>
                 {
                   console.log(`User ${result.userName} replied : ${result.replyContent} to comment with id ${result.commentId} in video with id ${result.videoId}`);
+                  if(this.activeCommentReplyId !== undefined)
+                  {
+                    let cloneActiveCommentsreplyId = this.activeCommentReplyId;
+                    this.activeCommentReplyId = undefined;
+                    //this is some dog ass code but it got the job done
+                    this.getRepliesForCommnet(cloneActiveCommentsreplyId);
+                  }
                 }
             });
 

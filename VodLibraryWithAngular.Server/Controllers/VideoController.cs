@@ -159,7 +159,7 @@ namespace VodLibraryWithAngular.Server.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Failed to load the gategories and its vidoes", error = ex.Message });
+                return StatusCode(500, new { message = "Failed to load the categories and its videos", error = ex.Message });
             }
 
 
