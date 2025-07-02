@@ -32,8 +32,7 @@ export class VideoService
   views$ = this.viewsSubject.asObservable();
 
   private commentRepliesSubject2 : {[commentId:number] : BehaviorSubject<Reply[]>} = {};
-  private commentRepliesSubject = new BehaviorSubject<Reply[]>([]);
-  commentReplies$ = this.commentRepliesSubject.asObservable();
+  
 
   getCategorys() : Observable <Category[]>
   {
@@ -214,31 +213,7 @@ export class VideoService
       }))
   }
 
-  getCommentReplies(videoId : number , commentId: number)
-  {
-      this.httpClient.get<Reply[]>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/${commentId}/replies`)
-      .pipe(catchError((error)=>
-      {
-          console.error(
-          {
-              message : error.message,
-              status : error.status,
-              erorr : error.error
-          });
-
-          return throwError(()=> new Error(`Failed to get the replies from the server for video with id ${videoId} in comment with id ${commentId}`))
-
-      }))
-      .subscribe(
-      {
-        next : (result) =>
-        {
-            this.commentRepliesSubject.next(result);
-        }
-      });
-  }
-
-  getCommentReplies2(videoId : number , commentId: number) : Observable<Reply[]>//Will work on this for improvement
+  getCommentReplies(videoId : number , commentId: number) : Observable<Reply[]>//Will work on this for improvement
   {
     if(!this.commentRepliesSubject2[commentId])
     {
@@ -259,9 +234,11 @@ export class VideoService
       )
     }
 
-    return this.commentRepliesSubject2[commentId].asObservable();
+        return this.commentRepliesSubject2[commentId].asObservable();
 
   }
+
+
 
 
 }

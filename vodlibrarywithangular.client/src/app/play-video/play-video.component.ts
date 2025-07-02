@@ -35,8 +35,8 @@ export class PlayVideoComponent
     nagivationService = inject(NavigationService);
     router = inject(Router);
     videoComments$? : Observable<VideoComment[]>;
-    commentReplies$? : Observable<Reply[]>;//replace this with
-    commentReplies2$ : {[commentId : number] :Observable<Reply[]>} = {};
+
+    commentReplies$ : {[commentId : number] :Observable<Reply[]>} = {};
     expandRepliesComments : {[commentId : number] :  boolean} = {};
     autoLoadComments : boolean = false;
     views$? : Observable<number>
@@ -160,22 +160,8 @@ export class PlayVideoComponent
 
     }
 
-    getRepliesForCommnet(commentId : number)//We need to remove/rework this
-    {
-      if(this.activeCommentReplyId === commentId)
-      {
-          this.commentReplies$ = undefined;
-          this.activeCommentReplyId = undefined;
-      }
-      else
-      {
-        this.activeCommentReplyId = commentId;
-        this.videoService.getCommentReplies(this.selectedVideoId, commentId)
-        this.commentReplies$ = this.videoService.commentReplies$;
-      }
 
-    }
-    getRepliesForCommnet2(commentId : number)//Will work on this for improvement
+    getRepliesForCommnet(commentId : number)
     {
       if(this.expandRepliesComments[commentId])
       {
@@ -184,9 +170,9 @@ export class PlayVideoComponent
       }
 
 
-      if(!this.commentReplies2$[commentId])
+      if(!this.commentReplies$[commentId])
       {
-          this.commentReplies2$[commentId] = this.videoService.getCommentReplies2(this.selectedVideoId, commentId);
+          this.commentReplies$[commentId] = this.videoService.getCommentReplies(this.selectedVideoId, commentId);
       }
 
       this.expandRepliesComments[commentId] = true;
