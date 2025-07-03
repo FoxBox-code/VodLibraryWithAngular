@@ -11,6 +11,7 @@ import { AddCommentDTO } from '../models/add-comment';
 import { VideoComment } from '../models/comment';
 import { ReplyForm } from '../models/reply-form';
 import { Reply } from '../models/reply';
+import { Reaction } from '../models/reaction';
 
 
 @Component({
@@ -39,7 +40,9 @@ export class PlayVideoComponent
     commentReplies$ : {[commentId : number] :Observable<Reply[]>} = {};
     expandRepliesComments : {[commentId : number] :  boolean} = {};
     autoLoadComments : boolean = false;
-    views$? : Observable<number>
+    views$? : Observable<number>;
+
+    reaction? : Reaction;
 
     constructor(private videoService : VideoService, private activatedRoute:ActivatedRoute, private formBuilder : FormBuilder, private authService : AuthService)
     {
@@ -77,6 +80,11 @@ export class PlayVideoComponent
         this.views$ = videoService.views$;
 
 
+    }
+
+    ngOnInit() : void
+    {
+        this.loadReactions();
     }
 
     addComment()
@@ -221,7 +229,19 @@ export class PlayVideoComponent
         }
     }
 
+    loadReactions()
+    {
 
+
+       this.videoService.getVideoReactions(this.selectedVideoId)
+       .subscribe(data =>
+       {
+          this.reaction = data;
+       }
+       )
+
+        
+    }
 
 
 

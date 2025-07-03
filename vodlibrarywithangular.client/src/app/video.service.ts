@@ -11,6 +11,7 @@ import { AddCommentDTO } from './models/add-comment';
 import { VideoComment } from './models/comment';
 import { ReplyForm } from './models/reply-form';
 import { Reply } from './models/reply';
+import { Reaction } from './models/reaction';
 
 @Injectable({
   providedIn: 'root'
@@ -32,7 +33,7 @@ export class VideoService
   views$ = this.viewsSubject.asObservable();
 
   private commentRepliesSubject2 : {[commentId:number] : BehaviorSubject<Reply[]>} = {};
-  
+
 
   getCategorys() : Observable <Category[]>
   {
@@ -213,7 +214,7 @@ export class VideoService
       }))
   }
 
-  getCommentReplies(videoId : number , commentId: number) : Observable<Reply[]>//Will work on this for improvement
+  getCommentReplies(videoId : number , commentId: number) : Observable<Reply[]>
   {
     if(!this.commentRepliesSubject2[commentId])
     {
@@ -236,6 +237,11 @@ export class VideoService
 
         return this.commentRepliesSubject2[commentId].asObservable();
 
+  }
+
+  getVideoReactions(videoId: number) : Observable<Reaction>
+  {
+    return this.httpClient.get<Reaction>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/reactions`)
   }
 
 

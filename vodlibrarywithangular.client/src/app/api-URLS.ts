@@ -13,5 +13,6 @@ export class ApiUrls
     static readonly SELECTEDVIDEO = `${this.BASE}/video/play`;
     static readonly ADDCOMMENT = `${this.BASE}/video/addComment`;
     static readonly ADDREPLY = `${this.BASE}/video/addReply`;
+    
   }
 

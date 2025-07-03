@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -17,13 +18,15 @@ namespace VodLibraryWithAngular.Server.Controllers
         private readonly ApplicationDbContext _dbContext;
         private readonly IWebHostEnvironment _environment;
         private readonly ILogger<VideoController> _logger;
+        private readonly UserManager<ApplicationUser> _userManager;
 
 
-        public VideoController(ApplicationDbContext context, IWebHostEnvironment enviroment, ILogger<VideoController> logger)
+        public VideoController(ApplicationDbContext context, IWebHostEnvironment enviroment, ILogger<VideoController> logger, UserManager<ApplicationUser> userManager)
         {
             _dbContext = context;
             _environment = enviroment;
             _logger = logger;
+            _userManager = userManager;
         }
 
         [HttpGet("categories")]
@@ -205,8 +208,8 @@ namespace VodLibraryWithAngular.Server.Controllers
                        Description = c.Description,
                        VideoRecordId = c.VideoRecordId,
                        Uploaded = c.Uploaded,
-                       Likes = c.Likes,
-                       DisLikes = c.DisLikes,
+                       Likes = c.Likes, //we dont do anything with this 
+                       DisLikes = c.DisLikes,//we dont do anything with this
                        RepliesCount = c.RepliesCount,
                        Replies = c.Replies
                            .Select(r => new ReplieDTO()
@@ -251,6 +254,34 @@ namespace VodLibraryWithAngular.Server.Controllers
                 });
             }
 
+        }
+
+        [HttpGet("play/{videoId}/reactions")]
+        public async Task<IActionResult> GetCurrentReactions(int videoId)
+        {
+            int likeCount = await _dbContext.VideoLikesDislikes
+                .CountAsync(x => x.VideoId == videoId && x.Liked);
+
+            int dislikeCount = await _dbContext.VideoLikesDislikes
+                .CountAsync(x => x.VideoId == videoId && !x.Liked);
+
+
+            string? userId = _userManager.GetUserId(User);
+
+            VideoLikesDislikes? userVote = await _dbContext.VideoLikesDislikes
+                .FirstOrDefaultAsync(x => x.UserId == userId);
+
+            var userReact = userVote == null ? "None" : userVote.Liked ? "Like" : "Dislike";
+
+            var result = new
+            {
+                videoId,
+                likeCount,
+                dislikeCount,
+                userReact
+            };
+
+            return Ok(result);
         }
 
         [HttpGet("play/{videoId}/comments")]
