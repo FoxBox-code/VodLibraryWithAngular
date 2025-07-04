@@ -237,72 +237,82 @@ export class PlayVideoComponent
        .subscribe(data =>
        {
           this.reaction = data;
+          console.log(`LIke COUNT ${this.reaction.likeCount} , DISLIKE COUNT ${this.reaction.disLikeCount}`);
        }
        )
     }
 
     addReaction(reactionClicked : string)
     {
-         var currentUser = this.userName;
+         var currentUser : string | null = null;
+         this.userNameAsObservable.subscribe(
+          {
+            next : (name) =>
+              {
+                currentUser = name;
+              }
+          })
+
 
          if(currentUser === null)
          {
             return;
          }
 
-         if(this.reaction?.userReact === reactionClicked)
-         {
+         if(this.reaction?.reaction === reactionClicked)
+          {
 
-              this.reaction.userReact = `None`;// We have to delete the table from here
-              this.videoService.deleteVideoReaction(this.selectedVideoId)
-              .subscribe(() =>
+            this.videoService.deleteVideoReaction(this.selectedVideoId)
+            .subscribe(
               {
-                if(this.reaction)
+                next : (data) =>
                 {
-                    this.reaction.userReact = `None`;
-
-                    if(reactionClicked === "Like")
-                        this.reaction.likeCount -= 1;
-
-                    else
-                        this.reaction.dislikeCount -=1;
+                    this.reaction = data;
+                }
+                ,
+                error : (err) =>
+                {
+                  console.error("Error while deleting", err)
                 }
 
               }
-              )
-
-
+            )
           }
           else
           {
             this.videoService.addOrUpdateVideoReaction(this.selectedVideoId, reactionClicked)
-            .subscribe(() =>
-            {
-              if(this.reaction?.userReact === "Like")
+            .subscribe(
               {
-                this.reaction.likeCount -= 1;
+                next : (data) =>
+                {
+                  this.reaction = data;
+                }
+                ,
+                error : (err) =>
+                {
+                  console.error("Error while reacting", err)
+                }
               }
-              else if(this.reaction?.userReact === "Dislike")
-              {
-                this.reaction.dislikeCount -= 1;
-              }
-
-              this.reaction!.userReact = reactionClicked //Reaction should be not null here but mark it as potential error harbinger
-
-              if(this.reaction?.userReact === "Like")
-                  this.reaction.likeCount +=1;
-              else if(this.reaction?.userReact === "Dislike")
-                  this.reaction.dislikeCount +=1;
-
-            })
-
-
+            )
 
           }
-
-
-
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

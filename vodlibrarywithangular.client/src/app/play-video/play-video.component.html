@@ -8,7 +8,7 @@
   <section>Views:{{views$ | async}}
     <ng-container *ngIf="reaction">
         <button type="button" (click)="addReaction('Like')">Likes  {{reaction.likeCount}}</button>
-        <button type="button" (click)="addReaction('Dislike')">DisLikes {{reaction.dislikeCount}}</button>
+        <button type="button" (click)="addReaction('Dislike')">DisLikes {{reaction.disLikeCount}}</button>
     </ng-container>
 
   </section>

@@ -246,13 +246,28 @@ export class VideoService
 
   deleteVideoReaction(videoId: number) : Observable<Reaction>
   {
-    return new Observable;
+    const token = this.authService.getLocalStorageToken();
+    const headers = new HttpHeaders(
+      {
+        Authorization : `Bearer ${token}`
+      }
+    )
+
+    return this.httpClient.delete<Reaction>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/reactions`, {headers})
   }
 
   addOrUpdateVideoReaction(videoId : number, reaction : string) : Observable<Reaction>
   {
-    return new Observable;
+    const token = this.authService.getLocalStorageToken();
+    const headers = new HttpHeaders(
+      {
+        Authorization : `Bearer ${token}`
+      }
+    )
+    return this.httpClient.post<Reaction>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/reactions`, { reactionType : reaction }, {headers})
   }
+
+
 
 
 

@@ -2,6 +2,6 @@ export interface Reaction
 {
     videoId : number,
     likeCount : number,
-    dislikeCount : number,
-    userReact : string
+    disLikeCount : number,
+    reaction : string
 }

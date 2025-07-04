@@ -273,15 +273,108 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             var userReact = userVote == null ? "None" : userVote.Liked ? "Like" : "Dislike";
 
-            var result = new
+            var result = new ReactionResponseDto
             {
-                videoId,
-                likeCount,
-                dislikeCount,
-                userReact
+                VideoId = videoId,
+                LikeCount = likeCount,
+                DisLikeCount = dislikeCount,
+                Reaction = userReact
             };
 
             return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPost("play/{videoId}/reactions")]
+        public async Task<IActionResult> AddOrUpdateVideoReaction(int videoId, [FromBody] ReactionDTO dto)
+        {
+            string? userId = _userManager.GetUserId(User);
+
+            if (userId == null)
+                return Unauthorized(new
+                {
+                    message = "User is not logged in"
+                });
+
+            var exists = await _dbContext.VideoLikesDislikes
+                .FirstOrDefaultAsync(x => x.VideoId == videoId && userId == x.UserId);
+
+            if (exists == null)
+            {
+                VideoLikesDislikes reaction = new VideoLikesDislikes()
+                {
+                    VideoId = videoId,
+                    UserId = userId,
+                    Liked = dto.ReactionType == "Like"
+                };
+
+                await _dbContext.VideoLikesDislikes.AddAsync(reaction);
+
+            }
+            else
+            {
+                exists.Liked = dto.ReactionType == "Like";
+            }
+
+            await _dbContext.SaveChangesAsync();
+
+            var likeCount = await _dbContext.VideoLikesDislikes
+                .CountAsync(x => x.VideoId == videoId && x.Liked == true);
+            var disLikeCount = await _dbContext.VideoLikesDislikes
+                .CountAsync(x => x.VideoId == videoId && x.Liked == false);
+            var userCurrentReaction = dto.ReactionType;
+
+            return Ok(new ReactionResponseDto
+            {
+                VideoId = videoId,
+                LikeCount = likeCount,
+                DisLikeCount = disLikeCount,
+                Reaction = userCurrentReaction
+            });
+        }
+
+        [Authorize]
+        [HttpDelete("play/{videoId}/reactions")]
+        public async Task<IActionResult> RemoveUserReaction(int videoId)
+        {
+            string? userId = _userManager.GetUserId(User);
+
+            if (userId == null)
+            {
+                return Unauthorized(new
+                {
+                    message = "User is not logged in"
+                });
+            }
+
+            var selected = await _dbContext.VideoLikesDislikes
+                .FirstOrDefaultAsync(x => x.VideoId == videoId && x.UserId == userId);
+
+            if (selected == null)
+            {
+                return NotFound(new
+                {
+                    message = "Reaction on this video for this user was not found"
+                });
+            }
+
+            _dbContext.VideoLikesDislikes.Remove(selected);
+            await _dbContext.SaveChangesAsync();
+
+            var likeCount = await _dbContext.VideoLikesDislikes
+                .CountAsync(x => x.VideoId == videoId && x.Liked == true);
+            var disLikeCount = await _dbContext.VideoLikesDislikes
+                .CountAsync(x => x.VideoId == videoId && x.Liked == false);
+
+
+            string reaction = "None";
+            return Ok(new ReactionResponseDto
+            {
+                VideoId = videoId,
+                LikeCount = likeCount,
+                DisLikeCount = disLikeCount,
+                Reaction = reaction
+            });
         }
 
         [HttpGet("play/{videoId}/comments")]
