@@ -7,8 +7,8 @@
   <section>{{selectedVideo?.videoOwnerName}} Uploaded : {{selectedVideo?.uploaded}}</section>
   <section>Views:{{views$ | async}}
     <ng-container *ngIf="reaction">
-        <button type="button" >Likes  {{reaction.likeCount}}</button>
-        <button type="button" >DisLikes {{reaction.dislikeCount}}</button>
+        <button type="button" (click)="addReaction('Like')">Likes  {{reaction.likeCount}}</button>
+        <button type="button" (click)="addReaction('Dislike')">DisLikes {{reaction.dislikeCount}}</button>
     </ng-container>
 
   </section>

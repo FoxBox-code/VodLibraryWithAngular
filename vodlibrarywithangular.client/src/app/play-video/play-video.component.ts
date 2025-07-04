@@ -239,9 +239,74 @@ export class PlayVideoComponent
           this.reaction = data;
        }
        )
-
-        
     }
+
+    addReaction(reactionClicked : string)
+    {
+         var currentUser = this.userName;
+
+         if(currentUser === null)
+         {
+            return;
+         }
+
+         if(this.reaction?.userReact === reactionClicked)
+         {
+
+              this.reaction.userReact = `None`;// We have to delete the table from here
+              this.videoService.deleteVideoReaction(this.selectedVideoId)
+              .subscribe(() =>
+              {
+                if(this.reaction)
+                {
+                    this.reaction.userReact = `None`;
+
+                    if(reactionClicked === "Like")
+                        this.reaction.likeCount -= 1;
+
+                    else
+                        this.reaction.dislikeCount -=1;
+                }
+
+              }
+              )
+
+
+          }
+          else
+          {
+            this.videoService.addOrUpdateVideoReaction(this.selectedVideoId, reactionClicked)
+            .subscribe(() =>
+            {
+              if(this.reaction?.userReact === "Like")
+              {
+                this.reaction.likeCount -= 1;
+              }
+              else if(this.reaction?.userReact === "Dislike")
+              {
+                this.reaction.dislikeCount -= 1;
+              }
+
+              this.reaction!.userReact = reactionClicked //Reaction should be not null here but mark it as potential error harbinger
+
+              if(this.reaction?.userReact === "Like")
+                  this.reaction.likeCount +=1;
+              else if(this.reaction?.userReact === "Dislike")
+                  this.reaction.dislikeCount +=1;
+
+            })
+
+
+
+          }
+
+
+
+    }
+
+
+
+
 
 
 

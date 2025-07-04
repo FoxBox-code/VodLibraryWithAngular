@@ -244,6 +244,17 @@ export class VideoService
     return this.httpClient.get<Reaction>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/reactions`)
   }
 
+  deleteVideoReaction(videoId: number) : Observable<Reaction>
+  {
+    return new Observable;
+  }
+
+  addOrUpdateVideoReaction(videoId : number, reaction : string) : Observable<Reaction>
+  {
+    return new Observable;
+  }
+
+
 
 
 
