@@ -23,6 +23,10 @@ namespace VodLibraryWithAngular.Server.Data
 
         public DbSet<VideoLikesDislikes> VideoLikesDislikes { get; set; }
 
+        public DbSet<CommentLikesDisLikes> CommentLikesDisLikes { get; set; }
+
+        public DbSet<RepliesLikesDisLikes> RepliesLikesDisLikes { get; set; }
+
         private Category[] categoriesToSeed;
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -82,6 +86,16 @@ namespace VodLibraryWithAngular.Server.Data
                 .WithMany(v => v.LikeDislikesStats)
                 .HasForeignKey(u => u.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<CommentLikesDisLikes>()
+                .HasOne(c => c.Comment)
+                .WithMany(c => c.LikesDisLikes)
+                .HasForeignKey(c => c.CommentId);
+
+            builder.Entity<RepliesLikesDisLikes>()
+                .HasOne(r => r.Reply)
+                .WithMany(r => r.LikesDisLikes)
+                .HasForeignKey(r => r.ReplyId);
 
             SeedCategories();
 

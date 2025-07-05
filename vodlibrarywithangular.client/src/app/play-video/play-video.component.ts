@@ -142,6 +142,11 @@ export class PlayVideoComponent
         this.videoComments$ = this.videoService.videoComment$;
     }
 
+    toggleCommentsShowHide()
+    {
+      this.autoLoadComments = !this.autoLoadComments;
+    }
+
     navigateToLogIn()
     {
         this.nagivationService.updateAdress(this.router.url);

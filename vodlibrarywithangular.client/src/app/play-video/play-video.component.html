@@ -31,8 +31,10 @@
 
 
 <ng-container *ngIf="commentsCountObservable | async; else NoComments">
-  <button type="button" (click)="loadComments()">Load Comments</button>
-      <section *ngFor="let comment of videoComments$ | async">
+  <button *ngIf="!videoComments$" type="button" (click)="loadComments()">Load comments</button>
+  <button *ngIf="videoComments$" type="button" (click)="toggleCommentsShowHide()">{{autoLoadComments ? "Hide comments" : "Load comments"}}</button>
+      <section *ngIf="autoLoadComments">
+          <section *ngFor="let comment of videoComments$ | async">
 
           <p>{{comment.userName}}: {{comment.uploaded}}</p>
           <p>{{comment.description}}</p>
@@ -52,7 +54,7 @@
           <p></p>
 
           <section *ngIf="comment.repliesCount > 0">
-            <button type="button" (click)="getRepliesForCommnet(comment.id)">{{expandRepliesComments[comment.id] ? 'Hide' : 'LoadComments'}}</button>
+            <button type="button" (click)="getRepliesForCommnet(comment.id)">{{expandRepliesComments[comment.id] ? 'Hide' : 'Load replies'}}</button>
 
               <section *ngIf="expandRepliesComments[comment.id]">
                 <ng-container *ngFor="let reply of commentReplies$[comment.id] | async">
@@ -66,6 +68,8 @@
           </section>
 
         </section>
+      </section>
+
     </ng-container>
 
 

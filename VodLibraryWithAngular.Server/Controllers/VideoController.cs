@@ -185,7 +185,61 @@ namespace VodLibraryWithAngular.Server.Controllers
                 .FirstOrDefaultAsync(x => x.Id == videoId);
 
 
+                var comments = video.Comments.ToList();
 
+                List<CommentDTO> commentDTOs = new List<CommentDTO>();
+
+                foreach (var com in comments)
+                {
+                    int likeCount = await _dbContext.CommentLikesDisLikes
+                        .CountAsync(x => x.Id == com.Id && x.Like);
+
+                    int disLikeCout = await _dbContext.CommentLikesDisLikes
+                        .CountAsync(x => x.Id == com.Id && !x.Like);
+
+                    var replies = await _dbContext.Replies.Where(x => x.CommentId == com.Id).ToListAsync();
+
+                    List<ReplieDTO> repliesDTOs = new List<ReplieDTO>();
+
+                    foreach (var rep in replies)
+                    {
+                        int repLikeCount = await _dbContext.RepliesLikesDisLikes
+                            .CountAsync(x => x.Id == rep.Id && x.Like);
+
+                        int repDisLikeCount = await _dbContext.RepliesLikesDisLikes
+                            .CountAsync(x => x.Id == rep.Id && !x.Like);
+
+                        ReplieDTO currentReply = new ReplieDTO()
+                        {
+                            Id = rep.Id,
+                            UserName = rep.UserName,
+                            Description = rep.Description,
+                            VideoRecordId = rep.VideoRecordId,
+                            CommentId = rep.CommentId,
+                            Uploaded = rep.Uploaded,
+                            Likes = repLikeCount,
+                            DisLikes = repDisLikeCount
+                        };
+
+                        repliesDTOs.Add(currentReply);
+                    }
+
+                    CommentDTO current = new CommentDTO()
+                    {
+                        Id = com.Id,
+                        UserName = com.UserName,
+                        Description = com.Description,
+                        VideoRecordId = com.VideoRecordId,
+                        Uploaded = com.Uploaded,
+                        Likes = likeCount,
+                        DisLikes = disLikeCout,
+                        RepliesCount = com.RepliesCount,
+                        Replies = repliesDTOs
+
+                    };
+
+
+                }
 
                 PlayVideoDTO selectedVideo = new PlayVideoDTO()
                 {
@@ -200,36 +254,12 @@ namespace VodLibraryWithAngular.Server.Controllers
                     Views = video.Views,
 
                     CommentCount = video.CommentsCount,
-                    Comments = video.Comments
-                   .Select(c => new CommentDTO()
-                   {
-                       Id = c.Id,
-                       UserName = c.UserName,
-                       Description = c.Description,
-                       VideoRecordId = c.VideoRecordId,
-                       Uploaded = c.Uploaded,
-                       Likes = c.Likes, //we dont do anything with this 
-                       DisLikes = c.DisLikes,//we dont do anything with this
-                       RepliesCount = c.RepliesCount,
-                       Replies = c.Replies
-                           .Select(r => new ReplieDTO()
-                           {
-                               Id = r.Id,
-                               UserName = r.UserName,
-                               Description = r.Description,
-                               VideoRecordId = r.VideoRecordId,
-                               CommentId = r.CommentId,
-                               Uploaded = r.Uploaded,
-                               Likes = r.Likes,
-                               DisLikes = r.DisLikes
-
-                           })
-                           .ToList()
-                   })
-                   .ToList()
-
+                    Comments = commentDTOs
 
                 };
+
+
+
 
                 return Ok(selectedVideo);
             }
@@ -391,8 +421,8 @@ namespace VodLibraryWithAngular.Server.Controllers
                         Description = c.Description,
                         VideoRecordId = c.VideoRecordId,
                         Uploaded = c.Uploaded,
-                        Likes = c.Likes,
-                        DisLikes = c.DisLikes,
+                        Likes = c.LikesDisLikes.Count(x => x.Like),
+                        DisLikes = c.LikesDisLikes.Count(x => !x.Like),
                         RepliesCount = c.RepliesCount,
                     })
                     .ToListAsync();
@@ -457,9 +487,8 @@ namespace VodLibraryWithAngular.Server.Controllers
                 UserName = userName,
                 Description = model.Description,
                 VideoRecordId = model.VideoRecordId,
-                Likes = 0,
-                DisLikes = 0,
                 RepliesCount = 0,
+
 
             };
 
@@ -542,8 +571,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                 Description = model.ReplyContent,
                 CommentId = model.CommentId,
                 VideoRecordId = model.VideoId,
-                Likes = 0,
-                DisLikes = 0,
+
 
             };
 
@@ -586,8 +614,8 @@ namespace VodLibraryWithAngular.Server.Controllers
                     VideoRecordId = r.VideoRecordId,
                     CommentId = r.CommentId,
                     Uploaded = r.Uploaded,
-                    Likes = r.Likes,
-                    DisLikes = r.DisLikes
+                    Likes = r.LikesDisLikes.Count(x => x.Like),
+                    DisLikes = r.LikesDisLikes.Count(x => !x.Like)
                 })
                 .ToListAsync();
 

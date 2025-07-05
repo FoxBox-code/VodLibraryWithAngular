@@ -28,8 +28,6 @@ namespace VodLibraryWithAngular.Server.Data.Models
 
         public DateTime Uploaded { get; set; } = DateTime.UtcNow;
 
-        public int Likes { get; set; }
-
-        public int DisLikes { get; set; }
+        public ICollection<CommentLikesDisLikes> LikesDisLikes = new List<CommentLikesDisLikes>();
     }
 }
