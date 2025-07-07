@@ -12,6 +12,8 @@ import { VideoComment } from './models/comment';
 import { ReplyForm } from './models/reply-form';
 import { Reply } from './models/reply';
 import { Reaction } from './models/reaction';
+import { userCommentReactions } from './models/userCommentReactions';
+import { CommentReactionResponse } from './models/comment-reaction-response';
 
 @Injectable({
   providedIn: 'root'
@@ -20,7 +22,10 @@ export class VideoService
 {
   constructor(private httpClient : HttpClient, private authService : AuthService)
   {
-
+      authService.logout$.subscribe(() =>
+      {
+        this.clearUserCommentReactions();
+      })
   }
 
   private commentsCountSubject = new BehaviorSubject<number>(0);
@@ -33,6 +38,8 @@ export class VideoService
   views$ = this.viewsSubject.asObservable();
 
   private commentRepliesSubject2 : {[commentId:number] : BehaviorSubject<Reply[]>} = {};
+
+  public userCommentReactions: { [commentId: number]: boolean | undefined } = {};
 
 
   getCategorys() : Observable <Category[]>
@@ -265,6 +272,51 @@ export class VideoService
       }
     )
     return this.httpClient.post<Reaction>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/reactions`, { reactionType : reaction }, {headers})
+  }
+
+  getUserCommentLikesDislikes(videoId : number): Observable<userCommentReactions[]>
+  {
+    const token = this.authService.getLocalStorageToken();
+    const headers = new HttpHeaders
+    (
+      {
+        Authorization : `Bearer ${token}`
+      }
+    )
+
+    return this.httpClient.get<userCommentReactions[]>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/comment-reactions`, {headers})
+
+  }
+
+  addUpdateUserCommentReaction(commentId : number, reaction : boolean) : Observable<CommentReactionResponse>
+  {
+    const token = this.authService.getLocalStorageToken();
+    const headers = new HttpHeaders
+    (
+      {
+        Authorization : `Bearer ${token}`
+      }
+    )
+
+    return this.httpClient.post<CommentReactionResponse>(`${ApiUrls.SELECTEDVIDEO}/${commentId}/comment-reactions`, {like : reaction},{headers})
+  }
+
+  deleteUserCommentReaction(commentId : number ) : Observable<CommentReactionResponse>
+  {
+    const token = this.authService.getLocalStorageToken();
+    const headers = new HttpHeaders
+    (
+      {
+        Authorization : `Bearer ${token}`
+      }
+    )
+
+    return this.httpClient.delete<CommentReactionResponse>(`${ApiUrls.SELECTEDVIDEO}/${commentId}/comment-reactions`,{headers})
+  }
+
+  clearUserCommentReactions()
+  {
+      this.userCommentReactions = {};
   }
 
 

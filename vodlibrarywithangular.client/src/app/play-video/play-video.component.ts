@@ -4,7 +4,7 @@ import { PlayVideo } from '../models/play-video';
 import { ActivatedRoute } from '@angular/router';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { AuthService } from '../auth.service';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { NavigationService } from '../navigation.service';
 import { Router } from '@angular/router';
 import { AddCommentDTO } from '../models/add-comment';
@@ -43,6 +43,12 @@ export class PlayVideoComponent
     views$? : Observable<number>;
 
     reaction? : Reaction;
+
+    videoCommentsSnapshot: VideoComment[] = [];
+
+    // private destroy$ = new Subject<void>();
+
+
 
     constructor(private videoService : VideoService, private activatedRoute:ActivatedRoute, private formBuilder : FormBuilder, private authService : AuthService)
     {
@@ -85,6 +91,8 @@ export class PlayVideoComponent
     ngOnInit() : void
     {
         this.loadReactions();
+        console.log("PlayVideoComponent loaded");
+
     }
 
     addComment()
@@ -134,12 +142,110 @@ export class PlayVideoComponent
 
 
     }
+    addCommentReaction(commentId : number, reaction : boolean)
+    {
+      if(this.userName === null) return
+
+      const userReactions = this.videoService.userCommentReactions;
+      const exists = userReactions[commentId];
+
+      if(exists == undefined)
+      {
+          this.createCommentReaction(commentId, reaction);
+      }
+      else if (exists === reaction)
+      {
+        this.deleteCommentReaction(commentId);
+      }
+      else
+      {
+        this.updateCommentReaction(commentId, reaction);
+      }
+    }
+
+    private createCommentReaction(commentId : number , reaction : boolean)
+    {
+        this.videoService.addUpdateUserCommentReaction(commentId, reaction)
+        .subscribe(result => {
+        this.videoService.userCommentReactions[commentId] = result.like;
+        this.updateCommentCounts(commentId, result.likeCount, result.dislikeCount);
+    });
+    }
+    private deleteCommentReaction(commentId : number)
+    {
+        this.videoService.deleteUserCommentReaction(commentId)
+        .subscribe(result => {
+        delete this.videoService.userCommentReactions[commentId];
+        this.updateCommentCounts(commentId, result.likeCount, result.dislikeCount);
+    });
+    }
+    private updateCommentReaction(commentId: number, reaction: boolean)
+    {
+        this.videoService.addUpdateUserCommentReaction(commentId, reaction)
+      .subscribe(result => {
+      this.videoService.userCommentReactions[commentId] = result.like;
+      this.updateCommentCounts(commentId, result.likeCount, result.dislikeCount);
+      });
+    }
+
+    private updateCommentCounts(commentId: number, likeCount: number, dislikeCount: number)
+    {
+      const comment = this.findComment(commentId);
+      if (comment)
+      {
+        comment.likes = likeCount;
+        comment.disLikes = dislikeCount;
+        }
+      }
+
+
+
+
+    findComment(commentId: number) : VideoComment | undefined
+    {
+      return this.videoCommentsSnapshot.find(x => x.id === commentId);
+    }
 
     loadComments()
     {
         this.autoLoadComments = true;
         this.videoService.getVideoComments(this.selectedVideoId);
         this.videoComments$ = this.videoService.videoComment$;
+        this.videoComments$.subscribe(data =>
+          this.videoCommentsSnapshot = data
+        )
+        var userId : string | null = null;
+        this.userNameAsObservable.subscribe((data)=>
+          {
+            userId = data;
+
+            if(userId !== null)
+        {
+            this.videoService.getUserCommentLikesDislikes(this.selectedVideoId)
+            .subscribe
+            (
+              {
+                next : (data) =>
+                {
+                    for(var commentReaction of data)//Possible source of why another user delets anothers likes and dislikes
+                    {
+
+                      this.videoService.userCommentReactions[commentReaction.commentId] = commentReaction.like;
+                    }
+
+                }
+                ,
+                error : (error) =>
+                {
+                    console.error(`Error while getting the userCommentReactions`, error)
+                }
+
+              }
+            )
+        }
+          })
+
+
     }
 
     toggleCommentsShowHide()
@@ -242,7 +348,7 @@ export class PlayVideoComponent
        .subscribe(data =>
        {
           this.reaction = data;
-          console.log(`LIke COUNT ${this.reaction.likeCount} , DISLIKE COUNT ${this.reaction.disLikeCount}`);
+
        }
        )
     }

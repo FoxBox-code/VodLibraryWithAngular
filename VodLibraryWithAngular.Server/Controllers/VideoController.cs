@@ -286,7 +286,7 @@ namespace VodLibraryWithAngular.Server.Controllers
 
         }
 
-        [HttpGet("play/{videoId}/reactions")]
+        [HttpGet("play/{videoId}/reactions")]//THIS MIGHT BE a source of problem , we use _userManager on a method that is not authorized
         public async Task<IActionResult> GetCurrentReactions(int videoId)
         {
             int likeCount = await _dbContext.VideoLikesDislikes
@@ -312,6 +312,114 @@ namespace VodLibraryWithAngular.Server.Controllers
             };
 
             return Ok(result);
+        }
+
+        [Authorize]
+        [HttpGet("play/{videoId}/comment-reactions")]
+        public async Task<IActionResult> GetUserCommentReactions(int videoId)
+        {
+            var userId = _userManager.GetUserId(User);
+
+            if (userId == null)
+            {
+                return Unauthorized(new
+                {
+                    message = "User is not logged in"
+                });
+            }
+
+
+            List<UserCommentReactionsDTO> reactions = await _dbContext.CommentLikesDisLikes
+                .Where(x => x.Comment.VideoRecordId == videoId && x.UserId == userId)
+                .Select(x => new UserCommentReactionsDTO
+                {
+                    CommentId = x.CommentId,
+                    Like = x.Like
+                })
+                .ToListAsync();
+
+
+
+            return Ok(reactions);
+
+        }
+
+        [Authorize]
+        [HttpPost("play/{commentId}/comment-reactions")]
+        public async Task<IActionResult> AddUpdateUserCommentReactions(int commentId, [FromBody] UserCommentReactionsDTO body)
+        {
+            var userId = _userManager.GetUserId(User);
+
+            var commentLikeDislike = await _dbContext.CommentLikesDisLikes.FirstOrDefaultAsync(x => x.CommentId == commentId && userId == x.UserId);
+
+            if (commentLikeDislike == null)
+            {
+                commentLikeDislike = new CommentLikesDisLikes()
+                {
+                    CommentId = commentId,
+                    UserId = userId,
+                    Like = body.Like
+                };
+
+                await _dbContext.CommentLikesDisLikes.AddAsync(commentLikeDislike);
+            }
+            else
+            {
+                commentLikeDislike.Like = body.Like;
+
+                _dbContext.CommentLikesDisLikes.Update(commentLikeDislike);
+            }
+
+            await _dbContext.SaveChangesAsync();
+
+            var likeCount = await _dbContext.CommentLikesDisLikes.CountAsync(x => x.CommentId == commentId && x.Like);
+            var disLikeCount = await _dbContext.CommentLikesDisLikes.CountAsync(x => x.CommentId == commentId && !x.Like);
+
+            CommentReactionResponseDTO commentReactionResponseDTO = new CommentReactionResponseDTO()
+            {
+                CommentId = commentId,
+                LikeCount = likeCount,
+                DislikeCount = disLikeCount,
+                Like = body.Like
+            };
+
+            return Ok(commentReactionResponseDTO);
+
+        }
+
+
+
+        [Authorize]
+        [HttpDelete("play/{commentId}/comment-reactions")]
+        public async Task<IActionResult> DeleteUserCommentReactions(int commentId)
+        {
+            var userId = _userManager.GetUserId(User);
+            var commentLikesDislikes = await _dbContext.CommentLikesDisLikes
+                .FirstOrDefaultAsync(x => x.CommentId == commentId && userId == x.UserId);
+
+            if (commentLikesDislikes == null)
+            {
+                return BadRequest(new
+                {
+                    message = $"Comment with {commentId} was not found!"
+                });
+            }
+
+            _dbContext.CommentLikesDisLikes.Remove(commentLikesDislikes);
+            await _dbContext.SaveChangesAsync();
+
+            var likeCount = await _dbContext.CommentLikesDisLikes.CountAsync(x => x.CommentId == commentId && x.Like);
+            var disLikeCount = await _dbContext.CommentLikesDisLikes.CountAsync(x => x.CommentId == commentId && !x.Like);
+
+            CommentReactionResponseDTO commentReactionResponseDTO = new CommentReactionResponseDTO()
+            {
+                CommentId = commentId,
+                LikeCount = likeCount,
+                DislikeCount = disLikeCount,
+
+            };
+
+            return Ok(commentReactionResponseDTO);
         }
 
         [Authorize]

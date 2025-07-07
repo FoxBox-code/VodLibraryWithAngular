@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, catchError, throwError } from 'rxjs';
+import { Observable, Subject, catchError, throwError } from 'rxjs';
 import { Register } from './models/register';
 import { Login } from './models/login';
 import { BehaviorSubject } from 'rxjs';
 import {jwtDecode} from 'jwt-decode';
 import { ApiUrls } from './api-URLS';
+
 
 @Injectable({
   providedIn: 'root'
@@ -17,7 +18,9 @@ export class AuthService
   private tokenKey = 'authtokenkey';
   private authStatus = new BehaviorSubject(this.isAuthenticated());
   private userName = new BehaviorSubject(this.getUserNameFromToken());
-  constructor(private httpClient : HttpClient) { }
+  private logOutEvent = new Subject<void>();
+  public logout$ = this.logOutEvent.asObservable();
+  constructor(private httpClient : HttpClient,) { }
 
   setLocalStorageToken(token : string)
   {
@@ -42,8 +45,13 @@ export class AuthService
     localStorage.removeItem(this.tokenKey);
     this.authStatus.next(false);
     this.userName.next(this.getUserNameFromToken());
+    this.logOutEvent.next();
+
+
 
   }
+
+
 
   isAuthenticated() : boolean
   {

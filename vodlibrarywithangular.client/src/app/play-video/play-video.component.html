@@ -7,8 +7,8 @@
   <section>{{selectedVideo?.videoOwnerName}} Uploaded : {{selectedVideo?.uploaded}}</section>
   <section>Views:{{views$ | async}}
     <ng-container *ngIf="reaction">
-        <button type="button" (click)="addReaction('Like')">Likes  {{reaction.likeCount}}</button>
-        <button type="button" (click)="addReaction('Dislike')">DisLikes {{reaction.disLikeCount}}</button>
+        <button type="button" (click)="addReaction('Like')">Likes  : {{reaction.likeCount}}</button>
+        <button type="button" (click)="addReaction('Dislike')">DisLikes : {{reaction.disLikeCount}}</button>
     </ng-container>
 
   </section>
@@ -38,7 +38,11 @@
 
           <p>{{comment.userName}}: {{comment.uploaded}}</p>
           <p>{{comment.description}}</p>
-          <p>Likes {{comment.likes}} DisLikes {{comment.disLikes}} Replies {{comment.repliesCount}}</p>
+          <p>
+            <button type="button" (click)="addCommentReaction(comment.id, true)">Likes : {{comment.likes}} </button>
+            <button type="button" (click)="addCommentReaction(comment.id, false)">Dislikes : {{comment.disLikes}}</button>
+            Replies {{comment.repliesCount}}
+          </p>
 
           <section *ngIf="userName">
           <button type="button" (click)="getReplyForm(comment.id)">Reply</button>
