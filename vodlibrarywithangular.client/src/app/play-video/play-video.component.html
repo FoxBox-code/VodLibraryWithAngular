@@ -64,7 +64,10 @@
                 <ng-container *ngFor="let reply of commentReplies$[comment.id] | async">
                   <p>{{reply.userName}} : {{reply.uploaded}}</p>
                   <p>{{reply.description}}</p>
-                  <p>Likes {{reply.likes}} DisLikes {{reply.disLikes}}</p>
+                  <p>
+                    <button type="button" (click)="addReplyReaction(comment.id, reply.id, true)">Like</button> {{reply.likes}}
+                    <button type="button" (click)="addReplyReaction(comment.id, reply.id, false)">DisLike</button> {{reply.disLikes}}
+                  </p>
                 </ng-container>
               </section>
 

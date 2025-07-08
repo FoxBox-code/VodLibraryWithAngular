@@ -730,6 +730,103 @@ namespace VodLibraryWithAngular.Server.Controllers
             return Ok(replieDTOs);
         }
 
+        [Authorize]
+        [HttpGet("play/{commentId}/replies-user-reactions")]
+        public async Task<IActionResult> GetUserRepliesReactions(int commentId)
+        {
+            string userId = _userManager.GetUserId(User);//Authorize should make sure this is not empty
+
+            var userRepliesReactions = await _dbContext.RepliesLikesDisLikes.Where(x => x.Reply.CommentId == commentId && x.UserId == userId)
+                .Select(x => new UserReplyReactions
+                {
+                    CommentId = commentId,
+                    ReplyId = x.ReplyId,
+                    Like = x.Like
+                })
+                .ToListAsync();
+
+            return Ok(userRepliesReactions);
+
+
+        }
+
+        [Authorize]
+        [HttpPost("play/{replyId}/replies-user-reactions")]
+        public async Task<IActionResult> AddUpdateUserReplyReaction(int replyId, [FromBody] ReplyReactionDTO reaction)
+        {
+            var userId = _userManager.GetUserId(User);
+
+            var replyLikeDislike = await _dbContext.RepliesLikesDisLikes.FirstOrDefaultAsync(x => x.ReplyId == replyId && x.UserId == userId);
+
+            if (replyLikeDislike == null)
+            {
+                RepliesLikesDisLikes newReaction = new RepliesLikesDisLikes()
+                {
+                    ReplyId = replyId,
+                    UserId = userId,
+                    Like = reaction.ReactionType
+                };
+
+                await _dbContext.RepliesLikesDisLikes.AddAsync(newReaction);
+            }
+            else
+            {
+                replyLikeDislike.Like = reaction.ReactionType;
+
+                _dbContext.RepliesLikesDisLikes.Update(replyLikeDislike);
+            }
+
+            await _dbContext.SaveChangesAsync();
+
+            int replyLikeCount = await _dbContext.RepliesLikesDisLikes.CountAsync(x => x.ReplyId == replyId && x.Like);
+            int replyDislikeCount = await _dbContext.RepliesLikesDisLikes.CountAsync(x => x.ReplyId == replyId && !x.Like);
+
+            ReplyLikeDislikeCountUpdateDTO updatedCount = new ReplyLikeDislikeCountUpdateDTO()
+            {
+                ReplyId = replyId,
+                LikeCount = replyLikeCount,
+                DislikeCount = replyDislikeCount
+            };
+
+            return Ok(updatedCount);
+
+        }
+
+        [Authorize]
+        [HttpDelete("play/{replyId}/replies-user-reactions")]
+        public async Task<IActionResult> DeleteUserReaction(int replyId)
+        {
+            string userId = _userManager.GetUserId(User);
+
+            var selected = await _dbContext.RepliesLikesDisLikes.FirstAsync(x => x.ReplyId == replyId && x.UserId == userId);
+
+            if (selected == null)
+            {
+                return BadRequest(new
+                {
+                    message = $"A reply with this id {replyId} was not found!"
+                });
+            }
+
+            _dbContext.RepliesLikesDisLikes.Remove(selected);
+
+            await _dbContext.SaveChangesAsync();
+
+            int replyLikeCount = await _dbContext.RepliesLikesDisLikes.CountAsync(x => x.ReplyId == replyId && x.Like);
+            int replyDislikeCount = await _dbContext.RepliesLikesDisLikes.CountAsync(x => x.ReplyId == replyId && !x.Like);
+
+            ReplyLikeDislikeCountUpdateDTO updatedCount = new ReplyLikeDislikeCountUpdateDTO()
+            {
+                ReplyId = replyId,
+                LikeCount = replyLikeCount,
+                DislikeCount = replyDislikeCount
+            };
+
+            return Ok(updatedCount);
+        }
+
+
+
 
 
 

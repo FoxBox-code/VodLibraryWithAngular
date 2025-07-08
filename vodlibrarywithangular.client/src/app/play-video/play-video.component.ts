@@ -5,6 +5,8 @@ import { ActivatedRoute } from '@angular/router';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { AuthService } from '../auth.service';
 import { Observable, Subject } from 'rxjs';
+import { take } from 'rxjs/operators';
+
 import { NavigationService } from '../navigation.service';
 import { Router } from '@angular/router';
 import { AddCommentDTO } from '../models/add-comment';
@@ -12,6 +14,7 @@ import { VideoComment } from '../models/comment';
 import { ReplyForm } from '../models/reply-form';
 import { Reply } from '../models/reply';
 import { Reaction } from '../models/reaction';
+import { ReplyLikeDislikeCountUpdateDTO } from '../models/replyLikeDislikeCountUpdateDTO';
 
 
 @Component({
@@ -296,6 +299,101 @@ export class PlayVideoComponent
 
       this.expandRepliesComments[commentId] = true;
 
+      this.videoService.getUserRepliesReactions(commentId)
+      .subscribe(
+        {
+          next : (data) =>
+          {
+            for(var replyReaction of data)
+            {
+                this.videoService.userReplyReactions[replyReaction.replyId] = replyReaction.like;
+            }
+
+          }
+        }
+      )
+
+    }
+
+    addReplyReaction(commentId : number, replyId : number , reaction : boolean)
+    {
+        if(this.userName === null) return;
+
+        if(!this.videoService.userReplyReactions.hasOwnProperty(replyId))//Make a reaction
+        {
+            this.createReplyReaction(commentId, replyId , reaction);
+        }
+        else if(this.videoService.userReplyReactions[replyId] === reaction)//delete/neutral reaction
+        {
+            this.deleteReplyReaction(commentId, replyId);
+        }
+        else
+        {
+            this.updateReplyReaction(commentId, replyId, reaction);
+        }
+    }
+
+    private createReplyReaction(commentId : number, replyId : number , reaction : boolean)
+    {
+        this.videoService.addUpdateReplyReaction(replyId, reaction)
+        .subscribe(
+          {
+            next : (data) =>
+            {
+              this.videoService.userReplyReactions[replyId] = reaction
+
+              this.updateReplyLikeDislikeCounts(commentId ,replyId ,data)
+            }
+          })
+    }
+
+    private deleteReplyReaction(commentId : number, replyId : number )
+    {
+        this.videoService.deleteUserReplyReaction(replyId)
+        .subscribe(
+          {
+            next : (data) =>
+            {
+              delete this.videoService.userReplyReactions[replyId];
+
+              this.updateReplyLikeDislikeCounts(commentId ,replyId ,data)
+            }
+          }
+        )
+    }
+
+    private updateReplyReaction(commentId : number, replyId : number , reaction : boolean)
+    {
+        this.videoService.addUpdateReplyReaction(replyId, reaction)
+        .subscribe(
+          {
+            next : (replyLikeDislikeCountUpdateDTO) =>
+            {
+              this.videoService.userReplyReactions[replyId] = reaction
+
+              this.updateReplyLikeDislikeCounts(commentId ,replyId ,replyLikeDislikeCountUpdateDTO)
+            }
+          })
+    }
+
+    private updateReplyLikeDislikeCounts(commentId : number , replyId : number, replyLikeDislikeCountUpdateDTO : ReplyLikeDislikeCountUpdateDTO)
+    {
+        const repliesObservable = this.commentReplies$[commentId]
+
+        if(!repliesObservable)
+        {
+          return;
+        }
+
+        repliesObservable
+        .pipe(take(1)) // take the current snapshot, don't keep subscribing
+      .subscribe(replies => {
+      const reply = replies.find(r => r.id === replyId);
+      if (reply) {
+        reply.likes = replyLikeDislikeCountUpdateDTO.likeCount;
+        reply.disLikes = replyLikeDislikeCountUpdateDTO.dislikeCount;
+      }
+    });
     }
 
     addReply()

@@ -14,6 +14,8 @@ import { Reply } from './models/reply';
 import { Reaction } from './models/reaction';
 import { userCommentReactions } from './models/userCommentReactions';
 import { CommentReactionResponse } from './models/comment-reaction-response';
+import { UserReplyReactions } from './models/user-replies-reactions';
+import { ReplyLikeDislikeCountUpdateDTO } from './models/replyLikeDislikeCountUpdateDTO';
 
 @Injectable({
   providedIn: 'root'
@@ -24,7 +26,7 @@ export class VideoService
   {
       authService.logout$.subscribe(() =>
       {
-        this.clearUserCommentReactions();
+        this.clearUserReactions();
       })
   }
 
@@ -40,7 +42,7 @@ export class VideoService
   private commentRepliesSubject2 : {[commentId:number] : BehaviorSubject<Reply[]>} = {};
 
   public userCommentReactions: { [commentId: number]: boolean | undefined } = {};
-
+  public userReplyReactions : {[replyId : number] : boolean | undefined} = {};
 
   getCategorys() : Observable <Category[]>
   {
@@ -314,12 +316,50 @@ export class VideoService
     return this.httpClient.delete<CommentReactionResponse>(`${ApiUrls.SELECTEDVIDEO}/${commentId}/comment-reactions`,{headers})
   }
 
-  clearUserCommentReactions()
+  getUserRepliesReactions(commentId : number) : Observable<UserReplyReactions[]>
   {
-      this.userCommentReactions = {};
+    const token = this.authService.getLocalStorageToken();
+    const headers = new HttpHeaders
+    (
+      {
+        Authorization : `Bearer ${token}`
+      }
+    )
+    return this.httpClient.get<UserReplyReactions[]>(`${ApiUrls.SELECTEDVIDEO}/${commentId}/replies-user-reactions`, {headers})
   }
 
+  clearUserReactions()
+  {
+      this.userCommentReactions = {};
+      this.userReplyReactions = {}
+  }
 
+  addUpdateReplyReaction(replyId : number, reaction : boolean) : Observable<ReplyLikeDislikeCountUpdateDTO>
+  {
+    const token = this.authService.getLocalStorageToken();
+    const headers = new HttpHeaders
+    (
+      {
+        Authorization : `Bearer ${token}`
+      }
+    )
+
+    return this.httpClient.post<ReplyLikeDislikeCountUpdateDTO>(`${ApiUrls.SELECTEDVIDEO}/${replyId}/replies-user-reactions`, {reactionType : reaction}, {headers})
+  }
+
+  deleteUserReplyReaction(replyId : number) : Observable<ReplyLikeDislikeCountUpdateDTO>
+  {
+    const token = this.authService.getLocalStorageToken();
+    const headers = new HttpHeaders
+    (
+      {
+        Authorization : `Bearer ${token}`
+      }
+    )
+
+    return this.httpClient.delete<ReplyLikeDislikeCountUpdateDTO>(`${ApiUrls.SELECTEDVIDEO}/${replyId}/replies-user-reactions`, {headers})
+
+  }
 
 
 
