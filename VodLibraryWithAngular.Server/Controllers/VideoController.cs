@@ -443,7 +443,8 @@ namespace VodLibraryWithAngular.Server.Controllers
                 {
                     VideoId = videoId,
                     UserId = userId,
-                    Liked = dto.ReactionType == "Like"
+                    Liked = dto.ReactionType == "Like",
+                    TimeOfLike = DateTime.UtcNow
                 };
 
                 await _dbContext.VideoLikesDislikes.AddAsync(reaction);
@@ -452,6 +453,7 @@ namespace VodLibraryWithAngular.Server.Controllers
             else
             {
                 exists.Liked = dto.ReactionType == "Like";
+                exists.TimeOfLike = DateTime.UtcNow;
             }
 
             await _dbContext.SaveChangesAsync();
@@ -825,8 +827,54 @@ namespace VodLibraryWithAngular.Server.Controllers
             return Ok(updatedCount);
         }
 
+        [Authorize]
+        [HttpGet("liked")]
+        public async Task<IActionResult> GetUserLikedHistory()
+        {
+            string userId = _userManager.GetUserId(User);
 
 
+            var videoIds = await _dbContext.VideoLikesDislikes
+                .Where(x => x.UserId == userId && x.Liked)
+                .OrderByDescending(x => x.TimeOfLike)
+                .Select(x => new
+                {
+                    videoId = x.VideoId
+                })
+                .ToListAsync();
+
+            List<VideoWindowDTO> collection = new List<VideoWindowDTO>();
+
+            foreach (var videoId in videoIds)
+            {
+                VideoRecord current = await _dbContext.VideoRecords
+                    .Include(v => v.VideoOwner)
+                    .FirstOrDefaultAsync(x => x.Id == videoId.videoId);
+
+                if (current == null)
+                {
+                    Console.WriteLine($"During the search of the users liked videos , one of the pointed ids {videoId.videoId} was not present in the videoCollection");
+                    continue; // not sure how to handle this 
+                }
+
+                VideoWindowDTO video = new VideoWindowDTO()
+                {
+                    Id = current.Id,
+                    Title = current.Title,
+                    Uploaded = current.Uploaded,
+                    Length = current.Length,
+                    Views = current.Views,
+                    VideoOwnerId = current.VideoOwnerId,
+                    VideoOwnerName = current.VideoOwner.UserName,
+                    ImagePath = $"{Request.Scheme}://{Request.Host}/thumbnail/{Path.GetFileName(current.ImagePath)}"
+
+                };
+
+                collection.Add(video);
+            }
+
+            return Ok(collection);
+        }
 
 
 

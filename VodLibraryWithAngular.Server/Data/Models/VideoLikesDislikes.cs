@@ -10,6 +10,8 @@
 
         public bool Liked { get; set; }
 
+        public DateTime TimeOfLike { get; set; }
+
         public VideoRecord Video { get; set; }
 
         public ApplicationUser User { get; set; }
