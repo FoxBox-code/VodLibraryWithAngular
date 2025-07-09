@@ -11,6 +11,7 @@ import { LoginComponent } from './login/login.component';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { VideosSectionComponent } from './videos-section/videos-section.component';
 import { PlayVideoComponent } from './play-video/play-video.component';
+import { LikedVideosComponent } from './liked-videos/liked-videos.component';
 
 @NgModule({
   declarations: [
@@ -19,7 +20,8 @@ import { PlayVideoComponent } from './play-video/play-video.component';
     RegisterComponent,
     LoginComponent,
     VideosSectionComponent,
-    PlayVideoComponent
+    PlayVideoComponent,
+    LikedVideosComponent
   ],
   imports: [
     BrowserModule, HttpClientModule,

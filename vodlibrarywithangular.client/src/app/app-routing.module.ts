@@ -6,6 +6,7 @@ import { LoginComponent } from './login/login.component';
 import { authGuard } from './auth.guard';
 import { AppComponent } from './app.component';
 import { PlayVideoComponent } from './play-video/play-video.component';
+import { LikedVideosComponent } from './liked-videos/liked-videos.component';
 const routes: Routes = [
   // {
   //   path : '',
@@ -32,6 +33,11 @@ const routes: Routes = [
     path : 'playing/:id',
     component : PlayVideoComponent,
     title : 'Playing video'
+  },
+  {
+    path : 'liked-videos',
+    component : LikedVideosComponent,
+    canActivate : [authGuard]
   }
 
 ];

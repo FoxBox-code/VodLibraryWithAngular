@@ -18,6 +18,7 @@
     <ng-template #LoggedIn>
       <button *ngIf="userAuth" type="button" (click)="logOutUser()">Log out </button>
       <a *ngIf="userAuth">Hello {{userNameDynamic$ | async}}</a>
+      <a *ngIf="userAuth" routerLink="liked-videos" routerLinkActive="active" ariaCurrentWhenActive="page"> Liked Videos</a>
     </ng-template>
   </nav>
 </header>

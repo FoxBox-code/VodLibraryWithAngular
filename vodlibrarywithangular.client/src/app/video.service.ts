@@ -16,6 +16,7 @@ import { userCommentReactions } from './models/userCommentReactions';
 import { CommentReactionResponse } from './models/comment-reaction-response';
 import { UserReplyReactions } from './models/user-replies-reactions';
 import { ReplyLikeDislikeCountUpdateDTO } from './models/replyLikeDislikeCountUpdateDTO';
+import { VideoWindow } from './models/video-window';
 
 @Injectable({
   providedIn: 'root'
@@ -359,6 +360,31 @@ export class VideoService
 
     return this.httpClient.delete<ReplyLikeDislikeCountUpdateDTO>(`${ApiUrls.SELECTEDVIDEO}/${replyId}/replies-user-reactions`, {headers})
 
+  }
+
+  getUsersLikedVideosHistory() : Observable<VideoWindow[]>
+  {
+    const token = this.authService.getLocalStorageToken();
+    const headers = new HttpHeaders
+    (
+      {
+        Authorization : `Bearer ${token}`
+      }
+    )
+
+    return this.httpClient.get<VideoWindow[]>(`${ApiUrls.LIKEDVIDEOS}`, {headers});
+  }
+
+  deleteLikedVideoFromHistory(videoId : number) : Observable<{message : string}>
+  {
+    const token = this.authService.getLocalStorageToken();
+    const headers = new HttpHeaders
+    (
+      {
+        Authorization : `Bearer ${token}`
+      }
+    )
+      return this.httpClient.delete<{message : string}>(`${ApiUrls.LIKEDVIDEOS}/${videoId}`, {headers})
   }
 
 

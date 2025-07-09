@@ -843,6 +843,8 @@ namespace VodLibraryWithAngular.Server.Controllers
                 })
                 .ToListAsync();
 
+
+
             List<VideoWindowDTO> collection = new List<VideoWindowDTO>();
 
             foreach (var videoId in videoIds)
@@ -870,10 +872,38 @@ namespace VodLibraryWithAngular.Server.Controllers
 
                 };
 
+
+
                 collection.Add(video);
             }
 
             return Ok(collection);
+        }
+
+        [Authorize]
+        [HttpDelete("liked/{videoId}")]
+        public async Task<IActionResult> RemoveVideoLikeFromHistory(int videoId)
+        {
+            string userId = _userManager.GetUserId(User);
+
+            var selectedForRemoval = await _dbContext.VideoLikesDislikes
+                .FirstOrDefaultAsync(x => x.UserId == userId && x.VideoId == videoId);
+
+            if (selectedForRemoval == null)
+            {
+                return BadRequest(new
+                {
+                    message = $"An error occurred  while deleting this like for video with id {videoId}, the video was not found present in the users collection"
+                });
+            }
+
+            _dbContext.VideoLikesDislikes.Remove(selectedForRemoval);
+            await _dbContext.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "successfully removed video from liked"
+            });
         }
 
 
