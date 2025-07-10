@@ -27,6 +27,8 @@ namespace VodLibraryWithAngular.Server.Data
 
         public DbSet<RepliesLikesDisLikes> RepliesLikesDisLikes { get; set; }
 
+        public DbSet<UserWatchHistory> UserWatchHistories { get; set; }
+
         private Category[] categoriesToSeed;
 
         protected override void OnModelCreating(ModelBuilder builder)

@@ -6,5 +6,7 @@ namespace VodLibraryWithAngular.Server.Data
     public class ApplicationUser : IdentityUser
     {
         public ICollection<VideoLikesDislikes> LikeDislikesStats { get; set; }
+
+        public ICollection<UserWatchHistory> UserWatchHistories { get; set; }
     }
 }

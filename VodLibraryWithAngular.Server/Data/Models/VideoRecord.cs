@@ -46,5 +46,7 @@ namespace VodLibraryWithAngular.Server.Data.Models
 
         public int ReplyCount { get; set; }
 
+        public ICollection<UserWatchHistory> WatchHistories { get; set; }
+
     }
 }
