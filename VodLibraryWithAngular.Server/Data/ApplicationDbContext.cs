@@ -99,6 +99,19 @@ namespace VodLibraryWithAngular.Server.Data
                 .WithMany(r => r.LikesDisLikes)
                 .HasForeignKey(r => r.ReplyId);
 
+            builder.Entity<UserWatchHistory>()
+                .HasOne(x => x.User)
+                .WithMany(u => u.UserWatchHistories)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<UserWatchHistory>()
+                .HasOne(x => x.Video)
+                .WithMany(v => v.WatchHistories)
+                .HasForeignKey(x => x.VideoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+
             SeedCategories();
 
             builder.Entity<Category>()

@@ -46,6 +46,7 @@ export class AppComponent implements OnInit {
   logOutUser()
   {
     this.authService.clearLocalStorageToken();
+    this.authService.userTodayWatchHistorySubject.next([]);
 
   }
   getUserName()

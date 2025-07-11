@@ -1,11 +1,13 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, Subject, catchError, throwError } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, Subject, catchError, switchMap, throwError } from 'rxjs';
 import { Register } from './models/register';
 import { Login } from './models/login';
 import { BehaviorSubject } from 'rxjs';
 import {jwtDecode} from 'jwt-decode';
 import { ApiUrls } from './api-URLS';
+import { WatchHistoryVideoInfo } from './models/watch-history-video-info';
+
 
 
 @Injectable({
@@ -20,6 +22,8 @@ export class AuthService
   private userName = new BehaviorSubject(this.getUserNameFromToken());
   private logOutEvent = new Subject<void>();
   public logout$ = this.logOutEvent.asObservable();
+  public userTodayWatchHistorySubject = new BehaviorSubject<WatchHistoryVideoInfo[]>([]);
+  public userTodayWatchHistory$ = this.userTodayWatchHistorySubject.asObservable();
   constructor(private httpClient : HttpClient,) { }
 
   setLocalStorageToken(token : string)
@@ -46,7 +50,7 @@ export class AuthService
     this.authStatus.next(false);
     this.userName.next(this.getUserNameFromToken());
     this.logOutEvent.next();
-
+    this.userTodayWatchHistorySubject.next([]);
 
 
   }
@@ -99,7 +103,12 @@ export class AuthService
               new Error("Login error");
           });
       }))
+
   }
+
+
+
+
 
   getUserNameFromToken() : string | null
   {
@@ -117,9 +126,22 @@ export class AuthService
       return userName;
 
   }
+
   getUserNameAsOservable() : Observable<string | null>
   {
     return this.userName.asObservable();
+  }
+
+  getUserTodaysWatchHistory() : Observable<WatchHistoryVideoInfo[]>
+  {
+    const token = this.getLocalStorageToken();
+        const headers = new HttpHeaders
+        (
+          {
+            Authorization : `Bearer ${token}`
+          }
+        )
+    return this.httpClient.get<WatchHistoryVideoInfo[]>(`${ApiUrls.GETUSERHISTORYFORTODAY}`,{headers})
   }
 
 

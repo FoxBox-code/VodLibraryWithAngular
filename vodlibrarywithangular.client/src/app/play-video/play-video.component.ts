@@ -15,6 +15,7 @@ import { ReplyForm } from '../models/reply-form';
 import { Reply } from '../models/reply';
 import { Reaction } from '../models/reaction';
 import { ReplyLikeDislikeCountUpdateDTO } from '../models/replyLikeDislikeCountUpdateDTO';
+import { WatchHistoryVideoInfo } from '../models/watch-history-video-info';
 
 
 @Component({
@@ -49,7 +50,7 @@ export class PlayVideoComponent
 
     videoCommentsSnapshot: VideoComment[] = [];
 
-    // private destroy$ = new Subject<void>();
+
 
 
 
@@ -95,6 +96,50 @@ export class PlayVideoComponent
     {
         this.loadReactions();
         console.log("PlayVideoComponent loaded");
+
+        if(this.userName !== null)
+        {
+          this.authService.userTodayWatchHistory$
+          .pipe(take(1))
+          .subscribe(history =>
+            {
+              const exists = history.find(h => h.videoId == this.selectedVideoId)
+
+
+              this.videoService.addUpdateUserWatchHistory(this.selectedVideoId)
+                .subscribe(
+                {
+                    next : (data) =>
+                    {
+                      let updatedWatchedHistory : WatchHistoryVideoInfo[];
+                      if(!exists)
+                      {
+                          data.watchedOn = new Date(data.watchedOn);
+                          updatedWatchedHistory = [...history, data];
+
+                      }
+                      else
+                      {
+                          let index = history.findIndex(h => h.videoId === this.selectedVideoId);
+
+                          const [topElement] = history.splice(index,1);
+
+                          topElement.watchedOn = new Date(data.watchedOn);
+
+                          updatedWatchedHistory = [topElement, ...history]
+
+                      }
+
+                      this.authService.userTodayWatchHistorySubject.next(updatedWatchedHistory);
+
+
+                    }
+                })
+
+            })
+
+
+        }
 
     }
 

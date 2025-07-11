@@ -1,0 +1,10 @@
+<section *ngFor="let history of userTodayWatchHistory$ | async">
+  <a [routerLink]="['/playing', history.video.id]">
+    <img [src]="history.video.imagePath" alt="Video Thumbnail">
+    <h3>{{history.video.title}}</h3>
+    <h4>{{history.video.videoOwnerName}}</h4>
+    <p>{{history.video.uploaded}}</p>
+    <p>{{history.video.views}}</p>
+    <p>Last watched on {{history.watchedOn}}</p>
+  </a>
+</section>

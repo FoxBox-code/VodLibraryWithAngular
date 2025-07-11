@@ -8,7 +8,7 @@
 
         public int VideoId { get; set; }
 
-        DateTime WatchedOn { get; set; }
+        public DateTime WatchedOn { get; set; }
         public ApplicationUser User { get; set; }
 
         public VideoRecord Video { get; set; }

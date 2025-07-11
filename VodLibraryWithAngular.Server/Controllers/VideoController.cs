@@ -907,6 +907,102 @@ namespace VodLibraryWithAngular.Server.Controllers
         }
 
 
+        [Authorize]
+        [HttpPost("history/{videoId}")]
+        public async Task<IActionResult> AddVideoToUsersWatchHistory(int videoId)
+        {
+            string userId = _userManager.GetUserId(User);
+
+            UserWatchHistory newAddition = await _dbContext.UserWatchHistories.FirstOrDefaultAsync(h => h.VideoId == videoId && userId == h.UserId);
+
+            if (newAddition == null)
+            {
+                newAddition = new UserWatchHistory()
+                {
+                    UserId = userId,
+                    VideoId = videoId,
+                    WatchedOn = DateTime.UtcNow,
+
+                };
+
+                await _dbContext.UserWatchHistories.AddAsync(newAddition);
+            }
+            else
+            {
+                newAddition.WatchedOn = DateTime.UtcNow;
+
+                _dbContext.UserWatchHistories.Update(newAddition);
+            }
+
+
+
+            await _dbContext.SaveChangesAsync();
+
+            WatchHistoryVideoInfoDTO res = new WatchHistoryVideoInfoDTO()
+            {
+                VideoId = newAddition.VideoId,
+                WatchedOn = newAddition.WatchedOn,
+                Video = _dbContext.VideoRecords
+                    .Include(v => v.VideoOwner)
+                    .Where(v => v.Id == videoId)
+                    .Select(v => new VideoWindowDTO
+                    {
+                        Id = v.Id,
+                        Title = v.Title,
+                        Uploaded = v.Uploaded,
+                        Length = v.Length,
+                        Views = v.Views,
+                        VideoOwnerId = v.VideoOwnerId,
+                        VideoOwnerName = v.VideoOwner.UserName,
+                        ImagePath = $"{Request.Scheme}://{Request.Host}/thumbnail/{Path.GetFileName(v.ImagePath)}"
+
+                    })
+                    .First()
+            };
+
+            return Ok(res);
+
+        }
+
+
+        [Authorize]
+        [HttpGet("history")]
+        public async Task<IActionResult> GetUserWatchHistoryForToday()
+        {
+            string userId = _userManager.GetUserId(User);
+
+            DateTime today = DateTime.UtcNow.Date;
+            DateTime tomorrow = today.AddDays(1);
+
+            var videos = await _dbContext.UserWatchHistories
+                .Include(x => x.Video)
+                .Where(x => x.UserId == userId && x.WatchedOn >= today && x.WatchedOn < tomorrow)
+                .OrderByDescending(x => x.WatchedOn)
+                .Select(x => new WatchHistoryVideoInfoDTO
+                {
+                    VideoId = x.VideoId,
+                    WatchedOn = x.WatchedOn,
+                    Video = _dbContext.VideoRecords
+                    .Include(v => v.VideoOwner)
+                    .Where(v => v.Id == x.VideoId)
+                    .Select(v => new VideoWindowDTO
+                    {
+                        Id = v.Id,
+                        Title = v.Title,
+                        Uploaded = v.Uploaded,
+                        Length = v.Length,
+                        Views = v.Views,
+                        VideoOwnerId = v.VideoOwnerId,
+                        VideoOwnerName = v.VideoOwner.UserName,
+                        ImagePath = $"{Request.Scheme}://{Request.Host}/thumbnail/{Path.GetFileName(v.ImagePath)}"
+
+                    })
+                    .First()
+                })
+                .ToListAsync();
+
+            return Ok(videos);
+        }
 
 
 

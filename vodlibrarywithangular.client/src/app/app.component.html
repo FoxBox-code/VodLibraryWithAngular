@@ -1,8 +1,9 @@
 ﻿<header>
   <nav>
-    <a href="/">
-      logo
+    <a routerLink="/" routerLinkActive="active" ariaCurrentWhenActive="page">
+     logo
     </a>
+
 
     <a routerLink="upload" routerLinkActive="active" ariaCurrentWhenActive="page">
       Go to upload
@@ -19,6 +20,7 @@
       <button *ngIf="userAuth" type="button" (click)="logOutUser()">Log out </button>
       <a *ngIf="userAuth">Hello {{userNameDynamic$ | async}}</a>
       <a *ngIf="userAuth" routerLink="liked-videos" routerLinkActive="active" ariaCurrentWhenActive="page"> Liked Videos</a>
+      <a *ngIf="userAuth" routerLink="watch-history" routerLinkActive="active" ariaCurrentWhenActive="page"> Watch History</a>
     </ng-template>
   </nav>
 </header>

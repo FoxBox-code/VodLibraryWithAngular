@@ -12,6 +12,7 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { VideosSectionComponent } from './videos-section/videos-section.component';
 import { PlayVideoComponent } from './play-video/play-video.component';
 import { LikedVideosComponent } from './liked-videos/liked-videos.component';
+import { WatchHistoryComponent } from './watch-history/watch-history.component';
 
 @NgModule({
   declarations: [
@@ -21,7 +22,8 @@ import { LikedVideosComponent } from './liked-videos/liked-videos.component';
     LoginComponent,
     VideosSectionComponent,
     PlayVideoComponent,
-    LikedVideosComponent
+    LikedVideosComponent,
+    WatchHistoryComponent
   ],
   imports: [
     BrowserModule, HttpClientModule,

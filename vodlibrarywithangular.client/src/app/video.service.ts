@@ -17,6 +17,7 @@ import { CommentReactionResponse } from './models/comment-reaction-response';
 import { UserReplyReactions } from './models/user-replies-reactions';
 import { ReplyLikeDislikeCountUpdateDTO } from './models/replyLikeDislikeCountUpdateDTO';
 import { VideoWindow } from './models/video-window';
+import { WatchHistoryVideoInfo } from './models/watch-history-video-info';
 
 @Injectable({
   providedIn: 'root'
@@ -44,6 +45,7 @@ export class VideoService
 
   public userCommentReactions: { [commentId: number]: boolean | undefined } = {};
   public userReplyReactions : {[replyId : number] : boolean | undefined} = {};
+
 
   getCategorys() : Observable <Category[]>
   {
@@ -384,9 +386,21 @@ export class VideoService
         Authorization : `Bearer ${token}`
       }
     )
-      return this.httpClient.delete<{message : string}>(`${ApiUrls.LIKEDVIDEOS}/${videoId}`, {headers})
+      return this.httpClient.delete<{message : string}>(`${ApiUrls.LIKEDVIDEOS}/${videoId}`,{headers})
   }
 
+  addUpdateUserWatchHistory(videoId : number) : Observable<WatchHistoryVideoInfo>
+  {
+    const token = this.authService.getLocalStorageToken();
+    const headers = new HttpHeaders
+    (
+      {
+        Authorization : `Bearer ${token}`
+      }
+    )
+
+    return this.httpClient.post<WatchHistoryVideoInfo>(`${ApiUrls.ADDVODTOHISTORY}/${videoId}`,null,{headers});
+  }
 
 
 

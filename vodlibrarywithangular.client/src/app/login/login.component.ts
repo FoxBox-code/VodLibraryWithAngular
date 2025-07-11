@@ -58,6 +58,27 @@ export class LoginComponent
             {
               console.log("Login successful", result);
               this.authService.setLocalStorageToken(result.token);
+
+
+              this.authService.getUserTodaysWatchHistory()
+              .subscribe(
+                {
+                  next : (data) =>
+                  {
+                    const convertedData = data.map(item =>({
+                      videoId : item.videoId,
+                      watchedOn : new Date(item.watchedOn),
+                      video : item.video
+                    }))
+                    this.authService.userTodayWatchHistorySubject.next(convertedData);
+
+                  },
+                  error : (err) =>
+                  {
+                    console.error(`Failed to load the users watch history for today`);
+                  }
+                }
+              )
             },
           error : (error) => console.log("Login failed", { messgae : error.message, status : error.status ,error : error.error }),
 
