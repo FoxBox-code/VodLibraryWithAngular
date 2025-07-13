@@ -957,7 +957,8 @@ namespace VodLibraryWithAngular.Server.Controllers
                         ImagePath = $"{Request.Scheme}://{Request.Host}/thumbnail/{Path.GetFileName(v.ImagePath)}"
 
                     })
-                    .First()
+                    .First(),
+                PrimaryKeyId = newAddition.Id
             };
 
             return Ok(res);
@@ -997,11 +998,122 @@ namespace VodLibraryWithAngular.Server.Controllers
                         ImagePath = $"{Request.Scheme}://{Request.Host}/thumbnail/{Path.GetFileName(v.ImagePath)}"
 
                     })
-                    .First()
+                    .First(),
+                    PrimaryKeyId = x.Id
                 })
                 .ToListAsync();
 
             return Ok(videos);
+        }
+
+        [Authorize]
+        [HttpGet("past/history")]
+        public async Task<IActionResult> GetUserWatchHistoryPastToday()//THIS MIGHT NEED A LOGIC rEWRITE
+        {
+            string userId = _userManager.GetUserId(User);
+
+            DateTime today = DateTime.UtcNow.Date;
+
+
+
+            List<List<WatchHistoryVideoInfoDTO>> pastRecords = new List<List<WatchHistoryVideoInfoDTO>>();
+
+            List<WatchHistoryVideoInfoDTO> currentDay = new List<WatchHistoryVideoInfoDTO>();
+
+            var userWatchHistory = await _dbContext.UserWatchHistories
+                .Include(x => x.Video)
+                    .ThenInclude(v => v.VideoOwner)
+                .Where(x => x.UserId == userId && x.WatchedOn < today)
+                .OrderByDescending(x => x.WatchedOn)
+                .ToListAsync();
+
+            DateTime previousDay = today.AddDays(-1);
+            DateTime currentDateDay = previousDay;
+
+            foreach (var video in userWatchHistory)
+            {
+
+
+                WatchHistoryVideoInfoDTO videoToAdd = new WatchHistoryVideoInfoDTO()
+                {
+                    VideoId = video.VideoId,
+                    WatchedOn = video.WatchedOn,
+                    Video = new VideoWindowDTO()
+                    {
+                        Id = video.Video.Id,
+                        Title = video.Video.Title,
+                        Uploaded = video.Video.Uploaded,
+                        Length = video.Video.Length,
+                        Views = video.Video.Views,
+                        VideoOwnerId = video.Video.VideoOwnerId,
+                        VideoOwnerName = video.Video.VideoOwner.UserName,
+                        ImagePath = $"{Request.Scheme}://{Request.Host}/thumbnail/{Path.GetFileName(video.Video.ImagePath)}"
+                    },
+                    PrimaryKeyId = video.Id
+                };
+
+                if (currentDay.Count > 0 && currentDateDay != video.WatchedOn.Date)
+                {
+                    pastRecords.Add(currentDay);
+                    currentDay = new List<WatchHistoryVideoInfoDTO>();
+                    currentDateDay = video.WatchedOn.Date;
+                }
+                else
+                {
+                    currentDateDay = video.WatchedOn.Date;
+                }
+
+                currentDay.Add(videoToAdd);
+
+            }
+
+            if (currentDay.Count > 0)
+            {
+                pastRecords.Add(currentDay);
+            }
+
+
+            return Ok(pastRecords);
+        }
+
+        [Authorize]
+        [HttpDelete("past/history")]
+        public async Task<IActionResult> DeleteUserWatchHistoryAll()
+        {
+            string userId = _userManager.GetUserId(User);
+
+            var recordHistory = await _dbContext.UserWatchHistories.Where(x => x.UserId == userId).ToListAsync();
+
+            _dbContext.UserWatchHistories.RemoveRange(recordHistory);
+            await _dbContext.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "History for user was cleared"
+            });
+        }
+
+        [Authorize]
+        [HttpDelete("history/{primaryKeyId}")]
+        public async Task<IActionResult> DeleteIndividualVideoRecord(int primaryKeyId)
+        {
+            var historyRecord = await _dbContext.UserWatchHistories.FirstOrDefaultAsync(x => x.Id == primaryKeyId);
+
+            if (historyRecord == null)
+            {
+                return BadRequest(new
+                {
+                    message = $"History record with this primary key id {primaryKeyId} was not found !"
+                });
+            }
+
+            _dbContext.Remove(historyRecord);
+            await _dbContext.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Video was successfully removed from user's history record"
+            });
         }
 
 

@@ -1,10 +1,33 @@
+<button type="button" (click)="deleteUserWatchHistory()">Delete watch history</button>
+
+<ng-container *ngIf="(userTodayWatchHistory$ | async) as history">
+  <h1 *ngIf="history.length > 0 ">
+    Watched Today: {{ today | date: 'fullDate' }}:
+  </h1>
+</ng-container>
 <section *ngFor="let history of userTodayWatchHistory$ | async">
   <a [routerLink]="['/playing', history.video.id]">
     <img [src]="history.video.imagePath" alt="Video Thumbnail">
     <h3>{{history.video.title}}</h3>
-    <h4>{{history.video.videoOwnerName}}</h4>
-    <p>{{history.video.uploaded}}</p>
-    <p>{{history.video.views}}</p>
+    <h4>by {{history.video.videoOwnerName}}</h4>
+    <p>Uploaded :{{history.video.uploaded}}</p>
+    <p>Views :{{history.video.views}}</p>
     <p>Last watched on {{history.watchedOn}}</p>
   </a>
+  <button type="button" (click)="deleteIndividuaVideoRecordFromHistoryTODAY(history.primaryKeyId)">Remove video from watch history</button>
+</section>
+
+<section *ngFor="let day of userPastWatchHistory; let dayIndex = index">
+    <h3>Will display today or date here, in the near future</h3>
+    <div *ngFor="let currVideo of day ; let videoIndex = index">
+        <a [routerLink]="['/playing', currVideo.video.id]">
+          <img [src]="currVideo.video.imagePath" alt="Video Thumbnail">
+          <h3>{{currVideo.video.title}}</h3>
+          <h4>by {{currVideo.video.videoOwnerName}}</h4>
+          <p>Uploaded : {{currVideo.video.uploaded}}</p>
+          <p>Views :{{currVideo.video.views}}</p>
+          <p>Last watched on {{currVideo.watchedOn}}</p>
+      </a>
+      <button type="button" (click)="deleteIndividuaVideoRecordFromHistoryPAST(currVideo.primaryKeyId, dayIndex , videoIndex)">Remove video from watch history</button>
+    </div>
 </section>

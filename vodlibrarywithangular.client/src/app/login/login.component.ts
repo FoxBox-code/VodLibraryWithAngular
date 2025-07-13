@@ -68,7 +68,8 @@ export class LoginComponent
                     const convertedData = data.map(item =>({
                       videoId : item.videoId,
                       watchedOn : new Date(item.watchedOn),
-                      video : item.video
+                      video : item.video,
+                      primaryKeyId : item.primaryKeyId
                     }))
                     this.authService.userTodayWatchHistorySubject.next(convertedData);
 

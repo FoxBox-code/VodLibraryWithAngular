@@ -7,5 +7,7 @@
 
         public VideoWindowDTO Video { get; set; }
 
+        public int PrimaryKeyId { get; set; }
+
     }
 }

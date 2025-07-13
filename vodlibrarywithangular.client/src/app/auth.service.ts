@@ -144,5 +144,43 @@ export class AuthService
     return this.httpClient.get<WatchHistoryVideoInfo[]>(`${ApiUrls.GETUSERHISTORYFORTODAY}`,{headers})
   }
 
+  getUserPastTodaysWatchHistory() : Observable<WatchHistoryVideoInfo[][]>
+  {
+    const token = this.getLocalStorageToken();
+        const headers = new HttpHeaders
+        (
+          {
+            Authorization : `Bearer ${token}`
+          }
+        )
+    return this.httpClient.get<WatchHistoryVideoInfo[][]>(`${ApiUrls.GETUSERHISTORYPASTTODAY}`, {headers})
+  }
+
+  deleteUserWatchHistory() : Observable<{message : string}>
+  {
+    const token = this.getLocalStorageToken();
+        const headers = new HttpHeaders
+        (
+          {
+            Authorization : `Bearer ${token}`
+          }
+        )
+
+       return this.httpClient.delete<{message : string}>(`${ApiUrls.DELETEUSERWATCHHISTORYALL}`, {headers})
+  }
+
+  deleteUserIndivudalVideoRecord(primaryKeyId : number) : Observable<{message : string}>
+  {
+      const token = this.getLocalStorageToken();
+        const headers = new HttpHeaders
+        (
+          {
+            Authorization : `Bearer ${token}`
+          }
+        )
+
+        return this.httpClient.delete<{message : string}>(`${ApiUrls.HISTORY}/${primaryKeyId}`, {headers})
+  }
+
 
 }
