@@ -9,7 +9,9 @@
   <a [routerLink]="['/playing', history.video.id]">
     <img [src]="history.video.imagePath" alt="Video Thumbnail">
     <h3>{{history.video.title}}</h3>
-    <h4>by {{history.video.videoOwnerName}}</h4>
+    </a>
+    <h4><a [routerLink]="['/user-profile', history.video.videoOwnerId]">by {{history.video.videoOwnerName}}</a></h4>
+  <a [routerLink]="['/playing', history.video.id]">
     <p>Uploaded :{{history.video.uploaded}}</p>
     <p>Views :{{history.video.views}}</p>
     <p>Last watched on {{history.watchedOn}}</p>
@@ -23,7 +25,9 @@
         <a [routerLink]="['/playing', currVideo.video.id]">
           <img [src]="currVideo.video.imagePath" alt="Video Thumbnail">
           <h3>{{currVideo.video.title}}</h3>
-          <h4>by {{currVideo.video.videoOwnerName}}</h4>
+        </a>
+          <h4><a [routerLink]="['/user-profile', currVideo.video.videoOwnerId]">by {{currVideo.video.videoOwnerName}}</a></h4>
+        <a [routerLink]="['/playing', currVideo.video.id]">
           <p>Uploaded : {{currVideo.video.uploaded}}</p>
           <p>Views :{{currVideo.video.views}}</p>
           <p>Last watched on {{currVideo.watchedOn}}</p>

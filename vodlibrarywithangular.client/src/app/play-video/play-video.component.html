@@ -36,7 +36,7 @@
       <section *ngIf="autoLoadComments">
           <section *ngFor="let comment of videoComments$ | async">
 
-          <p>{{comment.userName}}: {{comment.uploaded}}</p>
+          <p><a [routerLink]="['/user-profile', comment.userId]">{{comment.userName}}</a> {{comment.uploaded}}</p>
           <p>{{comment.description}}</p>
           <p>
             <button type="button" (click)="addCommentReaction(comment.id, true)">Likes : {{comment.likes}} </button>
@@ -62,7 +62,7 @@
 
               <section *ngIf="expandRepliesComments[comment.id]">
                 <ng-container *ngFor="let reply of commentReplies$[comment.id] | async">
-                  <p>{{reply.userName}} : {{reply.uploaded}}</p>
+                  <p><a [routerLink]="['/user-profile', reply.userId]">{{reply.userName}}</a> : {{reply.uploaded}}</p>
                   <p>{{reply.description}}</p>
                   <p>
                     <button type="button" (click)="addReplyReaction(comment.id, reply.id, true)">Like</button> {{reply.likes}}

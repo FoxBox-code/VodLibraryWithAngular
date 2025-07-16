@@ -1,1 +1,19 @@
 <p>user-profile works!</p>
+<ng-container *ngIf="userVideoCatalog.length > 0">
+  <button type="button" (click)="orderByNew()">Order by new</button>
+  <button type="button" (click)="orderByOld()">Order by old</button>
+</ng-container>
+
+
+<div></div>
+
+<ng-container *ngFor="let video of userVideoCatalog">
+  <a [routerLink]="['/playing', video.id]">
+    <img [src]="video.imagePath" alt="Video Thumbnail">
+    <h3>{{video.title}}</h3>
+    <h4>by {{video.videoOwnerName}}</h4>
+    <p>Uploaded :{{video.uploaded}}</p>
+    <p>Views :{{video.views}}</p>
+    <p>Length : {{video.length}}</p>
+  </a>
+</ng-container>

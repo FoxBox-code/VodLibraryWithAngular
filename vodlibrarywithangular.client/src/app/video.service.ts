@@ -1,5 +1,5 @@
 import { Injectable,inject } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, retry } from 'rxjs';
 import { Category } from './models/category';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { ApiUrls } from './api-URLS';
@@ -400,6 +400,11 @@ export class VideoService
     )
 
     return this.httpClient.post<WatchHistoryVideoInfo>(`${ApiUrls.ADDVODTOHISTORY}/${videoId}`,null,{headers});
+  }
+
+  getUserVideosCatalog(userId : string | null) : Observable<VideoWindow[]>
+  {
+      return this.httpClient.get<VideoWindow[]>(`${ApiUrls.VIDEO}/user-profile/${userId}`);
   }
 
 

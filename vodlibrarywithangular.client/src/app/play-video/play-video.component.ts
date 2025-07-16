@@ -344,8 +344,10 @@ export class PlayVideoComponent
 
       this.expandRepliesComments[commentId] = true;
 
-      this.videoService.getUserRepliesReactions(commentId)
-      .subscribe(
+      if(this.userName !== null)
+      {
+        this.videoService.getUserRepliesReactions(commentId)
+        .subscribe(
         {
           next : (data) =>
           {
@@ -357,6 +359,9 @@ export class PlayVideoComponent
           }
         }
       )
+      }
+
+
 
     }
 

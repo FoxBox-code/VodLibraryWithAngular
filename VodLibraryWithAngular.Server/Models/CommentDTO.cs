@@ -1,4 +1,6 @@
-﻿namespace VodLibraryWithAngular.Server.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace VodLibraryWithAngular.Server.Models
 {
     public class CommentDTO
     {
@@ -6,7 +8,8 @@
 
         public string UserName { get; set; }
 
-        public string UserNameId { get; set; }
+        [Required]
+        public string UserId { get; set; }
 
         public string Description { get; set; }
 

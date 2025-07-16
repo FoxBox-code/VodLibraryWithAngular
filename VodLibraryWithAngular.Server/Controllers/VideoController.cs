@@ -171,7 +171,7 @@ namespace VodLibraryWithAngular.Server.Controllers
         }
 
         [HttpGet("play/{videoId}")]
-        public async Task<IActionResult> GetCurrentVideo(int videoId)
+        public async Task<IActionResult> GetCurrentVideo(int videoId)//THIS needs to be rewritten since we load the comments when we get the video but have a seprate method for that
         {
 
 
@@ -213,6 +213,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                         {
                             Id = rep.Id,
                             UserName = rep.UserName,
+                            UserId = rep.UserId,
                             Description = rep.Description,
                             VideoRecordId = rep.VideoRecordId,
                             CommentId = rep.CommentId,
@@ -228,6 +229,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                     {
                         Id = com.Id,
                         UserName = com.UserName,
+                        UserId = com.UserId,
                         Description = com.Description,
                         VideoRecordId = com.VideoRecordId,
                         Uploaded = com.Uploaded,
@@ -528,6 +530,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                     {
                         Id = c.Id,
                         UserName = c.UserName,
+                        UserId = c.UserId,
                         Description = c.Description,
                         VideoRecordId = c.VideoRecordId,
                         Uploaded = c.Uploaded,
@@ -685,9 +688,20 @@ namespace VodLibraryWithAngular.Server.Controllers
                 return Unauthorized("You are not authorized to reply on comments!");
             }
 
+            string? userId = _userManager.GetUserId(User);
+
+            if (userId == null)
+            {
+                return Unauthorized(new
+                {
+                    message = "During the adding of a reply the user id was not found!"
+                });
+            }
+
             Reply reply = new Reply()
             {
                 UserName = userName,
+                UserId = userId,
                 Description = model.ReplyContent,
                 CommentId = model.CommentId,
                 VideoRecordId = model.VideoId,
@@ -730,6 +744,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                 {
                     Id = r.Id,
                     UserName = r.UserName,
+                    UserId = r.UserId,
                     Description = r.Description,
                     VideoRecordId = r.VideoRecordId,
                     CommentId = r.CommentId,
@@ -1126,6 +1141,40 @@ namespace VodLibraryWithAngular.Server.Controllers
             });
         }
 
+        [HttpGet("user-profile/{userId}")]
+        public async Task<IActionResult> GetUserCatalog(string userId)
+        {
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+            {
+                return NotFound(new
+                {
+                    message = "User not found!"
+                });
+            }
+
+            List<VideoWindowDTO> userCatalog = await _dbContext
+                .VideoRecords
+                .Include(v => v.VideoOwner)
+                .Where(x => x.VideoOwnerId == user.Id)
+                .OrderByDescending(x => x.Uploaded)
+                .Select(v => new VideoWindowDTO
+                {
+                    Id = v.Id,
+                    Title = v.Title,
+                    Uploaded = v.Uploaded,
+                    Length = v.Length,
+                    Views = v.Views,
+                    VideoOwnerId = v.VideoOwnerId,
+                    VideoOwnerName = v.VideoOwner.UserName,
+                    ImagePath = $"{Request.Scheme}://{Request.Host}/thumbnail/{Path.GetFileName(v.ImagePath)}"
+                })
+                .ToListAsync();
+
+            return Ok(userCatalog);
+
+        }
 
 
 

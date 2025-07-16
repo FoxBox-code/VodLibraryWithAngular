@@ -6,7 +6,11 @@
     <a [routerLink]="['/playing', video.id]">
     <img [src]="video.imagePath" alt="Video Thumbnail">
     <h3>{{video.title}}</h3>
-    <h4>{{video.videoOwnerName}}</h4>
+    </a>
+
+    <h4><a [routerLink]="['/user-profile/', video.videoOwnerId]">{{video.videoOwnerName}}</a></h4>
+
+    <a [routerLink]="['/playing', video.id]">
     <p>Uploaded on :{{video.uploaded}} Views: {{video.views}}</p>
     <p>Video duration : {{video.length}}</p>
     </a>

@@ -1,10 +1,14 @@
-﻿namespace VodLibraryWithAngular.Server.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace VodLibraryWithAngular.Server.Models
 {
     public class ReplieDTO
     {
         public int Id { get; set; }
 
         public string UserName { get; set; }
+
+        [Required]
         public string UserId { get; set; }
 
         public string Description { get; set; }

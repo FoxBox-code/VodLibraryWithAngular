@@ -47,7 +47,7 @@ const routes: Routes = [
     canActivate : [authGuard]
   },
   {
-    path : 'user-profile/:videoId',
+    path : 'user-profile/:userId',
     component : UserProfileComponent,
 
   }
