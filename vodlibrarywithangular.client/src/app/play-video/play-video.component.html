@@ -4,7 +4,7 @@
   <video [src]="selectedVideo?.videoPath" controls width="640"></video>
   <h2>{{selectedVideo?.title}}</h2>
   <p>{{selectedVideo?.description}}</p>
-  <section>{{selectedVideo?.videoOwnerName}} Uploaded : {{selectedVideo?.uploaded}}</section>
+  <section><a [routerLink]="['/user-profile', selectedVideo?.videoOwnerId]">{{selectedVideo?.videoOwnerName}}</a> Uploaded : {{selectedVideo?.uploaded}}</section>
   <section>Views:{{views$ | async}}
     <ng-container *ngIf="reaction">
         <button type="button" (click)="addReaction('Like')">Likes  : {{reaction.likeCount}}</button>

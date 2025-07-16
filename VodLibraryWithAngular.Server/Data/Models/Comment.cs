@@ -11,6 +11,13 @@ namespace VodLibraryWithAngular.Server.Data.Models
         [Required]
         public string UserName { get; set; }
 
+        [Required]
+        public string UserId { get; set; }
+
+        [JsonIgnore]
+
+        public ApplicationUser User { get; set; }
+
 
         [Required]
         [MaxLength(CommentDescriptionMaxLength)]

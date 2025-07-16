@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using VodLibraryWithAngular.Server.Data;
@@ -11,9 +12,11 @@ using VodLibraryWithAngular.Server.Data;
 namespace VodLibraryWithAngular.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250715144115_CommentRepliesUserRelationShipStage1")]
+    partial class CommentRepliesUserRelationShipStage1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -288,7 +291,6 @@ namespace VodLibraryWithAngular.Server.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("UserId")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("UserName")
@@ -299,8 +301,6 @@ namespace VodLibraryWithAngular.Server.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId");
 
                     b.HasIndex("VideoRecordId");
 
@@ -381,7 +381,6 @@ namespace VodLibraryWithAngular.Server.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("UserId")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("UserName")
@@ -394,8 +393,6 @@ namespace VodLibraryWithAngular.Server.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CommentId");
-
-                    b.HasIndex("UserId");
 
                     b.HasIndex("VideoRecordId");
 
@@ -568,19 +565,11 @@ namespace VodLibraryWithAngular.Server.Migrations
 
             modelBuilder.Entity("VodLibraryWithAngular.Server.Data.Models.Comment", b =>
                 {
-                    b.HasOne("VodLibraryWithAngular.Server.Data.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("VodLibraryWithAngular.Server.Data.Models.VideoRecord", "VideoRecord")
                         .WithMany("Comments")
                         .HasForeignKey("VideoRecordId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("User");
 
                     b.Navigation("VideoRecord");
                 });
@@ -631,12 +620,6 @@ namespace VodLibraryWithAngular.Server.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("VodLibraryWithAngular.Server.Data.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("VodLibraryWithAngular.Server.Data.Models.VideoRecord", "VideoRecord")
                         .WithMany("Replies")
                         .HasForeignKey("VideoRecordId")
@@ -644,8 +627,6 @@ namespace VodLibraryWithAngular.Server.Migrations
                         .IsRequired();
 
                     b.Navigation("Comment");
-
-                    b.Navigation("User");
 
                     b.Navigation("VideoRecord");
                 });

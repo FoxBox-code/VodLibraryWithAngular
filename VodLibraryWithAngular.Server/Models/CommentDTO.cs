@@ -6,6 +6,8 @@
 
         public string UserName { get; set; }
 
+        public string UserNameId { get; set; }
+
         public string Description { get; set; }
 
         public int VideoRecordId { get; set; }

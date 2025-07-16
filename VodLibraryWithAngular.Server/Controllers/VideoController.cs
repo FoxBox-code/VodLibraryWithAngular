@@ -584,17 +584,27 @@ namespace VodLibraryWithAngular.Server.Controllers
                 return BadRequest($"No video with the model id of {model.VideoRecordId} exists, please provide valid video id");
             }
 
-            var userName = User.FindFirst(ClaimTypes.Name)?.Value;
+            var userName = User.FindFirst(ClaimTypes.Name)?.Value;//I used username to do something with authentication?? This could be a problem !!!!!
 
             if (string.IsNullOrEmpty(userName) || userName != model.UserName)
             {
                 return Unauthorized("You are not authorized to comment on  videos!");
             }
 
+            string? userId = _userManager.GetUserId(User);//Adding Id to the comments for profile page link
+
+            if (userId == null)
+            {
+                return Unauthorized(new
+                {
+                    message = "The attempted comment was done form a user with unidentified/missing userId"
+                });
+            }
 
             Comment addedComment = new Comment()
             {
                 UserName = userName,
+                UserId = userId,
                 Description = model.Description,
                 VideoRecordId = model.VideoRecordId,
                 RepliesCount = 0,
@@ -1115,6 +1125,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                 message = "Video was successfully removed from user's history record"
             });
         }
+
 
 
 

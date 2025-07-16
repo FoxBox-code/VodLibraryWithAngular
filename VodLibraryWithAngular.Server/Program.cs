@@ -8,6 +8,7 @@ using System.Text;
 using VodLibraryWithAngular.Server;
 using VodLibraryWithAngular.Server.Data;
 
+
 var builder = WebApplication.CreateBuilder(args);
 Xabe.FFmpeg.FFmpeg.SetExecutablesPath(@"C:\stuff\ffmpeg-2025-01-22-git-e20ee9f9ae-full_build\bin");
 
@@ -95,10 +96,18 @@ builder.Services.AddAuthentication(options =>
         };
     });
 
+//builder.Services.AddScoped<DataMigrationService>(); This places our migration service in the DI container for a blueprint on how to use it
+
 var app = builder.Build();
 
 var directoriesConfiguration = app.Services.GetRequiredService<WebRootConfiguration>();
 directoriesConfiguration.ConfigureDirectories();
+
+//using (var scope = app.Services.CreateScope())
+//{
+//    var migrationService = scope.ServiceProvider.GetRequiredService<DataMigrationService>();
+//    migrationService.Run();
+//} This calls one time our service to populate comment/reply with userIds since we forgot to do it in the beginning of the project, we comment it out because we don t need to run it again but i want it to remain so i can see it
 
 app.UseDefaultFiles();
 app.UseStaticFiles();

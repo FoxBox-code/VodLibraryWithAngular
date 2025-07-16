@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using VodLibraryWithAngular.Server.Data.Models;
 
 
+
 namespace VodLibraryWithAngular.Server.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
@@ -44,8 +45,20 @@ namespace VodLibraryWithAngular.Server.Data
             builder.Entity<Comment>()
                 .HasKey(c => c.Id);
 
+            builder.Entity<Comment>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             builder.Entity<Reply>()
                 .HasKey(r => r.Id);
+
+            builder.Entity<Reply>()
+                .HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<VideoRecord>()
                 .HasOne(v => v.Category)
@@ -133,7 +146,16 @@ namespace VodLibraryWithAngular.Server.Data
 
             };
         }
+
+
+
+
     }
 
 
+
 }
+
+
+
+

@@ -8,6 +8,7 @@ import { AppComponent } from './app.component';
 import { PlayVideoComponent } from './play-video/play-video.component';
 import { LikedVideosComponent } from './liked-videos/liked-videos.component';
 import { WatchHistoryComponent } from './watch-history/watch-history.component';
+import { UserProfileComponent } from './user-profile/user-profile.component';
 const routes: Routes = [
   // {
   //   path : '',
@@ -44,6 +45,11 @@ const routes: Routes = [
     path : 'watch-history',
     component : WatchHistoryComponent,
     canActivate : [authGuard]
+  },
+  {
+    path : 'user-profile/:videoId',
+    component : UserProfileComponent,
+
   }
 
 ];
