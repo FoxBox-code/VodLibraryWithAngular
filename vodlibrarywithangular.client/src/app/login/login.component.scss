@@ -1,0 +1,54 @@
+form
+{
+  max-width: 400px;
+  border: 1px solid #ddd;
+  border-radius: 15px;
+  background: #f9f9f9;
+  margin: auto;
+
+  .input-wrapper
+  {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin: 1rem;
+
+
+    label
+    {
+      width: 100px;
+    }
+    input
+    {
+
+    }
+
+    button
+    {
+      width: 50px;
+    }
+
+  }
+
+  button
+  {
+    margin: 0.5rem;
+  }
+}
+
+.invisible-button
+{
+  visibility: hidden;
+  width: 50px;
+
+}
+
+.register-message
+{
+  margin-top: 1rem;
+  border: 1px solid black;
+  background-color: gold;
+  border-radius: 10px;
+  color: green;
+}

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject , AfterViewInit, ChangeDetectorRef} from '@angular/core';
 import { AuthService } from '../auth.service';
 import { Login } from '../models/login';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
@@ -10,9 +10,9 @@ import { NavigationService } from '../navigation.service';
   standalone: false,
 
   templateUrl: './login.component.html',
-  styleUrl: './login.component.css'
+  styleUrl: './login.component.scss'
 })
-export class LoginComponent
+export class LoginComponent implements AfterViewInit
 {
     user : Login =
     {
@@ -25,8 +25,11 @@ export class LoginComponent
 
     loginForm : FormGroup;
 
+    registerMessage : string | null = null;//if user register with success display a message
+    showPassword : boolean = false;
+    focusPassWordButton : boolean = false;
 
-    constructor(private authService : AuthService, formBuilder : FormBuilder, private navigationService : NavigationService)
+    constructor(private authService : AuthService, formBuilder : FormBuilder, private navigationService : NavigationService, private cdr : ChangeDetectorRef)
     {
       this.loginForm = formBuilder.group(
         {
@@ -36,6 +39,40 @@ export class LoginComponent
         })
 
         navigationService.getAdress().subscribe(result => this.navigationAdress = result)
+    }
+
+    ngOnInit()
+    {
+      const nav = this.router.getCurrentNavigation();
+      const state = nav?.extras.state as {message : string}
+
+      if(state)
+      {
+        this.registerMessage = state.message;
+      }
+    }
+
+    ngAfterViewInit()
+    {
+      setTimeout(() =>
+      {
+        this.focusPassWordButton = this.loginForm.get('Password')?.value?.length > 0
+        this.cdr.detectChanges();
+      }, 200);
+    }
+
+    onPasswordWrapperFocus()
+    {
+      this.focusPassWordButton = true;
+    }
+
+    onPasswordWrapperBlur()
+    {
+      if(!this.showPassword)
+      {
+        this.focusPassWordButton = false;
+      }
+      
     }
 
     onSubmit()
@@ -92,5 +129,17 @@ export class LoginComponent
 
 
     }
+
+    public viewPassword()
+    {
+      this.showPassword = !this.showPassword
+    }
+
+    public passWordInput()
+    {
+      this.focusPassWordButton = this.loginForm.get('Password')?.value?.length > 0
+    }
+
+
 
 }

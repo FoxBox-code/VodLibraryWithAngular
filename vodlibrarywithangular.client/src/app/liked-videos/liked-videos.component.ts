@@ -8,7 +8,7 @@ import { VideoWindow } from '../models/video-window';
   standalone: false,
 
   templateUrl: './liked-videos.component.html',
-  styleUrl: './liked-videos.component.css'
+  styleUrl: './liked-videos.component.scss'
 })
 export class LikedVideosComponent
 {

@@ -47,6 +47,8 @@ export class VideoService
   public userReplyReactions : {[replyId : number] : boolean | undefined} = {};
 
 
+
+
   getCategorys() : Observable <Category[]>
   {
     return this.httpClient.get<Category[]>(`${ApiUrls.CATEGORIES}`)
@@ -135,6 +137,12 @@ export class VideoService
       {
           next : (result) =>
           {
+              result = result.map(x => (
+                {
+                  ...x,
+                  uploaded : new Date(x.uploaded)
+                }
+              ))
               this.videoCommentsSubject.next(result);
           },
           error : (error) =>
@@ -143,6 +151,11 @@ export class VideoService
 
           }
       })
+  }
+
+  sortCommentsForBehaviorSubject(videoComments : VideoComment[])
+  {
+
   }
   addComment(comment : AddCommentDTO) : Observable<AddCommentDTO>
   {

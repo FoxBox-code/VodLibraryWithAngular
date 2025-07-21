@@ -7,7 +7,7 @@ export interface VideoComment
     userId : string,
     description : string,
     videoRecordId : string,
-    uploaded : string,
+    uploaded : Date,
     likes : number,
     disLikes : number,
     repliesCount : number,

@@ -1,0 +1,126 @@
+html // html font size by default is set to 16 like here I write it so we can visualize how its set each rem inside of it references those 16px , 1rem = 16 , 2rem = 32 and so on
+{
+  font-size: 16px;
+
+}//ok using html and overwritting the global set by the browser seems to be kind of tricky its better to place each component under class like here for register
+// will encapsulate all html under div/any tag class register-theme then set the scss .register-theme
+//{font size - 16px form  form {margin 2em auto}} em targets the local font size set by the parent aka register-theme
+
+
+  form
+{
+
+    max-width: 400px;
+  border: 1px solid #ddd;
+  border-radius: 15px;
+  background: #f9f9f9;
+  margin: auto;
+  .form-group
+  {
+
+
+
+
+
+    .input-wrapper
+    {
+      display: flex;
+      align-items: center;
+      margin: 1.5rem auto;
+      gap: 1rem;
+
+
+        label
+      {
+        font-weight: bold;
+        width: 129px;
+        margin-left: 8px;
+      }
+
+      input
+      {
+        border: 2px solid #080808;
+        border-radius: 5px ;
+        width: 150px;
+
+
+      &.invalid
+      {
+        border: 2px solid rgb(255, 0, 0, 0.5);
+      }
+      }
+
+      button
+      {
+        background-color: #080808;
+        font-size: 0.8rem;
+        width: 50px;
+      }
+    }
+
+
+
+
+
+
+    .error-message
+    {
+      color: red;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+
+      .min-max-requirements
+      {
+        display: block;
+      }
+
+    }
+
+
+
+
+  }
+
+  button
+    {
+
+      padding: 1.5rem auto;
+      width: 100%;
+      font-size: 1.5rem;
+      border-radius: 15px;
+      background-color: #3498db;
+      cursor: pointer;
+      color: whitesmoke;
+    }
+
+    & :disabled
+    {
+      background-color: #999;
+      cursor: not-allowed;
+
+    }
+
+
+
+    .invisible-button
+    {
+      visibility: hidden;
+    }
+
+}
+
+.serverError
+{
+  color: red;
+  font-weight: bold;
+  margin-top: 1rem;
+  border: 1px solid black;
+  border-radius: 10px;
+  background-color: whitesmoke;
+
+
+}
+
+
+
+

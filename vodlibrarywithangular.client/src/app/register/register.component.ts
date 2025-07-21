@@ -11,7 +11,7 @@ import {  Router } from '@angular/router';
   standalone: false,
 
   templateUrl: './register.component.html',
-  styleUrl: './register.component.css'
+  styleUrl: './register.component.scss'
 })
 export class RegisterComponent
 {
@@ -25,6 +25,10 @@ export class RegisterComponent
 
   registerForm : FormGroup
   router = inject(Router);
+  showPassword : boolean = false;
+
+  serverError : string | null = null;
+
 
   constructor(private authService : AuthService, private formBuilder : FormBuilder)
   {
@@ -55,15 +59,25 @@ export class RegisterComponent
     .subscribe(
       {
         next : (result) => console.log("Registered successful", result),
-        error : (error) => console.error("Registration failed", error),
+        error : (error) =>
+          {
+            console.error("Registration failed", error);
+            this.serverError = error.error;
+          },
         complete : () =>
           {
             console.log("Registration  completed")
-            this.router.navigate(['/login']);
+
+            this.router.navigate(['/login'], {state : {message : "You've completed the register process. Please log in to proceed."}});
           }
 
 
       })
+  }
+
+  public ShowPassword()
+  {
+      this.showPassword = !this.showPassword
   }
 
 

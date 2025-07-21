@@ -13,7 +13,7 @@ import { AuthService } from '../auth.service';
   standalone: false,
 
   templateUrl: './upload.component.html',
-  styleUrl: './upload.component.css'
+  styleUrl: './upload.component.scss'
 })
 export class UploadComponent implements OnInit
 {

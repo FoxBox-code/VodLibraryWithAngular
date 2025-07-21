@@ -526,6 +526,7 @@ namespace VodLibraryWithAngular.Server.Controllers
             {
                 List<CommentDTO> comments = await _dbContext.Comments
                     .Where(c => c.VideoRecordId == videoId)
+                    .OrderByDescending(c => c.Uploaded)
                     .Select(c => new CommentDTO()
                     {
                         Id = c.Id,

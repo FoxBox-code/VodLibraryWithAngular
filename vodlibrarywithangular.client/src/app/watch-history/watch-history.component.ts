@@ -8,7 +8,7 @@ import { Observable } from 'rxjs';
   standalone: false,
 
   templateUrl: './watch-history.component.html',
-  styleUrl: './watch-history.component.css'
+  styleUrl: './watch-history.component.scss'
 })
 export class WatchHistoryComponent
 {

@@ -82,10 +82,9 @@ export class AuthService
             status : error.status,
             error : error.error,
           });
-          return throwError(()=>
-          {
-              new Error("Registration error");
-          })
+
+          return throwError(()=> error
+          )
         }));
 
 

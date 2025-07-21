@@ -1,59 +1,100 @@
 <p>play-video works!</p>
 
+  <div class="video-wrapper">
+    <video [src]="selectedVideo?.videoPath" controls width="940"></video>
+    <h2>{{selectedVideo?.title}}</h2>
+    <section class="user-likes-dislikes-wrapper">
+      <a [routerLink]="['/user-profile', selectedVideo?.videoOwnerId]">{{selectedVideo?.videoOwnerName}}</a>
+          <ng-container *ngIf="reaction">
+            <div class="reaction">
+                  <button type="button" (click)="addReaction('Like')">Likes  : {{reaction.likeCount}}</button>
+                  <button type="button" (click)="addReaction('Dislike')">DisLikes : {{reaction.disLikeCount}}</button>
+            </div>
+          </ng-container>
+    </section>
 
-  <video [src]="selectedVideo?.videoPath" controls width="640"></video>
-  <h2>{{selectedVideo?.title}}</h2>
-  <p>{{selectedVideo?.description}}</p>
-  <section><a [routerLink]="['/user-profile', selectedVideo?.videoOwnerId]">{{selectedVideo?.videoOwnerName}}</a> Uploaded : {{selectedVideo?.uploaded}}</section>
-  <section>Views:{{views$ | async}}
-    <ng-container *ngIf="reaction">
-        <button type="button" (click)="addReaction('Like')">Likes  : {{reaction.likeCount}}</button>
-        <button type="button" (click)="addReaction('Dislike')">DisLikes : {{reaction.disLikeCount}}</button>
-    </ng-container>
 
-  </section>
-  <p>Comments : {{commentsCountObservable | async }}</p>
+    <section class="views-date-description-wrapper">
 
+      <div class="span-metadata">
+            <span>
+            Views : {{views$ | async}}
+            </span>
+
+            <span>
+            Uploaded : {{selectedVideo?.uploaded}}
+            </span>
+      </div>
+
+
+      <p>
+        {{selectedVideo?.description}}
+      </p>
+    </section>
+
+    <p>Comments : {{commentsCountObservable | async }}</p>
+
+    <!-- The form for the user to comment on -->
 <section *ngIf="userName ; else userIsNotLogged" >
-  <form [formGroup]="commentForm" (ngSubmit)="addComment()">
+  <form [formGroup]="commentForm" (ngSubmit)="addComment()" class="comment-form-wrapper">
     <label id="comment"></label>
-    <textarea id="comment" formControlName="Comment"></textarea>
-    <button type="submit" [disabled]="!commentForm.valid">Comment</button>
-    <button type="reset" >Cancel</button>
+    <textarea id="comment" formControlName="Comment" (input)="areaAutoGrowth($event)"></textarea>
+    <div class="buttons-wrapper">
+      <button type="reset" >Cancel</button>
+      <button type="submit" [disabled]="!commentForm.valid">Comment</button>
+    </div>
   </form>
 </section>
 
+
 <ng-template #userIsNotLogged>
-  <p>Register to comment on the video</p>
-  <button type="button" (click)="navigateToLogIn()">Log In</button>
+  <div class="user-not-logged">
+        <p>Register to comment on the video</p>
+        <button type="button" (click)="navigateToLogIn()">Log In</button>
+  </div>
 </ng-template>
 
 
 
+<!-- Loaded Comments -->
 <ng-container *ngIf="commentsCountObservable | async; else NoComments">
-  <button *ngIf="!videoComments$" type="button" (click)="loadComments()">Load comments</button>
-  <button *ngIf="videoComments$" type="button" (click)="toggleCommentsShowHide()">{{autoLoadComments ? "Hide comments" : "Load comments"}}</button>
-      <section *ngIf="autoLoadComments">
-          <section *ngFor="let comment of videoComments$ | async">
+  <div class="buttons-wrapper">
+        <button *ngIf="!videoComments$" type="button" (click)="loadComments()">Load comments</button>
+        <button *ngIf="videoComments$" type="button" (click)="toggleCommentsShowHide()">{{autoLoadComments ? "Hide comments" : "Load comments"}}</button>
 
-          <p><a [routerLink]="['/user-profile', comment.userId]">{{comment.userName}}</a> {{comment.uploaded}}</p>
+        <div *ngIf="autoLoadComments" class="toggle-sort-wrapper" #sortWrapper>
+            <button type="button" (click)="toggleSortMenu()" id = "sortByButton">Sort by</button>
+            <ul *ngIf="sortMenuOpen">
+                <li><button type="button" (click)="sortComments('newest')">Newest</button></li>
+                <li><button type="button" (click)="sortComments('popular')">Popular</button></li>
+            </ul>
+        </div>
+  </div>
+
+      <section *ngIf="autoLoadComments">
+          <section *ngFor="let comment of videoComments$ | async" class="forloop-comments-wrapper">
+
+          <a [routerLink]="['/user-profile', comment.userId]">{{comment.userName}}</a> {{comment.uploaded}}
           <p>{{comment.description}}</p>
-          <p>
+          <div class="comment-likes-dislikes-reply-wrapper">
             <button type="button" (click)="addCommentReaction(comment.id, true)">Likes : {{comment.likes}} </button>
             <button type="button" (click)="addCommentReaction(comment.id, false)">Dislikes : {{comment.disLikes}}</button>
-            Replies {{comment.repliesCount}}
-          </p>
+            <span>Comment replies {{comment.repliesCount}}</span>
 
-          <section *ngIf="userName">
-          <button type="button" (click)="getReplyForm(comment.id)">Reply</button>
+            <section *ngIf="userName">
+            <button type="button" (click)="getReplyForm(comment.id, undefined)">Reply</button>
+            </section>
+        </div>
 
-          <form *ngIf="replyForm && activeCommentId === comment.id" [formGroup]="replyForm" (ngSubmit)="addReply()">
+            <form *ngIf="userName && activeCommentReplyThreadDictionary.has(comment.id)" [formGroup]="activeCommentReplyThreadDictionary.get(comment.id)!" (ngSubmit)="addReply(comment.id, undefined)" class="reply-form-wrapper">
             <label id="reply"></label>
-            <textarea id="reply" formControlName="Reply"></textarea>
-            <button type="submit" [disabled]="replyForm.invalid">Reply to comment</button>
-            <button type="reset">Cancel</button>
-          </form>
-          </section>
+            <textarea id="reply" formControlName="Reply" (input)="areaAutoGrowth($event)"></textarea>
+            <button type="submit" [disabled]="activeCommentReplyThreadDictionary.get(comment.id)?.invalid">Reply to comment</button>
+            <button type="reset" (click)="cancelReplyForm(comment.id, undefined)">Cancel</button>
+            </form>
+
+
+
 
           <p></p>
 
@@ -61,17 +102,33 @@
             <button type="button" (click)="getRepliesForCommnet(comment.id)">{{expandRepliesComments[comment.id] ? 'Hide' : 'Load replies'}}</button>
 
               <section *ngIf="expandRepliesComments[comment.id]">
-                <ng-container *ngFor="let reply of commentReplies$[comment.id] | async">
+                <ng-container *ngFor="let reply of commentReplies$[comment.id] | async" >
+                <div class="reply-forcycle-wrapper">
                   <p><a [routerLink]="['/user-profile', reply.userId]">{{reply.userName}}</a> : {{reply.uploaded}}</p>
                   <p>{{reply.description}}</p>
-                  <p>
-                    <button type="button" (click)="addReplyReaction(comment.id, reply.id, true)">Like</button> {{reply.likes}}
-                    <button type="button" (click)="addReplyReaction(comment.id, reply.id, false)">DisLike</button> {{reply.disLikes}}
-                  </p>
+                  <div>
+                  <section class="buttons-wrapper">
+                    <button type="button" (click)="addReplyReaction(comment.id, reply.id, true)">Like : {{reply.likes}}</button>
+                    <button type="button" (click)="addReplyReaction(comment.id, reply.id, false)">DisLike : {{reply.disLikes}}</button>
+
+                    <section *ngIf="userName">
+                      <button type="button" (click)="getReplyForm(undefined,reply.id)">Reply</button>
+                    </section>
+                  </section>
+
+                    <form *ngIf="userName  && activeReplyThreadDictionary.has(reply.id)" [formGroup]="activeReplyThreadDictionary.get(reply.id)!" (ngSubmit)="addReply(comment.id, reply.id)" class="reply-form-wrapper">
+                        <label id="reply"></label>
+                        <textarea id="reply" formControlName="Reply" (input)="areaAutoGrowth($event)"></textarea>
+                        <button type="submit" [disabled]="activeReplyThreadDictionary.get(reply.id)?.invalid">Reply to comment</button>
+                        <button type="reset" (click)="cancelReplyForm(undefined, reply.id)">Cancel</button>
+                      </form>
+
+                  </div>
+                </div>
                 </ng-container>
               </section>
 
-              <div>_________________________________</div>
+
           </section>
 
         </section>
@@ -84,6 +141,11 @@
     <ng-template #NoComments>
         No comments on this video yet!
     </ng-template>
+
+
+  </div>
+
+
 
 
 

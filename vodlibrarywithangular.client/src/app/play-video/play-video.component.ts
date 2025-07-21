@@ -1,8 +1,8 @@
-import { Component, Inject, inject} from '@angular/core';
+import { Component, ElementRef, HostListener, Inject, inject, ViewChild} from '@angular/core';
 import { VideoService } from '../video.service';
 import { PlayVideo } from '../models/play-video';
 import { ActivatedRoute } from '@angular/router';
-import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { FormGroup, FormBuilder, Validators, RequiredValidator } from '@angular/forms';
 import { AuthService } from '../auth.service';
 import { Observable, Subject } from 'rxjs';
 import { take } from 'rxjs/operators';
@@ -23,7 +23,7 @@ import { WatchHistoryVideoInfo } from '../models/watch-history-video-info';
   standalone: false,
 
   templateUrl: './play-video.component.html',
-  styleUrl: './play-video.component.css'
+  styleUrl: './play-video.component.scss'
 })
 export class PlayVideoComponent
 {
@@ -32,8 +32,12 @@ export class PlayVideoComponent
     commentForm : FormGroup;
     replyForm? : FormGroup;
     replyCommentId? : number;
-    activeCommentId? : number;
-    activeCommentReplyId? : number;
+    activeCommentId? : number;//probably need to delete
+
+    activeCommentReplyThreadDictionary = new Map<number , FormGroup>();
+    activeCommentReplyId? : number;////probably need to delete
+
+    activeReplyThreadDictionary = new Map<number , FormGroup>();
     commentsCountObservable : Observable<number>
     userNameAsObservable : Observable<string | null>;
     userName : string | null = null;
@@ -42,6 +46,7 @@ export class PlayVideoComponent
     videoComments$? : Observable<VideoComment[]>;
 
     commentReplies$ : {[commentId : number] :Observable<Reply[]>} = {};
+
     expandRepliesComments : {[commentId : number] :  boolean} = {};
     autoLoadComments : boolean = false;
     views$? : Observable<number>;
@@ -50,7 +55,10 @@ export class PlayVideoComponent
 
     videoCommentsSnapshot: VideoComment[] = [];
 
+    public sortMenuOpen : boolean = false;
+    public criteria : 'popular' | 'newest' = 'newest';
 
+    @ViewChild('sortWrapper', {static : false}) sortWrapper? : ElementRef //this makes a dom element to a variable
 
 
 
@@ -256,6 +264,7 @@ export class PlayVideoComponent
 
     loadComments()
     {
+
         this.autoLoadComments = true;
         this.videoService.getVideoComments(this.selectedVideoId);
         this.videoComments$ = this.videoService.videoComment$;
@@ -308,24 +317,51 @@ export class PlayVideoComponent
 
         this.router.navigate(['login']);
     }
-
-    getReplyForm(commentId : number)
+    //getReplyForm and GetReplyFormOverLoad require a total rewrite since youtube allows for mutliple forms to be open
+    getReplyForm(commentId : number | undefined , replyId : number | undefined)
     {
-        if(this.activeCommentId !== commentId)
-        {
-          this.activeCommentId = commentId;
-          this.replyForm = this.formBuilder.group(
-            {
-              Reply : ["", [Validators.required]]
-            });
-        }
-        else
-        {
-            this.activeCommentId = undefined;
-            this.replyForm = undefined;
-        }
+
+      if(replyId !== undefined && !this.activeReplyThreadDictionary.has(replyId))
+      {
+        const form = this.formBuilder.group(
+          {
+            Reply : ["", [Validators.required]]
+          }
+        )
+
+        this.activeReplyThreadDictionary.set(replyId, form)
+      }
+
+      else if(commentId !== undefined && !this.activeCommentReplyThreadDictionary.has(commentId))
+      {
+        const form = this.formBuilder.group(
+          {
+            Reply : ["",[Validators.required]]
+          }
+        )
+
+        this.activeCommentReplyThreadDictionary.set(commentId, form);
+      }
+    }
+
+    cancelReplyForm(commentId : number | undefined , replyId : number | undefined)
+    {
+      if(commentId !== undefined && this.activeCommentReplyThreadDictionary.has(commentId))
+      {
+        this.activeCommentReplyThreadDictionary.delete(commentId)
+      }
+
+      else if (replyId !== undefined && this.activeReplyThreadDictionary.has(replyId))
+      {
+        this.activeReplyThreadDictionary.delete(replyId);
+      }
 
     }
+
+
+
+
+
 
 
     getRepliesForCommnet(commentId : number)
@@ -446,23 +482,39 @@ export class PlayVideoComponent
     });
     }
 
-    addReply()
+    addReply(commentId : number, replyId : number | undefined)//This is being rewritten so check carefully
     {
-        if(this.replyForm?.invalid)
+        let form : FormGroup;
+
+        if(replyId !== null && this.activeReplyThreadDictionary.has(replyId!))
+        {
+            form = this.activeReplyThreadDictionary.get(replyId!)!;//two fucking !! this language is so trash
+        }
+        else if (this.activeCommentReplyThreadDictionary.has(commentId))
+        {
+            form = this.activeCommentReplyThreadDictionary.get(commentId)!;
+        }
+        else
+        {
+          console.error(`Massive Error at function AddReply. Form for comment with ${commentId} or reply with ${replyId} was not found`)
+          return;
+        }
+
+        if(form?.invalid)
         {
             console.error("Invalid reply form");
 
         }
         else
         {
-          if(this.userName && this.activeCommentId)
+          if(this.userName)
           {
             let reply : ReplyForm =
             {
               userName : this.userName,
-              replyContent : this.replyForm?.value.Reply,
+              replyContent : form.value.Reply,
               videoId : this.selectedVideoId,
-              commentId : this.activeCommentId
+              commentId : commentId
             }
 
             this.videoService.addReplyToComment(reply).subscribe(
@@ -470,17 +522,14 @@ export class PlayVideoComponent
                 next : (result) =>
                 {
                   console.log(`User ${result.userName} replied : ${result.replyContent} to comment with id ${result.commentId} in video with id ${result.videoId}`);
-                  if(this.activeCommentReplyId !== undefined)
-                  {
-                    let cloneActiveCommentsreplyId = this.activeCommentReplyId;
-                    this.activeCommentReplyId = undefined;
-                    //this is some dog ass code but it got the job done
-                    this.getRepliesForCommnet(cloneActiveCommentsreplyId);
-                  }
+
+
+                  this.getRepliesForCommnet(commentId);
+
                 }
             });
 
-            this.replyForm?.reset();
+            this.cancelReplyForm(commentId , replyId);
           }
 
 
@@ -499,6 +548,64 @@ export class PlayVideoComponent
 
        }
        )
+    }
+
+    areaAutoGrowth(event : Event) :  void
+    {
+        const textArea = event.target as HTMLTextAreaElement;
+        textArea.style.height = 'auto';//if user removes text this sets it back to it original height
+        textArea.style.height = textArea.scrollHeight + 'px';
+    }
+
+    toggleSortMenu()
+    {
+      this.sortMenuOpen = !this.sortMenuOpen;
+    }
+
+    sortComments(criteria : 'popular' | 'newest')
+    {
+        this.sortMenuOpen = !this.sortMenuOpen;
+
+        this.videoComments$?.subscribe(
+          {
+            next : (data) =>
+            {
+              if(criteria === 'newest')
+              {
+
+                data = data.sort((a,b)=> b.uploaded.getTime() - a.uploaded.getTime());
+              }
+              else if(criteria === 'popular')
+              {
+                data = data.sort((a,b)=> b.likes - a.likes);
+              }
+
+              this.videoService.sortCommentsForBehaviorSubject(data);
+
+            }
+          }
+        )
+
+    }
+
+    @HostListener('document:click', ['$event'])
+    handleOutsideClick(event : MouseEvent)
+    {
+       if(this.sortMenuOpen
+        && this.sortWrapper
+        && !this.sortWrapper.nativeElement.contains(event.target))
+       {
+          this.sortMenuOpen = false;
+       }
+    }
+
+    @HostListener('window:keydown', ['$event'])
+    sortButtonEscapeKeyPressEvent(event : KeyboardEvent)
+    {
+      if(this.sortMenuOpen && event.key === 'Escape')
+      {
+        this.sortMenuOpen = false;
+      }
     }
 
     addReaction(reactionClicked : string)

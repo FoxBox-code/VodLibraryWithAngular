@@ -8,7 +8,7 @@ import { VideoWindow } from '../models/video-window';
   standalone: false,
 
   templateUrl: './user-profile.component.html',
-  styleUrl: './user-profile.component.css'
+  styleUrl: './user-profile.component.scss'
 })
 export class UserProfileComponent
 {

@@ -7,7 +7,7 @@ import { VideoService } from '../video.service';
   standalone: false,
 
   templateUrl: './videos-section.component.html',
-  styleUrl: './videos-section.component.css'
+  styleUrl: './videos-section.component.scss'
 })
 export class VideosSectionComponent
 {

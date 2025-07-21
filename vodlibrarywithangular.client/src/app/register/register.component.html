@@ -2,20 +2,95 @@
 
 <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
 
-  <label id="username">UserName:</label>
-  <input id="username" type="text" formControlName="UserName">
+  <div class="form-group">
+    <div class="input-wrapper">
+        <label id="username">UserName: </label>
+        <input id="username" type="text" formControlName="UserName"
+      [class.invalid]="registerForm.get('UserName')?.invalid && (registerForm.get('UserName')?.dirty || registerForm.get('UserName')?.touched)">
 
-  <label id="email">Email:</label>
-  <input id="email" type="email" formControlName="Email">
+      <button class="invisible-button" type="button">&nbsp;</button>
+    </div>
 
-  <label id="password">Password:</label>
-  <input id="password" type="password" formControlName="Password">
 
-  <label id="confirmpassword">ConfirmPassword:</label>
-  <input id="confirmpassword" type="password" formControlName="ConfirmPassword">
+      <div class="error-message" *ngIf="registerForm.get('UserName')?.errors && (registerForm.get('UserName')?.dirty || registerForm.get('UserName')?.touched)">
+            <span *ngIf="registerForm.get('UserName')?.errors?.['required']">User name is required</span>
+            <span *ngIf="registerForm.get('UserName')?.errors?.['minlength'] ||
+            registerForm.get('UserName')?.errors?.['maxlength']">User name must be between 3 or 22 characters long</span>
+
+          <div class="min-max-requirements">
+            <span *ngIf="registerForm.get('UserName')?.errors?.['minlength'] as minError">
+              Minimum is {{ minError.requiredLength }} characters (you typed {{ minError.actualLength }})
+            </span>
+            <span *ngIf="registerForm.get('UserName')?.errors?.['maxlength'] as maxError">
+              Maximum is {{maxError.requiredLength}} characters (you typed {{maxError.actualLength}})
+            </span>
+          </div>
+
+      </div>
+  </div>
+
+  <div class="form-group">
+    <div class="input-wrapper">
+        <label id="email">Email: </label>
+        <input id="email" type="email" formControlName="Email"
+      [class.invalid]="registerForm.get('Email')?.errors && (registerForm.get('Email')?.dirty || registerForm.get('Email')?.touched)">
+      <button class="invisible-button" type="button">&nbsp;</button>
+    </div>
+
+      <div class="error-message" *ngIf="registerForm.get('Email')?.errors && (registerForm.get('Email')?.dirty || registerForm.get('Email')?.touched)">
+        <span>Please enter a valid email</span>
+      </div>
+  </div>
+
+
+  <div class="form-group">
+
+    <div class="input-wrapper">
+      <label id="password">Password: </label>
+
+
+          <input id="password" [type]="showPassword ? 'text' : 'password'" formControlName="Password">
+          <button
+            type="button"
+            (click)="ShowPassword()"
+            [class.invisible-button]="!(registerForm.get('Password')?.value?.length > 0)">
+            {{ showPassword ? 'Hide' : 'Show' }}
+          </button>
+
+              </div>
+
+  </div>
+
+
+
+
+
+  <div class="form-group">
+    <div class="input-wrapper">
+        <label id="confirmpassword">ConfirmPassword: </label>
+
+
+          <input id="confirmpassword" [type]="showPassword ? 'text' : 'password'" formControlName="ConfirmPassword">
+          <button
+            type="button"
+            (click)="ShowPassword()"
+            [class.invisible-button]="!(registerForm.get('ConfirmPassword')?.value?.length > 0)">
+            {{ showPassword ? 'Hide' : 'Show' }}
+          </button>
+
+
+    </div>
+
+
+  </div>
+
 
   <button type="submit" [disabled]="registerForm.invalid">Make an account</button>
 </form>
 
-<pre>{{ registerForm.value | json }}</pre>
-<pre>{{ registerForm.valid }}</pre>
+<div class="serverError" *ngIf="serverError">
+  Failed to register : {{serverError}}
+</div>
+
+<!-- <pre>{{ registerForm.value | json }}</pre>
+<pre>{{ registerForm.valid }}</pre> -->
