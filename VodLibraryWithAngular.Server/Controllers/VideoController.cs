@@ -636,7 +636,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                 return BadRequest($"No such video with {videoId} exists");
             }
 
-            int videoCommentsCount = video.CommentsCount;
+            int videoCommentsCount = video.CommentsCount + video.ReplyCount;
 
             return Ok(videoCommentsCount);
         }
@@ -706,6 +706,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                 Description = model.ReplyContent,
                 CommentId = model.CommentId,
                 VideoRecordId = model.VideoId,
+                Uploaded = model.Uploaded
 
 
             };
@@ -716,7 +717,33 @@ namespace VodLibraryWithAngular.Server.Controllers
             await _dbContext.Replies.AddAsync(reply);
             await _dbContext.SaveChangesAsync();
 
-            return Ok(model);
+            Reply? userReply = await _dbContext.Replies.FirstOrDefaultAsync(r => r.UserId == userId
+                                && r.CommentId == model.CommentId
+                                && r.Uploaded == model.Uploaded);
+
+
+
+            if (userReply == null)
+            {
+                _logger.LogError($"Even though we have added a reply we could not get the added user reply from the data base using this filter {userId}, {model.CommentId}, {model.Uploaded}");
+                return BadRequest(new
+                {
+                    message = "Could not updade the UI with user's latest reply"
+                });
+            }
+
+            ReplieDTO answer = new ReplieDTO()
+            {
+                Id = userReply.Id,
+                UserName = userReply.UserName,
+                UserId = userReply.UserId,
+                Description = userReply.Description,
+                CommentId = userReply.CommentId,
+                Uploaded = userReply.Uploaded,
+                VideoRecordId = userReply.VideoRecordId
+            };
+
+            return Ok(answer);
 
 
 

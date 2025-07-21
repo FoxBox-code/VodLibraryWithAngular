@@ -41,7 +41,7 @@ export class VideoService
   private viewsSubject = new BehaviorSubject<number>(0);
   views$ = this.viewsSubject.asObservable();
 
-  private commentRepliesSubject2 : {[commentId:number] : BehaviorSubject<Reply[]>} = {};
+  private commentRepliesSubject : {[commentId:number] : BehaviorSubject<Reply[]>} = {};
 
   public userCommentReactions: { [commentId: number]: boolean | undefined } = {};
   public userReplyReactions : {[replyId : number] : boolean | undefined} = {};
@@ -152,6 +152,21 @@ export class VideoService
           }
       })
   }
+  increaseClientSideCommentReplyCount(commentId : number, videComments$ : Observable<VideoComment[]> | undefined)
+  {
+    const comments = this.videoCommentsSubject.getValue();
+
+    const upDatedComments = comments.map(comment =>
+      comment.id === commentId ? {...comment, repliesCount : comment.repliesCount + 1} : comment
+    );//Yeah fuck this syntax NOTE(...object writes all its properties for you syntax sugar)
+
+
+    this.videoCommentsSubject.next(upDatedComments);
+  }
+  locallyUpdateCommentCountAfterUserReply()
+  {
+    this.commentsCountSubject.next(this.commentsCountSubject.getValue() + 1);
+  }
 
   sortCommentsForBehaviorSubject(videoComments : VideoComment[])
   {
@@ -216,7 +231,7 @@ export class VideoService
     })
   }
 
-  addReplyToComment(reply : ReplyForm) : Observable<ReplyForm>
+  addReplyToComment(reply : ReplyForm) : Observable<Reply>
   {
       const token = this.authService.getLocalStorageToken();
 
@@ -225,7 +240,7 @@ export class VideoService
         Authorization : `Bearer ${token}`
       })
 
-      return this.httpClient.post<ReplyForm>(`${ApiUrls.ADDREPLY}`, reply , {headers})
+      return this.httpClient.post<Reply>(`${ApiUrls.ADDREPLY}`, reply , {headers})
       .pipe(catchError((error)=>
       {
         console.error("Failed to add a reply to the database",
@@ -239,11 +254,26 @@ export class VideoService
       }))
   }
 
+  updateCommentRepliesSubject(commentId : number, reply : Reply)
+  {
+    const subject = this.commentRepliesSubject[commentId];
+
+    if(!subject)
+    {
+      return console.log(`Failed to load reply ${reply} on comment with id${commentId}`)
+    }
+
+    const currentReplies = subject.getValue();
+    const clientSideUpdatedReplies = [...currentReplies, reply];
+
+    subject.next(clientSideUpdatedReplies);
+  }
+
   getCommentReplies(videoId : number , commentId: number) : Observable<Reply[]>
   {
-    if(!this.commentRepliesSubject2[commentId])
+    if(!this.commentRepliesSubject[commentId])
     {
-      this.commentRepliesSubject2[commentId] = new BehaviorSubject<Reply[]>([]);
+      this.commentRepliesSubject[commentId] = new BehaviorSubject<Reply[]>([]);
 
       this.httpClient.get<Reply[]>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/${commentId}/replies`)
       .pipe(
@@ -255,12 +285,18 @@ export class VideoService
           )
       .subscribe(replies =>
       {
-        this.commentRepliesSubject2[commentId].next(replies);
+        replies = replies.map(x => (
+          {
+            ...x,
+            uploaded : new Date(x.uploaded)
+          }//Change if it causes issues
+        ))
+        this.commentRepliesSubject[commentId].next(replies);
       }
       )
     }
 
-        return this.commentRepliesSubject2[commentId].asObservable();
+        return this.commentRepliesSubject[commentId].asObservable();
 
   }
 

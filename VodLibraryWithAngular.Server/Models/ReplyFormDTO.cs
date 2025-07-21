@@ -10,6 +10,8 @@
 
         public required int CommentId { get; set; }
 
+        public required DateTime Uploaded { get; set; }
+
     }
 
 

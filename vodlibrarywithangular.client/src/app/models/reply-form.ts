@@ -4,6 +4,7 @@ export interface ReplyForm
   replyContent : string,
   videoId : number,
   commentId : number
+  uploaded : Date
 }
 
 

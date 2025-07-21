@@ -32,10 +32,10 @@ export class PlayVideoComponent
     commentForm : FormGroup;
     replyForm? : FormGroup;
     replyCommentId? : number;
-    activeCommentId? : number;//probably need to delete
+
 
     activeCommentReplyThreadDictionary = new Map<number , FormGroup>();
-    activeCommentReplyId? : number;////probably need to delete
+
 
     activeReplyThreadDictionary = new Map<number , FormGroup>();
     commentsCountObservable : Observable<number>
@@ -53,7 +53,7 @@ export class PlayVideoComponent
 
     reaction? : Reaction;
 
-    videoCommentsSnapshot: VideoComment[] = [];
+    videoCommentsSnapshot: VideoComment[] = [];//probably needs to be removed
 
     public sortMenuOpen : boolean = false;
     public criteria : 'popular' | 'newest' = 'newest';
@@ -262,7 +262,7 @@ export class PlayVideoComponent
       return this.videoCommentsSnapshot.find(x => x.id === commentId);
     }
 
-    loadComments()
+    loadComments()//THIS WOULD BE SO MUCH BETTER IF I REWRITE IT
     {
 
         this.autoLoadComments = true;
@@ -344,7 +344,7 @@ export class PlayVideoComponent
       }
     }
 
-    cancelReplyForm(commentId : number | undefined , replyId : number | undefined)
+    cancelReplyForm(commentId : number | undefined , replyId : number | undefined)//WHAT THE FUCK this shit is wrong
     {
       if(commentId !== undefined && this.activeCommentReplyThreadDictionary.has(commentId))
       {
@@ -357,12 +357,6 @@ export class PlayVideoComponent
       }
 
     }
-
-
-
-
-
-
 
     getRepliesForCommnet(commentId : number)
     {
@@ -514,27 +508,48 @@ export class PlayVideoComponent
               userName : this.userName,
               replyContent : form.value.Reply,
               videoId : this.selectedVideoId,
-              commentId : commentId
+              commentId : commentId,
+              uploaded : new Date()
             }
 
             this.videoService.addReplyToComment(reply).subscribe(
             {
-                next : (result) =>
+                next : (newReply) =>
                 {
-                  console.log(`User ${result.userName} replied : ${result.replyContent} to comment with id ${result.commentId} in video with id ${result.videoId}`);
+                  console.log(`User ${newReply.userName} replied : ${newReply.description} to comment with id ${newReply.commentId} in video with id ${newReply.videoRecordId}`);
+
+                  newReply.uploaded = new Date(newReply.uploaded);
+
+                  this.videoService.updateCommentRepliesSubject(commentId, newReply);
+                  this.videoService.increaseClientSideCommentReplyCount(commentId , this.videoComments$);
+                  this.videoService.locallyUpdateCommentCountAfterUserReply();
+                  // this.updateLocalyCommentReplyOnUser(commentId) probably don t need
 
 
-                  this.getRepliesForCommnet(commentId);
-
+                  this.cancelReplyForm(commentId , replyId);
                 }
             });
 
-            this.cancelReplyForm(commentId , replyId);
+
           }
 
 
 
         }
+    }
+
+    updateLocalyCommentReplyOnUser(commentId : number)
+    {
+        const repliesUnderComment = this.commentReplies$[commentId];
+
+        repliesUnderComment.subscribe(
+          {
+            next :(replies) =>
+            {
+
+            }
+          }
+        )
     }
 
     loadReactions()
@@ -662,7 +677,9 @@ export class PlayVideoComponent
             )
 
           }
-    }
+        }
+
+      }
 
 
 
@@ -693,4 +710,10 @@ export class PlayVideoComponent
 
 
 
-}
+
+
+
+
+
+
+

@@ -6,7 +6,7 @@ export interface Reply
     description : string,
     videoRecordId : number,
     commentId : number,
-    uploaded : string,
+    uploaded : Date,//return to string if lots of stuff gets broken
     likes : number,
     disLikes : number
 
