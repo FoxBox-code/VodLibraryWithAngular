@@ -71,10 +71,16 @@ namespace VodLibraryWithAngular.Server.Controllers
                     await videoUploadForm.VideoFile.CopyToAsync(videoStream);
                 }
 
-                using (FileStream imageStream = new FileStream(thumbnail, FileMode.Create))
-                {
-                    await videoUploadForm.ImageFile.CopyToAsync(imageStream);
-                }
+                //using (FileStream imageStream = new FileStream(thumbnail, FileMode.Create))
+                //{
+                //    await videoUploadForm.ImageFile.CopyToAsync(imageStream);
+                //} use library ImageSharp to format the given image from the user to selected sizes 
+
+                using var image = await SixLabors.ImageSharp.Image.LoadAsync(videoUploadForm.ImageFile.OpenReadStream());
+                image.Mutate(x => x.Resize(480, 360));
+
+                await using var outPutStream = new FileStream(thumbnail, FileMode.Create);
+                await image.SaveAsJpegAsync(outPutStream);
 
 
 
@@ -136,7 +142,9 @@ namespace VodLibraryWithAngular.Server.Controllers
                      Name = c.Name,
                      Videos = c.Videos
                      .Take(10)
-                     .Select(v => new VideoWindowDTO()
+                     .Select(v =>
+
+                     new VideoWindowDTO()
                      {
                          Id = v.Id,
                          Title = v.Title,
@@ -147,14 +155,30 @@ namespace VodLibraryWithAngular.Server.Controllers
                          VideoOwnerName = v.VideoOwner.UserName,
                          ImagePath = $"{Request.Scheme}://{Request.Host}/thumbnail/{Path.GetFileName(v.ImagePath)}"
 
-                     })
+                     }
+                     )
                      .ToList()
                  })
                  .ToListAsync();
 
+
+
                 if (categoryWithItsVideosDTOs.Count() == 0)
                 {
                     return NotFound("Server could not find categories");
+                }
+
+                foreach (var category in categoryWithItsVideosDTOs)
+                {
+                    foreach (var video in category.Videos)
+                    {
+                        var (hours, minutes, seconds) = VideoLengthConvertedToHoursMinutesSeconds(video.Length);
+
+                        video.Hours = hours;
+                        video.Minutes = minutes;
+                        video.Seconds = seconds;
+
+                    }
                 }
 
                 return Ok(categoryWithItsVideosDTOs);
@@ -168,6 +192,11 @@ namespace VodLibraryWithAngular.Server.Controllers
 
 
 
+        }
+
+        private (int hours, int minutes, int seconds) VideoLengthConvertedToHoursMinutesSeconds(TimeSpan length)
+        {
+            return (((int)length.TotalHours, length.Minutes, length.Seconds));
         }
 
         [HttpGet("play/{videoId}")]

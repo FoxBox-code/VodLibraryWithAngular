@@ -1,6 +1,4 @@
-﻿using System.Collections;
-
-namespace VodLibraryWithAngular.Server.Models
+﻿namespace VodLibraryWithAngular.Server.Models
 {
     public class CategoryWithItsVideosDTO
     {
@@ -8,7 +6,7 @@ namespace VodLibraryWithAngular.Server.Models
 
         public string Name { get; set; }
 
-        public IEnumerable Videos { get; set; } = new List<VideoWindowDTO>();
+        public IEnumerable<VideoWindowDTO> Videos { get; set; } = new List<VideoWindowDTO>();
 
     }
 }

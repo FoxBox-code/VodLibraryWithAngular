@@ -10,6 +10,11 @@
 
         public TimeSpan Length { get; set; }
 
+        public int Hours { get; set; }
+        public int Minutes { get; set; }
+
+        public int Seconds { get; set; }
+
         public int Views { get; set; }
 
         public required string VideoOwnerId { get; set; }

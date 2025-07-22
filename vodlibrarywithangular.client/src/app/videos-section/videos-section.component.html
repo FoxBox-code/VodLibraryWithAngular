@@ -2,19 +2,33 @@
 
 <section *ngFor="let category of categoryWithVideos">
   <h2>{{category.name}}</h2>
-  <div *ngFor="let video of category.videos">
-    <a [routerLink]="['/playing', video.id]">
-    <img [src]="video.imagePath" alt="Video Thumbnail">
-    <h3>{{video.title}}</h3>
-    </a>
+    <section class="category-wrapper">
 
-    <h4><a [routerLink]="['/user-profile/', video.videoOwnerId]">{{video.videoOwnerName}}</a></h4>
+      <div *ngFor="let video of category.videos">
+          <section class="videos-category-wrapper">
 
-    <a [routerLink]="['/playing', video.id]">
-    <p>Uploaded on :{{video.uploaded}} Views: {{video.views}}</p>
-    <p>Video duration : {{video.length}}</p>
-    </a>
+
+            <a [routerLink]="['/playing', video.id]">
+            <img [src]="video.imagePath" alt="Video Thumbnail">
+            </a>
+            <div class="video-details-wrapper">
+              <h3><a [routerLink]="['/user-profile/', video.videoOwnerId]">{{video.title}}</a></h3>
+
+
+              <h4><a [routerLink]="['/user-profile/', video.videoOwnerId]">{{video.videoOwnerName}}</a></h4>
+
+              <a [routerLink]="['/playing', video.id]">
+              <p>Views: {{video.views}}</p>
+              <p>Uploaded on : {{video.uploaded | date : 'dd-MM-yyyy, HH:mm'}}</p>
+              <p>Video duration : {{video.hours}}:{{video.minutes}}:{{video.seconds}}</p>
+              </a>
+            </div>
+
+          </section>
+
+
   </div>
+  </section>
 </section>
 
 
