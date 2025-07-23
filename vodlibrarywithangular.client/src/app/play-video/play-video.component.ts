@@ -46,6 +46,7 @@ export class PlayVideoComponent
     videoComments$? : Observable<VideoComment[]>;
 
     commentReplies$ : {[commentId : number] :Observable<Reply[]>} = {};
+    isUserClickingCommentForm : boolean = false;
 
     expandRepliesComments : {[commentId : number] :  boolean} = {};
     autoLoadComments : boolean = false;
@@ -150,6 +151,16 @@ export class PlayVideoComponent
         }
 
     }
+    commentFormClicked()
+    {
+        this.isUserClickingCommentForm = true;
+    }
+    cancelUserComment()
+    {
+      this.commentForm.reset();
+      this.isUserClickingCommentForm = false;
+    }
+
 
     addComment()
     {
@@ -344,7 +355,7 @@ export class PlayVideoComponent
       }
     }
 
-    cancelReplyForm(commentId : number | undefined , replyId : number | undefined)//WHAT THE FUCK this shit is wrong
+    cancelReplyForm(commentId : number | undefined , replyId : number | undefined)
     {
       if(commentId !== undefined && this.activeCommentReplyThreadDictionary.has(commentId))
       {

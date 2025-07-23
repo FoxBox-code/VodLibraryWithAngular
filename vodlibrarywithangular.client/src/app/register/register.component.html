@@ -10,8 +10,6 @@
 
       <button class="invisible-button" type="button">&nbsp;</button>
     </div>
-
-
       <div class="error-message" *ngIf="registerForm.get('UserName')?.errors && (registerForm.get('UserName')?.dirty || registerForm.get('UserName')?.touched)">
             <span *ngIf="registerForm.get('UserName')?.errors?.['required']">User name is required</span>
             <span *ngIf="registerForm.get('UserName')?.errors?.['minlength'] ||
@@ -28,6 +26,8 @@
 
       </div>
   </div>
+
+
 
   <div class="form-group">
     <div class="input-wrapper">

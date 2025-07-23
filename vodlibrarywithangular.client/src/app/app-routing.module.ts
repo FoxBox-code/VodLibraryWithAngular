@@ -51,6 +51,7 @@ const routes: Routes = [
     component : UserProfileComponent,
 
   }
+  
 
 ];
 

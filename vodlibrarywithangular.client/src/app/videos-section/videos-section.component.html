@@ -1,7 +1,7 @@
 <p>videos-section works!</p>
 
-<section *ngFor="let category of categoryWithVideos">
-  <h2>{{category.name}}</h2>
+<section *ngFor="let category of categoryWithVideos" class="category-section">
+  <h2 class="category-name">{{category.name}}</h2>
     <section class="category-wrapper">
 
       <div *ngFor="let video of category.videos">
@@ -9,7 +9,14 @@
 
 
             <a [routerLink]="['/playing', video.id]">
-            <img [src]="video.imagePath" alt="Video Thumbnail">
+              <div class="image-wrapper">
+                    <img [src]="video.imagePath" alt="Video Thumbnail">
+                    <span>Video duration  {{video.hours === 0 ? null : video.hours + ':'}}
+                                  {{video.minutes === 0 ? null : video.minutes + ':'}}
+                                  {{(video.hours === 0 && video.minutes === 0) ? video.seconds + 'sec': video.seconds}}
+                    </span>
+              </div>
+
             </a>
             <div class="video-details-wrapper">
               <h3><a [routerLink]="['/user-profile/', video.videoOwnerId]">{{video.title}}</a></h3>
@@ -20,7 +27,7 @@
               <a [routerLink]="['/playing', video.id]">
               <p>Views: {{video.views}}</p>
               <p>Uploaded on : {{video.uploaded | date : 'dd-MM-yyyy, HH:mm'}}</p>
-              <p>Video duration : {{video.hours}}:{{video.minutes}}:{{video.seconds}}</p>
+
               </a>
             </div>
 

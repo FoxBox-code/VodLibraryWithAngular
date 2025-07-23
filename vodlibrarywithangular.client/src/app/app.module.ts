@@ -14,6 +14,7 @@ import { PlayVideoComponent } from './play-video/play-video.component';
 import { LikedVideosComponent } from './liked-videos/liked-videos.component';
 import { WatchHistoryComponent } from './watch-history/watch-history.component';
 import { UserProfileComponent } from './user-profile/user-profile.component';
+import { VideoWindowComponent } from './video-window/video-window.component';
 
 @NgModule({
   declarations: [
@@ -25,7 +26,8 @@ import { UserProfileComponent } from './user-profile/user-profile.component';
     PlayVideoComponent,
     LikedVideosComponent,
     WatchHistoryComponent,
-    UserProfileComponent
+    UserProfileComponent,
+    VideoWindowComponent
   ],
   imports: [
     BrowserModule, HttpClientModule,

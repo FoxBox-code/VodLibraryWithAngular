@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using NuGet.Protocol;
 using System.Security.Claims;
 using VodLibraryWithAngular.Server.Data;
 using VodLibraryWithAngular.Server.Data.Models;
@@ -54,7 +55,7 @@ namespace VodLibraryWithAngular.Server.Controllers
         [Authorize]
         [HttpPost("upload")]
         [RequestSizeLimit(104857600)] //100MB
-        public async Task<IActionResult> Upload([FromForm] VideoUploadDTO videoUploadForm)
+        public async Task<IActionResult> UploadVideo([FromForm] VideoUploadDTO videoUploadForm)
         {
             if (!ModelState.IsValid)
             {
@@ -113,7 +114,23 @@ namespace VodLibraryWithAngular.Server.Controllers
                 await _dbContext.VideoRecords.AddAsync(video);
                 await _dbContext.SaveChangesAsync();
 
-                return Ok(new { message = "Video Uploaded successfully to VODLibrary " });
+                VideoRecord? latestVideo = await _dbContext.VideoRecords.Include(v => v.VideoOwner).FirstOrDefaultAsync(v => v.VideoOwnerId == userId && v.Uploaded == video.Uploaded);
+
+                if (latestVideo == null)
+                {
+                    _logger.LogError($"The video the user uploaded {video.ToJson()} was created in the db but retrieving it with the user id and the uploaded date was not successful");
+                    return Ok(new { message = "Video Uploaded successfully to VODLibrary" });
+                }
+
+                VideoWindowDTO videoWindowDTO = CreateVideoWindowDTOFromVideoRecord(latestVideo);
+
+
+                return Ok(new
+                {
+                    message = "Video Uploaded successfully to VODLibrary",
+                    videoWindowDTO
+                }
+                );
             }
             catch (Exception ex)
             {
@@ -197,6 +214,28 @@ namespace VodLibraryWithAngular.Server.Controllers
         private (int hours, int minutes, int seconds) VideoLengthConvertedToHoursMinutesSeconds(TimeSpan length)
         {
             return (((int)length.TotalHours, length.Minutes, length.Seconds));
+        }
+        private VideoWindowDTO CreateVideoWindowDTOFromVideoRecord(VideoRecord video)//if you feel brave place this function on every videoWindowDTO creation
+        {
+            VideoWindowDTO res = new VideoWindowDTO()
+            {
+                Id = video.Id,
+                Title = video.Title,
+                Uploaded = video.Uploaded,
+                Length = video.Length,
+                Views = video.Views,
+                VideoOwnerId = video.VideoOwnerId,
+                VideoOwnerName = video.VideoOwner.UserName,
+                ImagePath = $"{Request.Scheme}://{Request.Host}/thumbnail/{Path.GetFileName(video.ImagePath)}"
+            };
+
+            var (hours, minutes, seconds) = VideoLengthConvertedToHoursMinutesSeconds(video.Length);
+
+            res.Hours = hours;
+            res.Minutes = minutes;
+            res.Seconds = seconds;
+
+            return res;
         }
 
         [HttpGet("play/{videoId}")]

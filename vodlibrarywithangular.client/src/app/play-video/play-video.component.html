@@ -38,9 +38,9 @@
 <section *ngIf="userName ; else userIsNotLogged" >
   <form [formGroup]="commentForm" (ngSubmit)="addComment()" class="comment-form-wrapper">
     <label id="comment"></label>
-    <textarea id="comment" formControlName="Comment" (input)="areaAutoGrowth($event)"></textarea>
-    <div class="buttons-wrapper">
-      <button type="reset" >Cancel</button>
+    <textarea id="comment" formControlName="Comment" (input)="areaAutoGrowth($event)" (click)="commentFormClicked()"></textarea>
+    <div class="buttons-wrapper" *ngIf="isUserClickingCommentForm">
+      <button type="reset" (click)="cancelUserComment()">Cancel</button>
       <button type="submit" [disabled]="!commentForm.valid">Comment</button>
     </div>
   </form>

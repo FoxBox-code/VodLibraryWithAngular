@@ -3,11 +3,19 @@
 <form [formGroup]="uploadForm" (ngSubmit)="onSubmit()">
 
   <label id="title">Video Title:</label>
-  <input id="title" type="text" formControlName="Title">
+  <input id="title" type="text" formControlName="Title"
+  [class.invalid]="uploadForm.get('Title')?.invalid && (uploadForm.get('Title')?.dirty || uploadForm.get('Title')?.touched)">
+      <div class="error-section" *ngIf="uploadForm.get('Title')?.invalid && (uploadForm.get('Title')?.dirty || uploadForm.get('Title')?.touched)">
+          <p>Video title must be between {{dataConstants.TitleMinLength}} and {{dataConstants.TitleMaxLength}}</p>
+          <p *ngIf="uploadForm.get('Title')?.errors?.['maxlength']">You've hit the limit of allowed letters for a title</p>
+      </div>
   <p></p>
 
+
+
+
   <label id="description">Description:</label>
-  <textarea id="description" rows="4" formControlName="Description"></textarea>
+  <textarea id="description" formControlName="Description" (input)="areaAutoGrowth($event)"></textarea>
   <p></p>
 
 
@@ -24,12 +32,20 @@
   <p></p>
 
   <label id="videofile">Video File</label>
-  <input id="videofile" type="file" (change)="onFileSelect($event , 'videoFile')">
+  <input id="videofile" type="file" (change)="onFileSelect($event , 'videoFile')" #fileInput>
   <p></p>
 
   <label id="imagefile">Thumbnail</label>
-  <input id="imagefile" type="file" (change)="onFileSelect($event , 'imageFile')">
+  <input id="imagefile" type="file" (change)="onFileSelect($event , 'imageFile')" #fileInput>
+  <img *ngIf="currentImageUrl" [src]="currentImageUrl">
 
 
   <button [disabled]="uploadForm.invalid">Upload Video</button>
 </form>
+<!-- dont forget to add latestVideoAdded check after the visual is set -->
+<div *ngIf=" latestVideoWindow" class="latest-video-window">
+      <app-video-window [video]="latestVideoWindow">
+
+      </app-video-window>
+</div>
+
