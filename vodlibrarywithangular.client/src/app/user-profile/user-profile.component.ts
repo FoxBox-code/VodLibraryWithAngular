@@ -13,6 +13,8 @@ import { VideoWindow } from '../models/video-window';
 export class UserProfileComponent
 {
   userVideoCatalog : VideoWindow[] = [];
+  sessionSavingLoading : boolean = false;
+  sortingMethodType : string = '';
   constructor(private route : ActivatedRoute, private videoService : VideoService, private router : Router)
   {
 
@@ -39,6 +41,21 @@ export class UserProfileComponent
                 )
 
                   this.userVideoCatalog = data;
+
+                  const key = this.generateSessionKey();
+
+                  const savedSort = sessionStorage.getItem(key);
+
+                  if(savedSort !== null)
+                  {
+                    this.sessionSavingLoading = true;
+                    this.orderSelector(savedSort);
+                    this.sortingMethodType = savedSort;
+                  }
+                  else
+                    this.sortingMethodType = 'newest';
+
+
                 },
 
                 error : (err) =>
@@ -59,7 +76,33 @@ export class UserProfileComponent
 
   }
 
-  orderByNew()
+  orderSelector(orderType : string)
+  {
+      if(orderType === 'newest')
+      {
+          this.orderByNew();
+      }
+      else if(orderType === 'oldest')
+      {
+          this.orderByOld();
+      }
+      else if(orderType === 'popular')
+      {
+          this.orderByPopular();
+      }
+
+      if(!this.sessionSavingLoading)//skip the going back to session saving if we load it
+      {
+        this.sessionSortOnThisPage(orderType);
+
+      }
+      this.sessionSavingLoading = false;
+      this.sortingMethodType = orderType;
+
+
+  }
+
+  private orderByNew()
   {
     if(this.userVideoCatalog.length > 0)
     {
@@ -67,12 +110,36 @@ export class UserProfileComponent
     }
   }
 
-  orderByOld()
+  private orderByOld()
   {
     if(this.userVideoCatalog.length > 0)
     {
       this.userVideoCatalog.sort((a,b) => a.uploaded.getTime() - b.uploaded.getTime());
     }
+  }
+
+  private orderByPopular()
+  {
+    if(this.userVideoCatalog.length > 0)
+    {
+      this.userVideoCatalog.sort((a,b)=> b.views - a.views);
+    }
+
+  }
+
+  private sessionSortOnThisPage(orderType : string)
+  {
+      const key = this.generateSessionKey();
+
+      sessionStorage.setItem(key, orderType);
+  }
+
+  private generateSessionKey() : string
+  {
+      const profileId = this.route.snapshot.paramMap.get('userId');
+      const key = `{profilesort:${profileId}}`;
+
+      return key;
   }
 
 }

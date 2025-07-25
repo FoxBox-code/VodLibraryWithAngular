@@ -1,19 +1,30 @@
 <p>user-profile works!</p>
 <ng-container *ngIf="userVideoCatalog.length > 0">
-  <button type="button" (click)="orderByNew()">Order by new</button>
-  <button type="button" (click)="orderByOld()">Order by old</button>
+  <section class="sortButtonsWrap">
+        <button type="button" [class.active]="sortingMethodType === 'newest'" (click)="orderSelector('newest')">Order by new</button>
+        <button type="button" [class.active]="sortingMethodType === 'oldest'"(click)="orderSelector('oldest')">Order by old</button>
+        <button type="button" [class.active]="sortingMethodType === 'popular'" (click)="orderSelector('popular')">Order by pupluar</button>
+  </section>
 </ng-container>
+
 
 
 <div></div>
 
-<ng-container *ngFor="let video of userVideoCatalog">
-  <a [routerLink]="['/playing', video.id]">
-    <img [src]="video.imagePath" alt="Video Thumbnail">
-    <h3>{{video.title}}</h3>
-    <h4>by {{video.videoOwnerName}}</h4>
-    <p>Uploaded :{{video.uploaded}}</p>
-    <p>Views :{{video.views}}</p>
-    <p>Length : {{video.length}}</p>
-  </a>
-</ng-container>
+<div class="userVideoCatalog">
+  <ng-container *ngFor="let video of userVideoCatalog">
+  <div class="videoContainer">
+      <a [routerLink]="['/playing', video.id]">
+      <img [src]="video.imagePath" alt="Video Thumbnail">
+      <section class="videoDetails">
+        <h3>{{video.title}}</h3>
+        <h4>by {{video.videoOwnerName}}</h4>
+        <p>Uploaded :{{video.uploaded}}</p>
+        <p>Views :{{video.views}}</p>
+        <p>Length : {{video.length}}</p>
+      </section>
+    </a>
+  </div>
+
+  </ng-container>
+</div>

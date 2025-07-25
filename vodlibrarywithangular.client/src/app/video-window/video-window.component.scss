@@ -1,11 +1,48 @@
-.container-wrapper
+.videos-category-wrapper
 {
+  border: 2px whitesmoke solid;
+
+
+  .video-window-wrapper
+  {
   display: flex;
-
   flex-direction: column;
+  border: 2px solid whitesmoke;
+
+  }
+
+.image-wrapper {
+  display: grid;
+  width: fit-content;
+
+  img {
+    grid-area: 1 / 1;
+    display: block;
+    overflow: hidden;
+  }
+
+  span {
+    grid-area: 1 / 1;
+    justify-self: end;
+    align-self: end;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 2px 6px;
+    font-size: 12px;
+    border-radius: 4px;
+    margin: 5px;
+  }
 }
 
-a
+.video-details-wrapper
 {
-  font-style: none;
+  padding: 0 1rem;
+
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
 }
+
+}
+

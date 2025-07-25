@@ -1272,6 +1272,16 @@ namespace VodLibraryWithAngular.Server.Controllers
 
         }
 
+        [HttpGet("get-video-window")]
+        public async Task<IActionResult> GetVideoWindow()
+        {
+            VideoRecord video = await _dbContext.VideoRecords.Include(v => v.VideoOwner).FirstAsync(v => v.Id == 14);
+
+            VideoWindowDTO res = CreateVideoWindowDTOFromVideoRecord(video);
+
+            return Ok(res);
+        }
+
 
 
 

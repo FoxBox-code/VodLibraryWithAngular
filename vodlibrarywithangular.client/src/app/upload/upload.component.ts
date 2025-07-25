@@ -22,11 +22,15 @@ export class UploadComponent implements OnInit
    selectedCategory : Category | undefined;
    uploadForm : FormGroup;
    videoFile : File | null = null;
+   videFileName : string | null = null;
    imageFile : File | null = null;
+   imageFileName : string | null = null;
    currentImageUrl : string | null = null;
    dataConstants = DataCosntans;
    latestVideoAdded : boolean = false;
    latestVideoWindow : VideoWindow | undefined = undefined;
+
+   areaInputLimitHit : boolean = false;
 
       constructor(private videoService : VideoService, formBuilder : FormBuilder, private router: Router, private authService: AuthService)
       {
@@ -50,6 +54,9 @@ export class UploadComponent implements OnInit
               Title : ['', [Validators.required, Validators.maxLength(DataCosntans.TitleMaxLength), Validators.minLength(DataCosntans.TitleMinLength)]],
               Description : ['', [Validators.maxLength(DataCosntans.DescriptionMaxLength)]],
               CategoryId : ['', [Validators.required]],
+              VideoFile : ['', [Validators.required]],
+              ImageFile : ['', [Validators.required]]
+
 
           });
       }
@@ -58,7 +65,15 @@ export class UploadComponent implements OnInit
 
   ngOnInit(): void
   {
-
+    this.videoService.getVideoWindow()
+    .subscribe(
+      {
+        next : (data) =>
+        {
+          this.latestVideoWindow = data;
+        }
+      }
+    )
   }
   ngOnDestroy()
   {
@@ -87,6 +102,8 @@ export class UploadComponent implements OnInit
             {
               console.log(result.message);
               this.latestVideoWindow = result.videoWindowDTO;
+
+              this.uploadForm.reset();
             }
             ,
           error : (error) => console.error("Failed to upload a video", error.message, error.error, error.status) ,
@@ -125,6 +142,8 @@ export class UploadComponent implements OnInit
           {
             this.videoFile = file
             console.log(`Video file selected ${file.name}`);
+            this.videFileName = this.videoFile.name;
+            this.uploadForm.get('VideoFile')?.setValue(this.videoFile);
 
           }
           else
@@ -136,12 +155,14 @@ export class UploadComponent implements OnInit
 
 
         }
-        else
+        else if (fileName === 'imageFile')
         {
           if(imageFormatAllowed.includes(fileFormat as string) && fileFormat)
           {
               console.log(`Image file selected ${file.name}`);
               this.imageFile = file;
+              this.imageFileName = this.imageFile.name;
+              this.uploadForm.get('ImageFile')?.setValue(this.imageFile);
 
               this.clearLocalImageUrl()//clears the previous local Image In Browser if exists
               this.currentImageUrl = URL.createObjectURL(this.imageFile);
@@ -164,6 +185,35 @@ export class UploadComponent implements OnInit
 
       elementTextArea.style.height = 'auto';
       elementTextArea.style.height = elementTextArea.scrollHeight + 'px'
+  }
+  maxUserInput(event : Event, field : string)
+  {
+      const elementTextArea = event.target as HTMLTextAreaElement;
+      const value = elementTextArea.value;
+      let limit = value.length;
+
+      this.areaInputLimitHit = false;
+
+      if(field === 'Title')
+      {
+        limit = this.dataConstants.TitleMaxLength;
+      }
+      else if(field === 'Description')
+      {
+        limit = this.dataConstants.DescriptionMaxLength;
+      }
+
+      if(value.length > limit)
+         {
+            this.areaInputLimitHit = true;
+            elementTextArea.value = value.slice(0, limit);
+            this.uploadForm.get(field)?.setValue(elementTextArea.value);
+
+            this.areaAutoGrowth(event);
+         }
+
+
+
   }
 
   private clearLocalImageUrl()

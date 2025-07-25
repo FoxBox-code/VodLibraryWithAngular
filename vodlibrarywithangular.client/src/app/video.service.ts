@@ -456,6 +456,11 @@ export class VideoService
       return this.httpClient.get<VideoWindow[]>(`${ApiUrls.VIDEO}/user-profile/${userId}`);
   }
 
+  getVideoWindow() : Observable<VideoWindow>
+  {
+    return this.httpClient.get<VideoWindow>(`${ApiUrls.VIDEO}/get-video-window`);
+  }
+
 
 
 

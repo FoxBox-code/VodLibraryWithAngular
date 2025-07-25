@@ -20,7 +20,7 @@
 </section>
 
 <section *ngFor="let day of userPastWatchHistory; let dayIndex = index">
-    <h3>Will display today or date here, in the near future</h3>
+    <h3>Will display today or date here, in the near future  {{day[0].watchedOn | date : 'dd-MM-yyyy'}}</h3>
     <div *ngFor="let currVideo of day ; let videoIndex = index">
         <a [routerLink]="['/playing', currVideo.video.id]">
           <img [src]="currVideo.video.imagePath" alt="Video Thumbnail">

@@ -1,11 +1,16 @@
-<div *ngIf="video" class="container-wrapper">
-      <a [routerLink]="['/playing', video.id]">
+<div *ngIf="video">
+    <section class="videos-category-wrapper">
+
+
+            <a [routerLink]="['/playing', video.id]">
               <div class="image-wrapper">
                     <img [src]="video.imagePath" alt="Video Thumbnail">
-                    <span>Video duration  {{video.hours === 0 ? null : video.hours + ':'}}
+                    <!-- <span>Video duration  {{video.hours === 0 ? null : video.hours + ':'}}
                                   {{video.minutes === 0 ? null : video.minutes + ':'}}
                                   {{(video.hours === 0 && video.minutes === 0) ? video.seconds + 'sec': video.seconds}}
-                    </span>
+
+                    </span> -->
+                    <span>{{videoTimeSpanToString}}</span>
               </div>
 
             </a>
@@ -20,5 +25,8 @@
               <p>Uploaded on : {{video.uploaded | date : 'dd-MM-yyyy, HH:mm'}}</p>
 
               </a>
+            </div>
+
+          </section>
 </div>
 

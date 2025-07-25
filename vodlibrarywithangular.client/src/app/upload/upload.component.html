@@ -1,21 +1,25 @@
 
 
-<form [formGroup]="uploadForm" (ngSubmit)="onSubmit()">
+<form [formGroup]="uploadForm" (ngSubmit)="onSubmit()" class="form-wrapper">
 
   <label id="title">Video Title:</label>
-  <input id="title" type="text" formControlName="Title"
-  [class.invalid]="uploadForm.get('Title')?.invalid && (uploadForm.get('Title')?.dirty || uploadForm.get('Title')?.touched)">
+  <textarea id="title" type="text" formControlName="Title" (input)="areaAutoGrowth($event)" (input)="maxUserInput($event,'Title')"
+  [class.invalid]="uploadForm.get('Title')?.invalid && (uploadForm.get('Title')?.dirty || uploadForm.get('Title')?.touched)"></textarea>
       <div class="error-section" *ngIf="uploadForm.get('Title')?.invalid && (uploadForm.get('Title')?.dirty || uploadForm.get('Title')?.touched)">
           <p>Video title must be between {{dataConstants.TitleMinLength}} and {{dataConstants.TitleMaxLength}}</p>
-          <p *ngIf="uploadForm.get('Title')?.errors?.['maxlength']">You've hit the limit of allowed letters for a title</p>
       </div>
+      <!-- <p class="error-section" *ngIf="areaInputLimitHit">You've hit the limit of allowed letters for a title {{dataConstants.TitleMaxLength}}</p> -->
+
   <p></p>
 
 
 
 
   <label id="description">Description:</label>
-  <textarea id="description" formControlName="Description" (input)="areaAutoGrowth($event)"></textarea>
+  <textarea id="description" class="descriptionTextArea" formControlName="Description"
+    (input)="areaAutoGrowth($event)" (input)="maxUserInput($event,'Description')"></textarea>
+    <p class="error-section" *ngIf="areaInputLimitHit">You've hit the limit of allowed letters for a title {{dataConstants.DescriptionMaxLength}}</p>
+
   <p></p>
 
 
@@ -32,18 +36,24 @@
   <p></p>
 
   <label id="videofile">Video File</label>
-  <input id="videofile" type="file" (change)="onFileSelect($event , 'videoFile')" #fileInput>
+  <input #videoFileInput id="videofile" type="file" (change)="onFileSelect($event , 'videoFile')" style="display: none;">
+  <button type="button" (click)="videoFileInput.click()">Choose File</button>
+  <span>{{ videFileName === null ? 'No file selected' : videFileName }}</span>
   <p></p>
 
   <label id="imagefile">Thumbnail</label>
-  <input id="imagefile" type="file" (change)="onFileSelect($event , 'imageFile')" #fileInput>
-  <img *ngIf="currentImageUrl" [src]="currentImageUrl">
+  <input #imageFileInput id="imagefile" type="file" (change)="onFileSelect($event , 'imageFile')" style="display: none;">
+  <button type="button" (click)="imageFileInput.click()">Choose File</button>
+  <span>{{ imageFileName === null ? 'No file selected' : imageFileName }}</span>
+  <img *ngIf="currentImageUrl" [src]="currentImageUrl" width="480">
 
 
   <button [disabled]="uploadForm.invalid">Upload Video</button>
 </form>
+
 <!-- dont forget to add latestVideoAdded check after the visual is set -->
 <div *ngIf=" latestVideoWindow" class="latest-video-window">
+      <h3>Your latest video </h3>
       <app-video-window [video]="latestVideoWindow">
 
       </app-video-window>

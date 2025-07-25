@@ -141,7 +141,7 @@ namespace VodLibraryWithAngular.Server.Data
                 new Category { Id = 3, Name = "Gaming"},
                 new Category { Id = 4, Name = "Entertainment"},
                 new Category { Id = 5, Name = "Education"},
-                new Category { Id = 6, Name = "Science and Technology"}
+
 
 
             };
