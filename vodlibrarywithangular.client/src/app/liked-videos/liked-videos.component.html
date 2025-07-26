@@ -1,15 +1,17 @@
 <p>liked-videos works!</p>
 
 <section *ngFor="let video of listOfLikedVideos; let i = index" >
-  <a [routerLink]="['/playing', video.id]">
-    <p>{{i + 1}}</p>
-    <img [src]="video.imagePath" alt="Video thumbnail">
-  </a>
-  <a [routerLink]="['/playing', video.id]">
-    <h3>{{video.title}}</h3>
-    <h4><a [routerLink]="['/user-profile',video.videoOwnerId]">{{video.videoOwnerName}}</a></h4>
-    <p>Uploaded on :{{video.uploaded}} Views: {{video.views}}</p>
-    <p>Video duration : {{video.length}}</p>
-  </a>
-  <button type="button" (click)="deleteLikedVideoFromHistroy(video.id)">Remove this video from liked</button>
+  <section class="individualVideo">
+          <a [routerLink]="['/playing', video.id]" id="indexCount">
+            <p>{{i + 1}}</p>
+          </a>
+
+    <div class="videoInfo">
+          <app-video-window [video]="video"></app-video-window>
+    </div>
+       <button type="button" (click)="deleteLikedVideoFromHistroy(video.id)">Remove this video from liked</button>
+  </section>
+
+
+
 </section>

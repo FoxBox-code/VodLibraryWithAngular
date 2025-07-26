@@ -12,7 +12,7 @@ import { VideoService } from '../video.service';
 export class VideosSectionComponent
 {
   categoryWithVideos : CategoryWithVideos[] = [];
-  
+
   constructor(private videoService : VideoService)
   {
       this.videoService.getVideosSection().subscribe(
@@ -21,6 +21,7 @@ export class VideosSectionComponent
           {
 
             this.categoryWithVideos = result;
+            this.videoService.saveCategoriesInMemory(result)
           },
           error : (error) => console.error(`Failed to retrive categories and it's videos ${error.message, error.status, error.error}`),
           complete : () =>

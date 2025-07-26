@@ -226,7 +226,10 @@ namespace VodLibraryWithAngular.Server.Controllers
                 Views = video.Views,
                 VideoOwnerId = video.VideoOwnerId,
                 VideoOwnerName = video.VideoOwner.UserName,
-                ImagePath = $"{Request.Scheme}://{Request.Host}/thumbnail/{Path.GetFileName(video.ImagePath)}"
+                ImagePath = $"{Request.Scheme}://{Request.Host}/thumbnail/{Path.GetFileName(video.ImagePath)}",
+                CategoryId = video.CategoryId,
+                CategoryName = video.Category.Name
+
             };
 
             var (hours, minutes, seconds) = VideoLengthConvertedToHoursMinutesSeconds(video.Length);
@@ -980,18 +983,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                     continue; // not sure how to handle this 
                 }
 
-                VideoWindowDTO video = new VideoWindowDTO()
-                {
-                    Id = current.Id,
-                    Title = current.Title,
-                    Uploaded = current.Uploaded,
-                    Length = current.Length,
-                    Views = current.Views,
-                    VideoOwnerId = current.VideoOwnerId,
-                    VideoOwnerName = current.VideoOwner.UserName,
-                    ImagePath = $"{Request.Scheme}://{Request.Host}/thumbnail/{Path.GetFileName(current.ImagePath)}"
-
-                };
+                VideoWindowDTO video = CreateVideoWindowDTOFromVideoRecord(current);
 
 
 
@@ -1096,35 +1088,31 @@ namespace VodLibraryWithAngular.Server.Controllers
             DateTime today = DateTime.UtcNow.Date;
             DateTime tomorrow = today.AddDays(1);
 
-            var videos = await _dbContext.UserWatchHistories
+
+            List<UserWatchHistory> videos = await _dbContext.UserWatchHistories
                 .Include(x => x.Video)
+                .ThenInclude(v => v.VideoOwner)
                 .Where(x => x.UserId == userId && x.WatchedOn >= today && x.WatchedOn < tomorrow)
                 .OrderByDescending(x => x.WatchedOn)
+                .ToListAsync();
+
+            List<WatchHistoryVideoInfoDTO> watchHistoryVideoDto = videos
                 .Select(x => new WatchHistoryVideoInfoDTO
                 {
                     VideoId = x.VideoId,
                     WatchedOn = x.WatchedOn,
-                    Video = _dbContext.VideoRecords
-                    .Include(v => v.VideoOwner)
-                    .Where(v => v.Id == x.VideoId)
-                    .Select(v => new VideoWindowDTO
-                    {
-                        Id = v.Id,
-                        Title = v.Title,
-                        Uploaded = v.Uploaded,
-                        Length = v.Length,
-                        Views = v.Views,
-                        VideoOwnerId = v.VideoOwnerId,
-                        VideoOwnerName = v.VideoOwner.UserName,
-                        ImagePath = $"{Request.Scheme}://{Request.Host}/thumbnail/{Path.GetFileName(v.ImagePath)}"
-
-                    })
-                    .First(),
-                    PrimaryKeyId = x.Id
+                    Video = CreateVideoWindowDTOFromVideoRecord(x.Video),
+                    PrimaryKeyId = x.VideoId
                 })
-                .ToListAsync();
+                .ToList();
 
-            return Ok(videos);
+
+
+
+
+
+
+            return Ok(watchHistoryVideoDto);
         }
 
         [Authorize]
@@ -1159,17 +1147,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                 {
                     VideoId = video.VideoId,
                     WatchedOn = video.WatchedOn,
-                    Video = new VideoWindowDTO()
-                    {
-                        Id = video.Video.Id,
-                        Title = video.Video.Title,
-                        Uploaded = video.Video.Uploaded,
-                        Length = video.Video.Length,
-                        Views = video.Video.Views,
-                        VideoOwnerId = video.Video.VideoOwnerId,
-                        VideoOwnerName = video.Video.VideoOwner.UserName,
-                        ImagePath = $"{Request.Scheme}://{Request.Host}/thumbnail/{Path.GetFileName(video.Video.ImagePath)}"
-                    },
+                    Video = CreateVideoWindowDTOFromVideoRecord(video.Video),
                     PrimaryKeyId = video.Id
                 };
 
@@ -1272,7 +1250,7 @@ namespace VodLibraryWithAngular.Server.Controllers
 
         }
 
-        [HttpGet("get-video-window")]
+        [HttpGet("get-video-window")]////This is a HARDCODED API request to see visually how the poping element will in Upload Component
         public async Task<IActionResult> GetVideoWindow()
         {
             VideoRecord video = await _dbContext.VideoRecords.Include(v => v.VideoOwner).FirstAsync(v => v.Id == 14);
@@ -1281,6 +1259,124 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             return Ok(res);
         }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchVideo([FromQuery] string query)
+        {
+            List<VideoRecord> allVideos = await _dbContext.VideoRecords.Include(v => v.VideoOwner).ToListAsync();
+
+            string[] querySplitted = query.ToLower().Split(" ");
+            List<VideoWindowDTO> result = new List<VideoWindowDTO>();
+            HashSet<string> queryHashSet = new HashSet<string>(querySplitted);
+
+            foreach (var video in allVideos)
+            {
+                if (4 >= Levenshtein(query.ToLower(), video.Title.ToLower()))
+                    result.Add(CreateVideoWindowDTOFromVideoRecord(video));
+
+                else
+                {
+                    string[] titleSplited = video.Title.ToLower().Split(" ", StringSplitOptions.RemoveEmptyEntries);
+
+                    foreach (var prefix in titleSplited)
+                    {
+                        if (queryHashSet.Contains(prefix))
+                        {
+                            result.Add(CreateVideoWindowDTOFromVideoRecord(video));
+                        }
+                    }
+                }
+
+
+            }
+
+            if (result.Count == 0)
+            {
+                foreach (var video in allVideos)
+                {
+
+                    if (2 >= Levenshtein(video.Title.Split(" ").First(), querySplitted[0]))
+                        result.Add(CreateVideoWindowDTOFromVideoRecord(video));
+
+                }
+            }
+
+
+            return Ok(result);
+
+
+
+        }
+
+
+        private int Levenshtein(string a, string b)
+        {
+            if (a == b) return 0;
+            if (a.Length == 0) return b.Length;
+            if (b.Length == 0) return a.Length;
+
+            var costs = new int[b.Length + 1];
+            for (int j = 0; j <= b.Length; j++)
+                costs[j] = j;
+
+            for (int i = 1; i <= a.Length; i++)
+            {
+                costs[0] = i;
+                int nw = i - 1;
+                for (int j = 1; j <= b.Length; j++)
+                {
+                    int cj = Math.Min(
+                        1 + Math.Min(costs[j], costs[j - 1]),
+                        a[i - 1] == b[j - 1] ? nw : nw + 1);
+                    nw = costs[j];
+                    costs[j] = cj;
+                }
+            }
+
+            return costs[b.Length];
+        }
+
+        [Authorize]
+        [HttpGet("edit/${videoId}")]
+        public async Task<IActionResult> GetEditVideoInfo(int videoId)
+        {
+            string userId = _userManager.GetUserId(User);
+
+            if (userId == null)
+            {
+                return Unauthorized(new
+                {
+                    message = "User manager was not able to find current user's claims"
+                });
+            }
+
+            VideoRecord video = await _dbContext.VideoRecords.FirstOrDefaultAsync(v => v.Id == videoId);
+
+            if (video == null)
+            {
+                return BadRequest(new
+                {
+                    message = $"Video with id ${videoId} was not found"
+                });
+            }
+
+            if (userId != video.VideoOwnerId)
+            {
+                _logger.LogError($"Somehow user with id${userId} and claims principal {User} went into edit mode to video not of his own, " +
+                    $"specifically at ${video.Id} Title ${video.Title} which belongs to user with id${video.VideoOwnerId}");
+
+                return Unauthorized(new
+                {
+                    message = $"You are not allowed to change videos that don t belong to you"
+                });
+            }
+
+            VideoWindowDTO res = CreateVideoWindowDTOFromVideoRecord(video);
+
+            return Ok(res);
+
+        }
+
 
 
 

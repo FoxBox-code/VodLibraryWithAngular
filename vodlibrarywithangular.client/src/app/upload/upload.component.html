@@ -12,9 +12,6 @@
 
   <p></p>
 
-
-
-
   <label id="description">Description:</label>
   <textarea id="description" class="descriptionTextArea" formControlName="Description"
     (input)="areaAutoGrowth($event)" (input)="maxUserInput($event,'Description')"></textarea>
@@ -29,9 +26,6 @@
           {{category.name}}
     </option>
   </select>
-
-
-
 
   <p></p>
 
@@ -50,6 +44,12 @@
 
   <button [disabled]="uploadForm.invalid">Upload Video</button>
 </form>
+
+
+
+
+
+
 
 <!-- dont forget to add latestVideoAdded check after the visual is set -->
 <div *ngIf=" latestVideoWindow" class="latest-video-window">

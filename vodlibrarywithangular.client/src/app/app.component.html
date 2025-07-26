@@ -8,6 +8,9 @@
     <a routerLink="upload" routerLinkActive="active" ariaCurrentWhenActive="page">
       Go to upload
     </a>
+
+
+
     <ng-container *ngIf="!userAuth; else LoggedIn">
       <a routerLink="register" routerLinkActive="active" ariaCurrentWhenActive="page">
         Register
@@ -26,6 +29,18 @@
 </header>
 
 <main>
+
+  <form>
+          <label for="search">Search</label>
+          <input id="search" type="text"
+          [formControl]="searchBar"
+          (focus)="searchBarFocused = true"
+          (blur)="searchBarFocused = false">
+
+          <div *ngIf="typeof searchBar.value === 'string' && searchBar.value.length > 0 && searchBarFocused">
+              <button type="submit" (click)="performASearch()">Find</button>
+          </div>
+    </form>
 
   <ng-container *ngIf="mainMenu; else DifferentComponent">
         <app-videos-section>

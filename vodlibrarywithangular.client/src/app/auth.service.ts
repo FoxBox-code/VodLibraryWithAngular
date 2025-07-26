@@ -20,6 +20,7 @@ export class AuthService
   private tokenKey = 'authtokenkey';
   private authStatus = new BehaviorSubject(this.isAuthenticated());
   private userName = new BehaviorSubject(this.getUserNameFromToken());
+  private userId = new BehaviorSubject(this.getUserIdFromToken());
   private logOutEvent = new Subject<void>();
   public logout$ = this.logOutEvent.asObservable();
   public userTodayWatchHistorySubject = new BehaviorSubject<WatchHistoryVideoInfo[]>([]);
@@ -33,6 +34,7 @@ export class AuthService
 
           this.authStatus.next(true);
           this.userName.next(this.getUserNameFromToken());
+          this.userId.next(this.getUserIdFromToken());
 
   }
 
@@ -49,6 +51,7 @@ export class AuthService
     localStorage.removeItem(this.tokenKey);
     this.authStatus.next(false);
     this.userName.next(this.getUserNameFromToken());
+    this.userId.next(this.getUserIdFromToken());
     this.logOutEvent.next();
     this.userTodayWatchHistorySubject.next([]);
 
@@ -126,9 +129,27 @@ export class AuthService
 
   }
 
+  getUserIdFromToken() : string | null
+  {
+    const token = this.getLocalStorageToken();
+
+    if(!token)
+      return null;
+
+    const decodeToken : any = jwtDecode(token);
+    const userId = decodeToken.nameid;
+
+    return userId;
+  }
+
   getUserNameAsOservable() : Observable<string | null>
   {
     return this.userName.asObservable();
+  }
+
+  getUserIdAsObservable() : Observable<string | null>
+  {
+    return this.userId.asObservable();
   }
 
   getUserTodaysWatchHistory() : Observable<WatchHistoryVideoInfo[]>

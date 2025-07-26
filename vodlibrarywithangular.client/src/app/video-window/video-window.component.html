@@ -2,7 +2,7 @@
     <section class="videos-category-wrapper">
 
 
-            <a [routerLink]="['/playing', video.id]">
+            <a [routerLink]="['/playing', video.id]" (click)="saveScrollPosition()">
               <div class="image-wrapper">
                     <img [src]="video.imagePath" alt="Video Thumbnail">
                     <!-- <span>Video duration  {{video.hours === 0 ? null : video.hours + ':'}}
@@ -15,10 +15,10 @@
 
             </a>
             <div class="video-details-wrapper">
-              <h3><a [routerLink]="['/user-profile/', video.videoOwnerId]">{{video.title}}</a></h3>
+              <h3><a [routerLink]="['/user-profile/', video.videoOwnerId]" (click)="saveScrollPosition()">{{video.title}}</a></h3>
 
 
-              <h4><a [routerLink]="['/user-profile/', video.videoOwnerId]">{{video.videoOwnerName}}</a></h4>
+              <h4><a [routerLink]="['/user-profile/', video.videoOwnerId]" (click)="saveScrollPosition()">{{video.videoOwnerName}}</a></h4>
 
               <a [routerLink]="['/playing', video.id]">
               <p>Views: {{video.views}}</p>
@@ -26,6 +26,14 @@
 
               </a>
             </div>
+            <ng-container *ngIf="userId$ | async as userId">
+              <button *ngIf="video.videoOwnerId === userId" type="button" (click)="navigateToEditPage(video.id)">
+                <span class="material-symbols-outlined">
+                build
+              </span>
+              </button>
+
+            </ng-container>
 
           </section>
 </div>

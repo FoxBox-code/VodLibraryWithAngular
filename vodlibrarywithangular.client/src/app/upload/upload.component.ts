@@ -65,7 +65,7 @@ export class UploadComponent implements OnInit
 
   ngOnInit(): void
   {
-    this.videoService.getVideoWindow()
+    this.videoService.getVideoWindow()//This is a HARDCODED API request to see visually how the poping element will look (Delete) if you want
     .subscribe(
       {
         next : (data) =>

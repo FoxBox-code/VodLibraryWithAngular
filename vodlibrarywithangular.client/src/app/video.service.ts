@@ -46,7 +46,11 @@ export class VideoService
   public userCommentReactions: { [commentId: number]: boolean | undefined } = {};
   public userReplyReactions : {[replyId : number] : boolean | undefined} = {};
 
+  private categoriesSubject = new BehaviorSubject<Category[]>([]);
+  public categories$ = this.categoriesSubject.asObservable();
 
+  private selectedVideoSubcjet = new BehaviorSubject<VideoWindow | null>(null);
+  public  selectedVideo$ = this.selectedVideoSubcjet.asObservable();
 
 
   getCategorys() : Observable <Category[]>
@@ -460,6 +464,38 @@ export class VideoService
   {
     return this.httpClient.get<VideoWindow>(`${ApiUrls.VIDEO}/get-video-window`);
   }
+
+  getVideoSearched(searchTerm : string) : Observable<VideoWindow[]>
+  {
+      return this.httpClient.get<VideoWindow[]>(`${ApiUrls.VIDEO}/search`, {params : {query : searchTerm}} );
+  }
+
+  saveCategoriesInMemory(categories : CategoryWithVideos[] | Category[])
+  {
+      const extractCategoriesFromObject : Category[] = categories.map(x => (
+        {
+          id : x.id,
+          name : x.name
+        }
+      ))
+
+      console.log(`Saving in memory these categories (check if something is missing)${extractCategoriesFromObject}`)
+
+      this.categoriesSubject.next(extractCategoriesFromObject);
+
+  }
+
+  saveVideoSelectedInMemory(video : VideoWindow)
+  {
+      this.selectedVideoSubcjet.next(video);
+  }
+
+  getEditVideoInfo(videoId : string) : Observable<VideoWindow >
+  {
+      return this.httpClient.get<VideoWindow>(`${ApiUrls.VIDEO}/edit/${videoId}`);
+  }
+
+
 
 
 

@@ -9,6 +9,8 @@ import { PlayVideoComponent } from './play-video/play-video.component';
 import { LikedVideosComponent } from './liked-videos/liked-videos.component';
 import { WatchHistoryComponent } from './watch-history/watch-history.component';
 import { UserProfileComponent } from './user-profile/user-profile.component';
+import { SearchPageComponent } from './search-page/search-page.component';
+import { EditPageComponent } from './edit-page/edit-page.component';
 const routes: Routes = [
   // {
   //   path : '',
@@ -50,8 +52,17 @@ const routes: Routes = [
     path : 'user-profile/:userId',
     component : UserProfileComponent,
 
+  },
+  {
+    path : 'search-page',
+    component : SearchPageComponent
+  },
+  {
+    path : 'edit-page/:videoId',
+    component : EditPageComponent,
+    canActivate : [authGuard]
   }
-  
+
 
 ];
 

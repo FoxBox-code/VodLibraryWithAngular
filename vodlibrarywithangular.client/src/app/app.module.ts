@@ -15,6 +15,8 @@ import { LikedVideosComponent } from './liked-videos/liked-videos.component';
 import { WatchHistoryComponent } from './watch-history/watch-history.component';
 import { UserProfileComponent } from './user-profile/user-profile.component';
 import { VideoWindowComponent } from './video-window/video-window.component';
+import { SearchPageComponent } from './search-page/search-page.component';
+import { EditPageComponent } from './edit-page/edit-page.component';
 
 @NgModule({
   declarations: [
@@ -27,7 +29,9 @@ import { VideoWindowComponent } from './video-window/video-window.component';
     LikedVideosComponent,
     WatchHistoryComponent,
     UserProfileComponent,
-    VideoWindowComponent
+    VideoWindowComponent,
+    SearchPageComponent,
+    EditPageComponent
   ],
   imports: [
     BrowserModule, HttpClientModule,

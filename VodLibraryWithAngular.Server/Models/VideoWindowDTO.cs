@@ -17,6 +17,9 @@
 
         public int Views { get; set; }
 
+        public int CategoryId { get; set; }
+        public string CategoryName { get; set; }
+
         public required string VideoOwnerId { get; set; }
         public required string VideoOwnerName { get; set; }
 

@@ -1,0 +1,38 @@
+.individualVideo
+{
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+  #indexCount
+  {
+    align-items: center;
+    justify-content: center;
+    font-size: 5rem;
+
+    p
+    {
+      height: 100%;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+
+  .videoInfo
+  {
+  display: flex;
+  flex-direction: column;
+
+  }
+}
+
+a
+{
+  text-decoration: none;
+  color: inherit;
+}
+
