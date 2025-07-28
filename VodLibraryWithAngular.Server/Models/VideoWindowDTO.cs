@@ -2,7 +2,7 @@
 {
     public class VideoWindowDTO
     {
-        public int Id { get; set; }
+        public required int Id { get; set; }
 
         public required string Title { get; set; }
 
@@ -17,12 +17,14 @@
 
         public int Views { get; set; }
 
-        public int CategoryId { get; set; }
-        public string CategoryName { get; set; }
+        public required int CategoryId { get; set; }
+        public required string CategoryName { get; set; }
 
         public required string VideoOwnerId { get; set; }
         public required string VideoOwnerName { get; set; }
 
         public required string ImagePath { get; set; }
+
+        public required string? Description { get; set; }
     }
 }

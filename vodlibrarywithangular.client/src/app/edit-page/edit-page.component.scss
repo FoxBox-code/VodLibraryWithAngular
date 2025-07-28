@@ -1,0 +1,42 @@
+.videoCardWrapper
+{
+  width: 480px;
+}
+
+textarea
+{
+  resize: none;
+  width: 100%;
+}
+p
+{
+  width: 100%;
+}
+
+.hidden
+{
+  display: none;
+  background-color: black;
+}
+
+.imageContainer
+{
+  img
+  {
+      width: 480px;
+      height: 360px;
+  }
+
+
+}
+
+
+
+.confirm-delete-button:disabled
+{
+  opacity: 0.5;
+  cursor: not-allowed;
+
+
+}
+

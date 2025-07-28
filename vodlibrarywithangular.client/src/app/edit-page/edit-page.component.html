@@ -1,1 +1,97 @@
 <p>edit-page works!</p>
+
+
+        <h1>Click a field you like to change</h1>
+      <div class="videoCardWrapper" *ngIf="selectedVideo$ | async as video">
+
+        <section class="imageContainer">
+            <div *ngIf="newImageFile; else originalImage">
+              <img [src]="newImageFile" alt="">
+            </div>
+            <ng-template #originalImage>
+                <img [src]="video.imagePath" alt="vidoeImage">
+            </ng-template>
+
+        </section>
+
+
+        <form *ngIf="editVideoMetaDataForm" [formGroup]="editVideoMetaDataForm">
+          <div class="titleEdit">
+            <div (click)="fieldToEdit('title')"  *ngIf="editField === 'title'; else standardTitle ">
+
+                  <input id="title" type="text" formControlName="Title" (blur)="fieldToEdit(null)" #titleInput>
+
+
+            </div>
+
+            <button type="button"
+                  *ngIf="editVideoMetaDataForm.get('Title')?.value !== video.title"
+                  (mousedown)="resetFormField('Title'); $event.preventDefault()">
+                    Reset
+                  </button>
+                  <!-- I don t really understand how preventDefault works it says its stops the browsers default behavior but that does not mean anything to me
+                   in this case when we click this button preventDefault stops the browser from fakig its focus of input Title if we did not have it upon clicking the button
+                   we'd loose focus on input which removes the actual input container -->
+
+            <ng-template #standardTitle >
+              <h3 (click)="fieldToEdit('title')">{{editVideoMetaDataForm.get('Title')?.value}}</h3>
+            </ng-template>
+
+
+
+          </div>
+
+
+          <section class="descriptionEdit">
+              <div (click)="fieldToEdit('description')" *ngIf="editField === 'description' ; else standardDescription">
+
+                  <textarea id="description" formControlName="Description" #descriptionArea (input)="textAreaAutoGrowth()"
+                  [style.height.px]="textAreaHeightCal"
+                  (click)="fieldToEdit('Description')"
+                  (blur)="fieldToEdit(null)"></textarea>
+
+
+              </div>
+
+              <button type="button"
+                  *ngIf="editVideoMetaDataForm.get('Description')?.value !== video.description"
+                   (mousedown)="resetFormField('Description'); $event.preventDefault()">
+                    Reset
+                  </button>
+
+              <ng-template #standardDescription>
+                      <p (click)="fieldToEdit('description')">{{editVideoMetaDataForm.get('Description')?.value}}</p>
+              </ng-template>
+
+          </section>
+
+
+          <label for="category">Category:</label>
+          <select id="category" formControlName="CategoryId">
+            <option *ngFor="let category of categories$ | async" [value]="category.id">
+              {{category.name}}
+            </option>
+          </select>
+
+          <section class="fileSectionWrapper">
+                <input #imageFileUpload type="file" (change)="upLoadImageFile($event)" style="display: none;">
+                <button type="button" (click)="imageFileUpload.click()">Change thumbnail</button>
+                <button [disabled]="imageFileUpload === undefined" (click)="cancelImageChanges()" [class.hidden]="newImageFile == undefined">Cancel </button>
+                <span *ngIf="imageFileFormatIncorrect">The image file format you've provided is not supported by us , please use formats {{imageFormatAllowed}}</span>
+          </section>
+
+
+          <div>
+            <button type="button" [disabled]="editVideoMetaDataForm.invalid" (mousedown)="submitEditForVideoData($event)">Confirm changes</button>
+            <p *ngIf="userMadeNoChanges">You made no changes to any field</p>
+          </div>
+        </form>
+
+        <button type="button" (click)="openUpDeleteForm()">Delete video
+        </button>
+
+          <input type="text" *ngIf="deleteVideoInputEnabled" [value]="deleteInputValue" (input)="deleteInputValidation($event)" #tareget>
+          <button [disabled]="deleteValidationConfirmed === false" *ngIf="deleteVideoInputEnabled"  class="confirm-delete-button" (click)="deleteVideo(video.id)">DELETE</button>
+
+      </div>
+

@@ -18,6 +18,8 @@ import { UserReplyReactions } from './models/user-replies-reactions';
 import { ReplyLikeDislikeCountUpdateDTO } from './models/replyLikeDislikeCountUpdateDTO';
 import { VideoWindow } from './models/video-window';
 import { WatchHistoryVideoInfo } from './models/watch-history-video-info';
+import { FormGroup } from '@angular/forms';
+import { EditVideoFormControls } from './models/EditVideoFormControls';
 
 @Injectable({
   providedIn: 'root'
@@ -482,18 +484,65 @@ export class VideoService
       console.log(`Saving in memory these categories (check if something is missing)${extractCategoriesFromObject}`)
 
       this.categoriesSubject.next(extractCategoriesFromObject);
+      sessionStorage.setItem('videoCategories', JSON.stringify(extractCategoriesFromObject))
 
   }
 
   saveVideoSelectedInMemory(video : VideoWindow)
   {
       this.selectedVideoSubcjet.next(video);
+      sessionStorage.setItem('selectedVideo', JSON.stringify(video));
   }
 
-  getEditVideoInfo(videoId : string) : Observable<VideoWindow >
+  clearSelectedVIdeo()
   {
-      return this.httpClient.get<VideoWindow>(`${ApiUrls.VIDEO}/edit/${videoId}`);
+    const video : VideoWindow | null = null;
+    this.selectedVideoSubcjet.next(video);
   }
+
+  getEditVideoInfo(videoId : number) : Observable<VideoWindow>
+  {
+      const headers = this.getHttpHeaders();
+      return this.httpClient.get<VideoWindow>(`${ApiUrls.VIDEO}/edit/${videoId}`, {headers});
+  }
+
+  private getHttpHeaders() : HttpHeaders
+  {
+    const token = this.authService.getLocalStorageToken();
+    const headers = new HttpHeaders
+    (
+      {
+        Authorization : `Bearer ${token}`
+      }
+    )
+
+    return headers;
+  }
+
+  patchEditVideo(videoId : number ,formGroup : FormGroup<EditVideoFormControls> , newImageFile : string | undefined) : Observable<VideoWindow>
+  {
+    const headers = this.getHttpHeaders();
+
+    const payload =
+    {
+      title : formGroup.value.Title ?? null,
+      description : formGroup.value.Description ?? null,
+      categoryId : formGroup.value.CategoryId ?? null,
+      newImageString : newImageFile ?? null
+    }
+      console.log("Sending PATCH payload:", JSON.stringify(payload, null, 2));
+
+    return this.httpClient.patch<VideoWindow>(`${ApiUrls.VIDEO}/edit/${videoId}`, payload ,{headers})
+  }
+
+  deleteVideo(videoId : number)
+  {
+    const headers = this.getHttpHeaders();
+
+    return this.httpClient.delete(`${ApiUrls.VIDEO}/delete/${videoId}`,{headers})
+  }
+
+
 
 
 

@@ -81,7 +81,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                 image.Mutate(x => x.Resize(480, 360));
 
                 await using var outPutStream = new FileStream(thumbnail, FileMode.Create);
-                await image.SaveAsJpegAsync(outPutStream);
+                await image.SaveAsJpegAsync(outPutStream);//We only work with JPegs for now
 
 
 
@@ -147,69 +147,50 @@ namespace VodLibraryWithAngular.Server.Controllers
         {
             try
             {
-                List<CategoryWithItsVideosDTO> categoryWithItsVideosDTOs = await _dbContext
+                List<Category> categories = await _dbContext
                  .Categories
                  .Include(c => c.Videos)
                  .ThenInclude(v => v.VideoOwner)
-
-                 .Select(c => new CategoryWithItsVideosDTO()
-                 {
-
-                     Id = c.Id,
-                     Name = c.Name,
-                     Videos = c.Videos
-                     .Take(10)
-                     .Select(v =>
-
-                     new VideoWindowDTO()
-                     {
-                         Id = v.Id,
-                         Title = v.Title,
-                         Uploaded = v.Uploaded,
-                         Length = v.Length,
-                         Views = v.Views,
-                         VideoOwnerId = v.VideoOwnerId,
-                         VideoOwnerName = v.VideoOwner.UserName,
-                         ImagePath = $"{Request.Scheme}://{Request.Host}/thumbnail/{Path.GetFileName(v.ImagePath)}"
-
-                     }
-                     )
-                     .ToList()
-                 })
                  .ToListAsync();
 
-
-
-                if (categoryWithItsVideosDTOs.Count() == 0)
+                if (categories.Count() == 0)
                 {
                     return NotFound("Server could not find categories");
                 }
 
-                foreach (var category in categoryWithItsVideosDTOs)
-                {
-                    foreach (var video in category.Videos)
+                List<CategoryWithItsVideosDTO> categoryDTO = categories
+                    .Select(c => new CategoryWithItsVideosDTO
                     {
-                        var (hours, minutes, seconds) = VideoLengthConvertedToHoursMinutesSeconds(video.Length);
+                        Id = c.Id,
+                        Name = c.Name,
+                        Videos = c.Videos.Select(v => CreateVideoWindowDTOFromVideoRecord(v)).ToList()
+                    })
+                    .ToList();
 
-                        video.Hours = hours;
-                        video.Minutes = minutes;
-                        video.Seconds = seconds;
+                return Ok(categoryDTO);
 
-                    }
-                }
-
-                return Ok(categoryWithItsVideosDTOs);
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Failed to load the categories and its videos", error = ex.Message });
             }
 
-
-
-
-
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         private (int hours, int minutes, int seconds) VideoLengthConvertedToHoursMinutesSeconds(TimeSpan length)
         {
@@ -217,6 +198,11 @@ namespace VodLibraryWithAngular.Server.Controllers
         }
         private VideoWindowDTO CreateVideoWindowDTOFromVideoRecord(VideoRecord video)//if you feel brave place this function on every videoWindowDTO creation
         {
+            if (video.Category?.Name == null || video.VideoOwner?.UserName == null)
+            {
+                video = _dbContext.VideoRecords.Include(v => v.Category).Include(v => v.VideoOwner).First(v => v.Id == video.Id);
+            }
+
             VideoWindowDTO res = new VideoWindowDTO()
             {
                 Id = video.Id,
@@ -228,7 +214,8 @@ namespace VodLibraryWithAngular.Server.Controllers
                 VideoOwnerName = video.VideoOwner.UserName,
                 ImagePath = $"{Request.Scheme}://{Request.Host}/thumbnail/{Path.GetFileName(video.ImagePath)}",
                 CategoryId = video.CategoryId,
-                CategoryName = video.Category.Name
+                CategoryName = video.Category.Name,
+                Description = video.Description
 
             };
 
@@ -1051,26 +1038,13 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             await _dbContext.SaveChangesAsync();
 
+            VideoRecord video = _dbContext.VideoRecords.Include(v => v.VideoOwner).First(v => v.Id == videoId);
+
             WatchHistoryVideoInfoDTO res = new WatchHistoryVideoInfoDTO()
             {
                 VideoId = newAddition.VideoId,
                 WatchedOn = newAddition.WatchedOn,
-                Video = _dbContext.VideoRecords
-                    .Include(v => v.VideoOwner)
-                    .Where(v => v.Id == videoId)
-                    .Select(v => new VideoWindowDTO
-                    {
-                        Id = v.Id,
-                        Title = v.Title,
-                        Uploaded = v.Uploaded,
-                        Length = v.Length,
-                        Views = v.Views,
-                        VideoOwnerId = v.VideoOwnerId,
-                        VideoOwnerName = v.VideoOwner.UserName,
-                        ImagePath = $"{Request.Scheme}://{Request.Host}/thumbnail/{Path.GetFileName(v.ImagePath)}"
-
-                    })
-                    .First(),
+                Video = CreateVideoWindowDTOFromVideoRecord(video),
                 PrimaryKeyId = newAddition.Id
             };
 
@@ -1228,23 +1202,14 @@ namespace VodLibraryWithAngular.Server.Controllers
                 });
             }
 
-            List<VideoWindowDTO> userCatalog = await _dbContext
+            List<VideoRecord> userCatalog = await _dbContext
                 .VideoRecords
                 .Include(v => v.VideoOwner)
                 .Where(x => x.VideoOwnerId == user.Id)
                 .OrderByDescending(x => x.Uploaded)
-                .Select(v => new VideoWindowDTO
-                {
-                    Id = v.Id,
-                    Title = v.Title,
-                    Uploaded = v.Uploaded,
-                    Length = v.Length,
-                    Views = v.Views,
-                    VideoOwnerId = v.VideoOwnerId,
-                    VideoOwnerName = v.VideoOwner.UserName,
-                    ImagePath = $"{Request.Scheme}://{Request.Host}/thumbnail/{Path.GetFileName(v.ImagePath)}"
-                })
                 .ToListAsync();
+
+            List<VideoWindowDTO> userCatalogDTO = userCatalog.Select(v => CreateVideoWindowDTOFromVideoRecord(v)).ToList();
 
             return Ok(userCatalog);
 
@@ -1337,7 +1302,7 @@ namespace VodLibraryWithAngular.Server.Controllers
         }
 
         [Authorize]
-        [HttpGet("edit/${videoId}")]
+        [HttpGet("edit/{videoId}")]
         public async Task<IActionResult> GetEditVideoInfo(int videoId)
         {
             string userId = _userManager.GetUserId(User);
@@ -1375,6 +1340,115 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             return Ok(res);
 
+        }
+
+        [Authorize]
+        [HttpPatch("edit/{videoId}")]
+        public async Task<IActionResult> PatchEditVideoInfo(int videoId, [FromBody] EditVideoDTO body)
+        {
+            string userId = _userManager.GetUserId(User);
+
+            Console.WriteLine(body);
+            string imageBase64 = body.NewImageString;
+            VideoRecord video = await _dbContext.VideoRecords.FirstOrDefaultAsync(v => v.Id == videoId);
+
+
+            if (video == null)
+            {
+                _logger.LogError($"A request for editing video with id {videoId} was made but the database did not find it ");
+
+                return BadRequest(new
+                {
+                    message = $"Video with pointed id {videoId} was not found"
+                });
+            }
+
+            if (video.VideoOwnerId != userId)
+                return Unauthorized(new
+                {
+                    message = "You are not authorized to edit this video"
+                });
+
+            if (imageBase64 != null)
+            {
+                if (video.ImagePath != null)
+                {
+                    string oldPath = Path.Combine(_environment.WebRootPath, video.ImagePath.TrimStart('/'));
+
+                    if (System.IO.File.Exists(oldPath))
+                    {
+                        System.IO.File.Delete(oldPath);
+                    }
+                }
+
+                string filePath = Guid.NewGuid().ToString() + ".jpg";//A bit of an iffy with this jpg hard code
+                string savedPath = Path.Combine("thumbnail", filePath);
+                string fullPath = Path.Combine(_environment.WebRootPath, savedPath);
+
+                string pureBase64 = SanitizeBase64(imageBase64);
+                var imageBytes = Convert.FromBase64String(pureBase64);
+                await using var imageStream = new MemoryStream(imageBytes);
+
+                using var image = await Image.LoadAsync(imageStream);
+
+                image.Mutate(x => x.Resize(480, 360));
+
+                await using var outPutStream = new FileStream(fullPath, FileMode.Create);
+
+                await image.SaveAsJpegAsync(outPutStream);
+
+                video.ImagePath = fullPath;
+
+            }
+
+            video.Title = body.Title;
+            video.Description = body.Description;
+            video.CategoryId = (int)body.CategoryId;
+
+            await _dbContext.SaveChangesAsync();
+
+
+            VideoWindowDTO res = CreateVideoWindowDTOFromVideoRecord(video);
+
+            return Ok(res);
+        }
+
+        private string SanitizeBase64(string base64)//for context this is how a base 64 string looks like(/9j/4AAQSkZJRgABAQAAAQABAAD...) ,
+                                                    //these values before the comma are headers placed by the browser for context but in order to work with the
+                                                    //encoded data we need to remove these headers, data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...
+
+        {
+            int commaIndex = base64.IndexOf(",");
+            return commaIndex >= 0 ? base64.Substring(commaIndex + 1) : base64;
+        }
+
+        [Authorize]
+        [HttpDelete("delete/{videoId}")]
+        public async Task<IActionResult> DeleteVideo(int videoId)
+        {
+            string? userId = _userManager.GetUserId(User);
+
+            VideoRecord video = await _dbContext.VideoRecords.FirstOrDefaultAsync(x => x.Id == videoId);
+
+            if (video == null)
+            {
+                _logger.LogError($"The video with id:{videoId} was requested by user with id:{userId} to be deleted but the video was not found in the database");
+                return NotFound(new
+                { message = "Video was not found" });
+
+            }
+
+            if (userId == null || video.VideoOwnerId != userId)
+            {
+                return Unauthorized(new
+                { message = "You're not authorized to remove this video" });
+
+            }
+
+            _dbContext.VideoRecords.Remove(video);
+            await _dbContext.SaveChangesAsync();
+
+            return Ok();
         }
 
 

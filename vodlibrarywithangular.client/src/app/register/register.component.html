@@ -3,7 +3,7 @@
 <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
 
   <div class="form-group">
-    <div class="input-wrapper">
+    <div class="input-wrapper"> 
         <label id="username">UserName: </label>
         <input id="username" type="text" formControlName="UserName"
       [class.invalid]="registerForm.get('UserName')?.invalid && (registerForm.get('UserName')?.dirty || registerForm.get('UserName')?.touched)">
