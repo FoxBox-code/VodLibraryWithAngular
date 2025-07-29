@@ -1211,7 +1211,7 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             List<VideoWindowDTO> userCatalogDTO = userCatalog.Select(v => CreateVideoWindowDTOFromVideoRecord(v)).ToList();
 
-            return Ok(userCatalog);
+            return Ok(userCatalogDTO);
 
         }
 

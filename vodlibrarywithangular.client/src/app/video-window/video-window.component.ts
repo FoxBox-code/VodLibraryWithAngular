@@ -33,15 +33,7 @@ export class VideoWindowComponent
     }
   }
 
-  ngAfterViewInit()//remember ngAfterVIewInit runs after the DOM elements are loaded
-  {
-    const previousScrollYPosition = sessionStorage.getItem(this.videoWindowScrollPosition);
 
-    if(previousScrollYPosition !== null)
-    {
-       window.scrollTo({ top: parseInt(previousScrollYPosition), behavior: 'auto' });//behavior : auto scrolls instatnly to the current positoin , options for smoother scroll exist
-    }
-  }
 
 
   private convertVideoTimeSpanToString(video : VideoWindow) : string
@@ -68,19 +60,13 @@ export class VideoWindowComponent
     return `${h}${m}${s}`;
   }
 
-  navigateToEditPage(videoId : number)
+  navigateToEdit(video : VideoWindow)
   {
-      this.saveScrollPosition();
+      this.videoService.saveVideoSelectedInMemory(video);
 
-      if(this.video)
-        this.videoService.saveVideoSelectedInMemory(this.video);
-      this.router.navigate(['/edit-page', videoId]);
+      this.router.navigate(['/edit-page/', video.id])
   }
 
-  public saveScrollPosition() : void
-  {
-      const scrollY = window.scrollY
-      sessionStorage.setItem(this.videoWindowScrollPosition, scrollY.toString())
-  }
+
 }
 

@@ -51,6 +51,9 @@ export class EditPageComponent
 
 
       this.selectedVideo$ = videoService.selectedVideo$;
+      this.selectedVideo$.subscribe(video => console.log(video));
+      console.log(this.selectedVideo);
+
       this.categories$ = videoService.categories$;
 
       //moster of a code , combineLatest times to the completion of two async observables , we need this because in order to laod the form this needs to be done
@@ -161,7 +164,7 @@ export class EditPageComponent
         if(video)////DONT know why we need to check twice but its required to parse
           {
 
-            this.videoService.saveVideoSelectedInMemory(JSON.parse(video));
+            // this.videoService.saveVideoSelectedInMemory(JSON.parse(video)); WTF IS THIS GARBAGE DELETE AFTER YOU FIX THE PAGE
             this.buildForm(JSON.parse(video))
             this.getOriginalFormValues();
             console.log('Videos were loaded from memory , httpRequest avoided')
@@ -358,10 +361,9 @@ export class EditPageComponent
     {
       this.deleteVideoInputEnabled = !this.deleteVideoInputEnabled;
 
-      const userId = this.authService.getUserIdFromToken();
-              this.router.navigate(['user-profile/', userId]);
-
     }
+
+
 
     deleteInputValidation(event : Event)
     {

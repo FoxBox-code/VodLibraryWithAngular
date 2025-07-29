@@ -3,8 +3,10 @@ import { Component, OnInit, Query } from '@angular/core';
 import { UploadComponent } from './upload/upload.component';
 import { AuthService } from './auth.service';
 import { Observable } from 'rxjs';
-import { Router } from '@angular/router';
+import { NavigationEnd, NavigationStart, Router } from '@angular/router';
 import { FormControl } from '@angular/forms';
+import { VideoService } from './video.service';
+import { Category } from './models/category';
 
 
 
@@ -15,7 +17,7 @@ import { FormControl } from '@angular/forms';
   styleUrl: './app.component.scss'
 })
 export class AppComponent implements OnInit {
-  constructor(private http: HttpClient, private authService : AuthService, private router : Router)
+  constructor(private http: HttpClient, private authService : AuthService, private router : Router, private videoService : VideoService)
   {
     this.userNameDynamic$ = this.authService.getUserNameAsOservable();
     this.userId$ = this.authService.getUserIdAsObservable()
@@ -32,6 +34,9 @@ export class AppComponent implements OnInit {
   searchBar : FormControl = new FormControl<string>('');
   searchBarFocused : boolean = false;
 
+  dashBoardExpanded : boolean = false;
+  categories : Observable<Category[]> | null = null;
+
 
 
   ngOnInit()
@@ -43,10 +48,40 @@ export class AppComponent implements OnInit {
 
 
 
-    this.router.events.subscribe(() =>
+    this.router.events.subscribe((event) =>
     {
         this.mainMenu = this.router.url === '/';
+
+        if(event instanceof NavigationStart)
+        {
+          const currentURL = this.router.url;
+          const scrolly = window.scrollY.toString();
+          sessionStorage.setItem(currentURL, scrolly)
+        }
+
+        if(event instanceof NavigationEnd)
+        {
+          const currentURL = this.router.url;
+          const scrollYValueFromSession = sessionStorage[this.router.url]
+          if(scrollYValueFromSession > 0)
+          {
+            requestAnimationFrame(() =>
+            {
+                setTimeout(() =>
+                  {
+                    console.log('Restoring scroll to:', scrollYValueFromSession, 'on', currentURL);
+
+                  window.scrollTo(0, parseInt(sessionStorage[currentURL], 10));
+                  }, 100);//100seems to work for the scroll to apply I don t understand when the DOM element are finished rendering
+            })
+
+          }
+          else
+            window.scrollTo(0,0);
+        }
     })
+
+    this.categories = this.videoService.getCategorys()
   }
 
   logOutUser()
@@ -66,6 +101,16 @@ export class AppComponent implements OnInit {
           queryParams: { query: userInput }
         });
     }
+  }
+
+  getUserIdFromAuthService()
+  {
+    return this.authService.getUserIdFromToken();
+  }
+
+  ExpandDashBaord()
+  {
+    this.dashBoardExpanded = !this.dashBoardExpanded;
   }
 
 

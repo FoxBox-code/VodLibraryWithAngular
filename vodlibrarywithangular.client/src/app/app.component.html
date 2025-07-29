@@ -25,12 +25,8 @@
       <a *ngIf="userAuth" routerLink="liked-videos" routerLinkActive="active" ariaCurrentWhenActive="page"> Liked Videos</a>
       <a *ngIf="userAuth" routerLink="watch-history" routerLinkActive="active" ariaCurrentWhenActive="page"> Watch History</a>
     </ng-template>
-  </nav>
-</header>
 
-<main>
-
-  <form>
+    <form>
           <label for="search">Search</label>
           <input id="search" type="text"
           [formControl]="searchBar"
@@ -41,18 +37,57 @@
               <button type="submit" (click)="performASearch()">Find</button>
           </div>
     </form>
+  </nav>
+</header>
 
-  <ng-container *ngIf="mainMenu; else DifferentComponent">
-        <app-videos-section>
+<main>
+  <div class="main-container">
 
-        </app-videos-section>
-  </ng-container>
 
-  <ng-template #DifferentComponent>
-        <router-outlet>
+  <aside class="sideBar">
+    <button type="button" (click)="ExpandDashBaord()">Dash</button>
+    <a routerLink="/" routerLinkActive="true" ariaCurrentWhenActive="page">Home</a>
+    <a>Subscribers</a>
+    <div *ngIf="dashBoardExpanded === false ; else expandedView">
+      <a [routerLink]="['/user-profile', getUserIdFromAuthService()]" routerLinkActive="true" ariaCurrentWhenActive="page">You</a>
+    </div>
 
-        </router-outlet>
-  </ng-template>
+    <ng-template #expandedView>
+        <a [routerLink]="['/user-profile', getUserIdFromAuthService()]" routerLinkActive="true" ariaCurrentWhenActive="page">You</a>
+        <a [routerLink]="['/watch-history']">Histroy</a>
+        <a [routerLink]="['/liked-videos']">Liked Videos</a>
+
+        <h4>Subscriptions</h4>
+
+        <h4>Explore</h4>
+        <section *ngFor="let category of categories | async">
+          <p>{{category.name}}</p>
+        </section>
+
+    </ng-template>
+
+
+
+
+
+
+
+  </aside>
+
+  <section class="mainContent">
+      <ng-container *ngIf="mainMenu; else DifferentComponent">
+            <app-videos-section>
+
+            </app-videos-section>
+      </ng-container>
+
+      <ng-template #DifferentComponent>
+            <router-outlet>
+
+            </router-outlet>
+      </ng-template>
+  </section>
+  </div>
 
 </main>
 
