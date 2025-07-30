@@ -8,5 +8,9 @@ namespace VodLibraryWithAngular.Server.Data
         public ICollection<VideoLikesDislikes> LikeDislikesStats { get; set; }
 
         public ICollection<UserWatchHistory> UserWatchHistories { get; set; }
+
+        public ICollection<Subscriber> Followers { get; set; }
+
+        public ICollection<Subscriber> Following { get; set; }
     }
 }

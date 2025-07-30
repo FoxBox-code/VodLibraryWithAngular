@@ -49,11 +49,11 @@
     <a routerLink="/" routerLinkActive="true" ariaCurrentWhenActive="page">Home</a>
     <a>Subscribers</a>
     <div *ngIf="dashBoardExpanded === false ; else expandedView">
-      <a [routerLink]="['/user-profile', getUserIdFromAuthService()]" routerLinkActive="true" ariaCurrentWhenActive="page">You</a>
+      <a [routerLink]="['/you-page']" routerLinkActive="true" ariaCurrentWhenActive="page">You</a>
     </div>
 
     <ng-template #expandedView>
-        <a [routerLink]="['/user-profile', getUserIdFromAuthService()]" routerLinkActive="true" ariaCurrentWhenActive="page">You</a>
+        <a [routerLink]="['/you-page']" routerLinkActive="true" ariaCurrentWhenActive="page">You</a>
         <a [routerLink]="['/watch-history']">Histroy</a>
         <a [routerLink]="['/liked-videos']">Liked Videos</a>
 

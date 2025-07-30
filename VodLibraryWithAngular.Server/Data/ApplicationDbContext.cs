@@ -30,6 +30,8 @@ namespace VodLibraryWithAngular.Server.Data
 
         public DbSet<UserWatchHistory> UserWatchHistories { get; set; }
 
+        public DbSet<Subscriber> SubScribers { get; set; }
+
         private Category[] categoriesToSeed;
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -123,6 +125,18 @@ namespace VodLibraryWithAngular.Server.Data
                 .WithMany(v => v.WatchHistories)
                 .HasForeignKey(x => x.VideoId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Subscriber>()
+                .HasOne(f => f.Follower)
+                .WithMany(s => s.Following)
+                .HasForeignKey(f => f.FollowerId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<Subscriber>()
+                .HasOne(s => s.Subscribed)
+                .WithMany(f => f.Followers)
+                .HasForeignKey(s => s.SubscribedId)
+                .OnDelete(DeleteBehavior.NoAction);
 
 
             SeedCategories();

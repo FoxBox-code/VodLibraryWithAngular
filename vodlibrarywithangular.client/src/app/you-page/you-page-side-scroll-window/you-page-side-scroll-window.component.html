@@ -1,0 +1,19 @@
+<section class="sideScrollContainer" #sideScrollContainer>
+    
+    <button [routerLink]="['/watch-history']">View all</button>
+    <button type="button" [disabled]="index == 0" (click)="moveLeft()"> Move left</button>
+    <button type="button" [disabled]="maxIndex -1 <= index" (click)="moveRight()">Move right </button>
+    <div class="videosWrapper" #videosWrapper>
+        <section class="Panel" *ngFor="let videoInfo of video" >
+                <a [routerLink]="['/playing/', videoInfo.id]" routerLinkActive="true" ariaCurrentWhenActive="page">
+                  <img [src]="videoInfo.imagePath" alt="">
+                  <h4>{{videoInfo.title}}</h4>
+                </a>
+          </section>
+      </div>
+</section>
+
+
+
+
+<p>Component Works</p>

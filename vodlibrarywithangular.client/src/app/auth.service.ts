@@ -7,6 +7,7 @@ import { BehaviorSubject } from 'rxjs';
 import {jwtDecode} from 'jwt-decode';
 import { ApiUrls } from './api-URLS';
 import { WatchHistoryVideoInfo } from './models/watch-history-video-info';
+import { ProfilesFollowingDTO } from './models/profiles-followingDTO';
 
 
 
@@ -20,11 +21,15 @@ export class AuthService
   private tokenKey = 'authtokenkey';
   private authStatus = new BehaviorSubject(this.isAuthenticated());
   private userName = new BehaviorSubject(this.getUserNameFromToken());
-  private userId = new BehaviorSubject(this.getUserIdFromToken());
+  private userIdSubject = new BehaviorSubject(this.getUserIdFromToken());
   private logOutEvent = new Subject<void>();
   public logout$ = this.logOutEvent.asObservable();
   public userTodayWatchHistorySubject = new BehaviorSubject<WatchHistoryVideoInfo[]>([]);
   public userTodayWatchHistory$ = this.userTodayWatchHistorySubject.asObservable();
+
+  private userFollowingSubject = new BehaviorSubject<ProfilesFollowingDTO[] | null>(null);
+  public userFollowing$ = this.userFollowingSubject.asObservable();
+
   constructor(private httpClient : HttpClient,) { }
 
   setLocalStorageToken(token : string)
@@ -34,7 +39,7 @@ export class AuthService
 
           this.authStatus.next(true);
           this.userName.next(this.getUserNameFromToken());
-          this.userId.next(this.getUserIdFromToken());
+          this.userIdSubject.next(this.getUserIdFromToken());
 
   }
 
@@ -51,7 +56,7 @@ export class AuthService
     localStorage.removeItem(this.tokenKey);
     this.authStatus.next(false);
     this.userName.next(this.getUserNameFromToken());
-    this.userId.next(this.getUserIdFromToken());
+    this.userIdSubject.next(this.getUserIdFromToken());
     this.logOutEvent.next();
     this.userTodayWatchHistorySubject.next([]);
 
@@ -149,7 +154,7 @@ export class AuthService
 
   getUserIdAsObservable() : Observable<string | null>
   {
-    return this.userId.asObservable();
+    return this.userIdSubject.asObservable();
   }
 
   getUserTodaysWatchHistory() : Observable<WatchHistoryVideoInfo[]>
@@ -200,6 +205,33 @@ export class AuthService
         )
 
         return this.httpClient.delete<{message : string}>(`${ApiUrls.HISTORY}/${primaryKeyId}`, {headers})
+  }
+
+  getUserFollowing() : Observable<ProfilesFollowingDTO[]>
+  {
+    const headers = this.getHttpHeaders();
+
+    return this.httpClient.get<ProfilesFollowingDTO[]>(`${ApiUrls.VIDEO}/subscribers`, {headers})
+
+
+  }
+
+  private getHttpHeaders() : HttpHeaders
+  {
+    const token = this.getLocalStorageToken();
+    const headers = new HttpHeaders
+    (
+      {
+        Authorization : `Bearer ${token}`
+      }
+    )
+
+    return headers;
+  }
+
+  public updateSubectForUserFollowing(following :  ProfilesFollowingDTO[])
+  {
+      this.userFollowingSubject.next(following);
   }
 
 

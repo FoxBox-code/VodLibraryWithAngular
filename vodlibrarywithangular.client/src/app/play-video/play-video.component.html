@@ -5,6 +5,7 @@
     <h2>{{selectedVideo?.title}}</h2>
     <section class="user-likes-dislikes-wrapper">
       <a [routerLink]="['/user-profile', selectedVideo?.videoOwnerId]">{{selectedVideo?.videoOwnerName}}</a>
+      <button type="button" (click)="subscribeToUser()">Subscribe</button>
           <ng-container *ngIf="reaction">
             <div class="reaction">
                   <button type="button" (click)="addReaction('Like')">Likes  : {{reaction.likeCount}}</button>

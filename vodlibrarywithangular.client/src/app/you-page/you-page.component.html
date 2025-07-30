@@ -1,0 +1,37 @@
+<p>you-page works!</p>
+
+
+<ng-container *ngIf="userId$ | async as userId ;else notLogged">
+  <p>Debug userId: {{ userId }}</p>
+
+  <p>Enjoy</p>
+
+</ng-container>
+
+
+  <ng-template #notLogged>
+    <p>Please login</p>
+  </ng-template>
+
+  <div class="history">
+    <h2>History</h2>
+      <app-you-page-side-scroll-window [video]="watchHistoryVideoInfo"></app-you-page-side-scroll-window>
+  </div>
+
+
+
+
+  <div class="likedVideos">
+      <h2>Liked videos</h2>
+      <app-you-page-side-scroll-window [video]="likedVideosCollection"></app-you-page-side-scroll-window>
+  </div>
+
+
+
+
+
+
+
+
+
+

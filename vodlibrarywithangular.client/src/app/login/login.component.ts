@@ -72,7 +72,7 @@ export class LoginComponent implements AfterViewInit
       {
         this.focusPassWordButton = false;
       }
-      
+
     }
 
     onSubmit()
@@ -117,6 +117,15 @@ export class LoginComponent implements AfterViewInit
                   }
                 }
               )
+
+              this.authService.getUserFollowing().subscribe({
+                next : (following) =>
+                  {
+                    this.authService.updateSubectForUserFollowing(following);
+                    console.log("We recieved user's followers");
+                  }
+
+              })
             },
           error : (error) => console.log("Login failed", { messgae : error.message, status : error.status ,error : error.error }),
 

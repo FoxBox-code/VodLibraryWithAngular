@@ -1,0 +1,30 @@
+.sideScrollContainer
+{
+  /* sets the boundaries of content overflow */
+  width: auto;
+  overflow: hidden;
+  position: relative;
+  display: inline-block;
+
+  /* Element that we move */
+  .videosWrapper
+  {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  transition: transform 0.3s ease;
+
+
+
+
+    .Panel
+    {
+      width: 480px;
+      flex-shrink: 0;
+    }
+
+
+
+
+  }
+}

@@ -11,6 +11,7 @@ import { WatchHistoryComponent } from './watch-history/watch-history.component';
 import { UserProfileComponent } from './user-profile/user-profile.component';
 import { SearchPageComponent } from './search-page/search-page.component';
 import { EditPageComponent } from './edit-page/edit-page.component';
+import { YouPageComponent } from './you-page/you-page.component';
 const routes: Routes = [
   // {
   //   path : '',
@@ -61,6 +62,11 @@ const routes: Routes = [
     path : 'edit-page/:videoId',
     component : EditPageComponent,
     canActivate : [authGuard]
+  },
+  {
+    path : 'you-page',
+    component : YouPageComponent,
+    
   }
 
 

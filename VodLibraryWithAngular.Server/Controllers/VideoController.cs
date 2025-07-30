@@ -940,21 +940,23 @@ namespace VodLibraryWithAngular.Server.Controllers
 
         [Authorize]
         [HttpGet("liked")]
-        public async Task<IActionResult> GetUserLikedHistory()
+        public async Task<IActionResult> GetUserLikedHistory([FromQuery] int take)
         {
             string userId = _userManager.GetUserId(User);
 
 
-            var videoIds = await _dbContext.VideoLikesDislikes
+            var videoLikesDislikes = _dbContext.VideoLikesDislikes
                 .Where(x => x.UserId == userId && x.Liked)
-                .OrderByDescending(x => x.TimeOfLike)
-                .Select(x => new
-                {
-                    videoId = x.VideoId
-                })
-                .ToListAsync();
+                .OrderByDescending(x => x.TimeOfLike);
 
+            if (take > 0)
+                videoLikesDislikes = (IOrderedQueryable<VideoLikesDislikes>)videoLikesDislikes.Take(take);
 
+            var videoIds = await videoLikesDislikes.Select(x => new
+            {
+                videoId = x.VideoId
+            })
+            .ToListAsync();
 
             List<VideoWindowDTO> collection = new List<VideoWindowDTO>();
 
@@ -979,6 +981,12 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             return Ok(collection);
         }
+
+
+
+
+
+
 
         [Authorize]
         [HttpDelete("liked/{videoId}")]
@@ -1013,7 +1021,7 @@ namespace VodLibraryWithAngular.Server.Controllers
         {
             string userId = _userManager.GetUserId(User);
 
-            UserWatchHistory newAddition = await _dbContext.UserWatchHistories.FirstOrDefaultAsync(h => h.VideoId == videoId && userId == h.UserId);
+            UserWatchHistory newAddition = await _dbContext.UserWatchHistories.FirstOrDefaultAsync(h => h.VideoId == videoId && userId == h.UserId);//check for duplicates
 
             if (newAddition == null)
             {
@@ -1449,6 +1457,52 @@ namespace VodLibraryWithAngular.Server.Controllers
             await _dbContext.SaveChangesAsync();
 
             return Ok();
+        }
+
+        [Authorize]
+        [HttpGet("history/you")]
+        public async Task<IActionResult> GetUserHistoryForYouPage()
+        {
+            string userId = _userManager.GetUserId(User);
+
+            List<UserWatchHistory> history = await _dbContext.UserWatchHistories.Where(h => h.UserId == userId)
+                .Include(h => h.Video)
+                .OrderByDescending(h => h.WatchedOn)
+                .Take(10)
+                .ToListAsync();
+
+            if (history.Count == 0)
+            {
+                return NotFound(new
+                {
+                    message = "No history"
+                });
+            }
+
+            List<VideoWindowDTO> videoWindowDTOs = history.Select(h => CreateVideoWindowDTOFromVideoRecord(h.Video)).ToList();
+
+            return Ok(videoWindowDTOs);
+        }
+
+        [Authorize]
+        [HttpGet("subscribers")]
+        public async Task<IActionResult> GetUserFollowing()
+        {
+            string userId = _userManager.GetUserId(User);
+
+            var queryResult = await _dbContext.SubScribers.Where(s => s.FollowerId == userId).ToListAsync();
+
+            List<ProfilesFollowingDTO> following = queryResult.Select(q => new ProfilesFollowingDTO
+            {
+                Id = q.SubscribedId,
+                UserName = q.SubscribedUserName,
+                SubscribedOn = q.SubscribedOn
+
+            })
+            .ToList();
+
+            return Ok(following);
+
         }
 
 

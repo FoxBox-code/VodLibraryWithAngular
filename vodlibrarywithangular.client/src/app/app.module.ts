@@ -17,6 +17,8 @@ import { UserProfileComponent } from './user-profile/user-profile.component';
 import { VideoWindowComponent } from './video-window/video-window.component';
 import { SearchPageComponent } from './search-page/search-page.component';
 import { EditPageComponent } from './edit-page/edit-page.component';
+import { YouPageComponent } from './you-page/you-page.component';
+import { YouPageSideScrollWindowComponent } from './you-page/you-page-side-scroll-window/you-page-side-scroll-window.component';
 
 @NgModule({
   declarations: [
@@ -31,7 +33,9 @@ import { EditPageComponent } from './edit-page/edit-page.component';
     UserProfileComponent,
     VideoWindowComponent,
     SearchPageComponent,
-    EditPageComponent
+    EditPageComponent,
+    YouPageComponent,
+    YouPageSideScrollWindowComponent
   ],
   imports: [
     BrowserModule, HttpClientModule,

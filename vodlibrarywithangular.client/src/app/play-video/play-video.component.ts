@@ -16,6 +16,7 @@ import { Reply } from '../models/reply';
 import { Reaction } from '../models/reaction';
 import { ReplyLikeDislikeCountUpdateDTO } from '../models/replyLikeDislikeCountUpdateDTO';
 import { WatchHistoryVideoInfo } from '../models/watch-history-video-info';
+import { ProfilesFollowingDTO } from '../models/profiles-followingDTO';
 
 
 @Component({
@@ -58,6 +59,8 @@ export class PlayVideoComponent
 
     public sortMenuOpen : boolean = false;
     public criteria : 'popular' | 'newest' = 'newest';
+    public userFollowing$ : Observable<ProfilesFollowingDTO[] | null> ;
+
 
     @ViewChild('sortWrapper', {static : false}) sortWrapper? : ElementRef //this makes a dom element to a variable
 
@@ -97,7 +100,8 @@ export class PlayVideoComponent
         videoService.getCommentsCount(this.selectedVideoId);
         this.commentsCountObservable = videoService.commentsCount$;
         this.views$ = videoService.views$;
-
+        this.userFollowing$ = this.authService.userFollowing$;
+        
 
     }
 
@@ -149,6 +153,8 @@ export class PlayVideoComponent
 
 
         }
+
+
 
     }
     commentFormClicked()
@@ -688,6 +694,11 @@ export class PlayVideoComponent
             )
 
           }
+        }
+
+        public subscribeToUser()
+        {
+
         }
 
       }

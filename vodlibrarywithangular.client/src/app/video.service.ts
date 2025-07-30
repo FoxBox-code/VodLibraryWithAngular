@@ -1,7 +1,7 @@
 import { Injectable,inject } from '@angular/core';
 import { BehaviorSubject, Observable, retry } from 'rxjs';
 import { Category } from './models/category';
-import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { ApiUrls } from './api-URLS';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
@@ -419,7 +419,7 @@ export class VideoService
 
   }
 
-  getUsersLikedVideosHistory() : Observable<VideoWindow[]>
+  getUsersLikedVideosHistory(take? : number) : Observable<VideoWindow[]>
   {
     const token = this.authService.getLocalStorageToken();
     const headers = new HttpHeaders
@@ -429,7 +429,11 @@ export class VideoService
       }
     )
 
-    return this.httpClient.get<VideoWindow[]>(`${ApiUrls.LIKEDVIDEOS}`, {headers});
+    const params = new HttpParams();
+    if(take)
+      params.set('take', take);
+
+    return this.httpClient.get<VideoWindow[]>(`${ApiUrls.LIKEDVIDEOS}`, {headers, params});
   }
 
   deleteLikedVideoFromHistory(videoId : number) : Observable<{message : string}>
@@ -540,6 +544,13 @@ export class VideoService
     const headers = this.getHttpHeaders();
 
     return this.httpClient.delete(`${ApiUrls.VIDEO}/delete/${videoId}`,{headers})
+  }
+
+  getUserHistoryForYouPage() : Observable<VideoWindow[]>
+  {
+      const headers = this.getHttpHeaders();
+
+      return this.httpClient.get<VideoWindow[]>(`${ApiUrls.VIDEO}/history/you`, {headers})
   }
 
 
