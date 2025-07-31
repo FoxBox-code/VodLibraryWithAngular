@@ -1,7 +1,7 @@
 import { Injectable,inject } from '@angular/core';
 import { BehaviorSubject, Observable, retry } from 'rxjs';
 import { Category } from './models/category';
-import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams, HttpParamsOptions } from '@angular/common/http';
 import { ApiUrls } from './api-URLS';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
@@ -20,6 +20,7 @@ import { VideoWindow } from './models/video-window';
 import { WatchHistoryVideoInfo } from './models/watch-history-video-info';
 import { FormGroup } from '@angular/forms';
 import { EditVideoFormControls } from './models/EditVideoFormControls';
+import { SubscribingDTO } from './models/subscribingDTO';
 
 @Injectable({
   providedIn: 'root'
@@ -553,6 +554,45 @@ export class VideoService
       return this.httpClient.get<VideoWindow[]>(`${ApiUrls.VIDEO}/history/you`, {headers})
   }
 
+  subscribeUserToVideoOwner(userId : string, followerUserNameProp : string , videoOwnerId : string , subscribedToUserNameProp : string)
+  {
+    const headers = this.getHttpHeaders();
+
+    const subscribingDTO : SubscribingDTO =
+    {
+        followerId : userId,
+        followerUserName : followerUserNameProp,
+        subscribedToId : videoOwnerId,
+        subscribedToUserName : subscribedToUserNameProp
+
+    }
+
+    return this.httpClient.post(`${ApiUrls.VIDEO}/subscribe`, subscribingDTO , {headers})
+  }
+
+  unSubscribeUserToVideoOwner(userId : string, followerUserNameProp : string , videoOwnerId : string , subscribedToUserNameProp : string)
+  {
+      const headers = this.getHttpHeaders();
+
+       const subscribingDTO : SubscribingDTO =
+    {
+        followerId : userId,
+        followerUserName : followerUserNameProp,
+        subscribedToId : videoOwnerId,
+        subscribedToUserName : subscribedToUserNameProp
+
+    }
+
+    const params : HttpParams = new HttpParams()
+    .set('followerId', userId)
+    .set('followerUserName', followerUserNameProp)
+    .set('subscribedToId', videoOwnerId)
+    .set('subscribedToUserName', subscribedToUserNameProp);
+    
+
+    console.log(params);
+    return this.httpClient.delete(`${ApiUrls.VIDEO}/subscribe`, {headers,params})
+  }
 
 
 

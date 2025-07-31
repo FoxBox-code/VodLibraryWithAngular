@@ -60,6 +60,8 @@ export class PlayVideoComponent
     public sortMenuOpen : boolean = false;
     public criteria : 'popular' | 'newest' = 'newest';
     public userFollowing$ : Observable<ProfilesFollowingDTO[] | null> ;
+    public userFollowing : ProfilesFollowingDTO[] = [];
+    public hasUserSubscribedToVideoOwner : boolean = false;
 
 
     @ViewChild('sortWrapper', {static : false}) sortWrapper? : ElementRef //this makes a dom element to a variable
@@ -77,6 +79,8 @@ export class PlayVideoComponent
                 this.selectedVideo = result;
                 console.log(JSON.stringify(this.selectedVideo));
                 videoService.getVideoViews(this.selectedVideoId);
+
+                this.getUserFillowersForThisPage();
             }
 
 
@@ -101,8 +105,37 @@ export class PlayVideoComponent
         this.commentsCountObservable = videoService.commentsCount$;
         this.views$ = videoService.views$;
         this.userFollowing$ = this.authService.userFollowing$;
-        
 
+
+
+
+
+
+    }
+
+    private getUserFillowersForThisPage()
+    {
+      this.userFollowing$.subscribe(
+          {
+            next : (following) =>
+            {
+              this.hasUserSubscribedToVideoOwner = following?.some(x => x.id == this.selectedVideo?.videoOwnerId) ?? false;
+              this.userFollowing = following ?? [];
+            }
+          }
+        )
+
+        if(this.userFollowing.length === 0)
+        {
+          const userFollowingFromStorage = sessionStorage.getItem('userFollowing');
+          const userFollowingFromStorageParse : ProfilesFollowingDTO[] = userFollowingFromStorage ? JSON.parse(userFollowingFromStorage) : []
+
+          if(userFollowingFromStorageParse.length !== 0)
+          {
+            this.authService.updateSubjectForUserFollowing(userFollowingFromStorageParse);
+             this.hasUserSubscribedToVideoOwner = userFollowingFromStorageParse?.some(x => x.id == this.selectedVideo?.videoOwnerId) ?? false;
+          }
+        }
     }
 
     ngOnInit() : void
@@ -698,10 +731,112 @@ export class PlayVideoComponent
 
         public subscribeToUser()
         {
+          const subscribingTo = this.selectedVideo?.videoOwnerId;
+          const currentUser = this.authService.getUserIdFromToken();
 
-        }
+          const userName = this.authService.getUserNameFromToken();
+          const videoOwner = this.selectedVideo?.videoOwnerName;
 
-      }
+          if(!this.hasUserSubscribedToVideoOwner)
+          {
+            if(currentUser && userName && subscribingTo && videoOwner)
+            {
+
+
+
+
+              const newProfileFollowingDTO : ProfilesFollowingDTO =
+              {
+                userName : this.selectedVideo!.videoOwnerName,
+                id : this.selectedVideo!.videoOwnerId,
+                subscribedOn : new Date()
+
+              }
+              this.userFollowing.push(newProfileFollowingDTO);
+
+
+
+              this.authService.updateSubjectForUserFollowing(this.userFollowing);
+              sessionStorage.setItem('userFollowing', JSON.stringify(this.userFollowing))
+
+              this.videoService.subscribeUserToVideoOwner(currentUser , userName, subscribingTo, videoOwner)
+              .subscribe(
+                {
+                    next : () =>
+                    {
+                      console.log(`Server returned succsess`);
+                    },
+                    error : (err) =>
+                      {
+                        console.error(err);
+                        if(err.status = 400)
+                        {
+                            this.hasUserSubscribedToVideoOwner = true;//status 400 from the server means that a duplicate subscription was made
+                            this.removeSubscription()
+                        }
+
+                      }
+                }
+              );
+
+            }
+          }
+          else //Unfollowing the content creator
+          {
+            this.removeSubscription()
+            this.hasUserSubscribedToVideoOwner = false;
+
+            if(currentUser && userName && subscribingTo && videoOwner)
+                this.videoService.unSubscribeUserToVideoOwner(currentUser , userName, subscribingTo, videoOwner)
+                .subscribe({
+                  next : () =>
+                  {
+
+                  },
+                  error : (err) => console.log(err)
+                });
+
+
+
+          }
+
+
+          }
+
+          private removeSubscription()
+          {
+            const currentSubList = JSON.parse(sessionStorage.getItem('userFollowing') ?? '') as ProfilesFollowingDTO[];
+
+            const hashSet = new Set();
+
+            // const filteredCurrentSubList = currentSubList.filter(x => x.id !== this.selectedVideo?.videoOwnerId);
+            const filteredCurrentSubList = currentSubList.filter(x => () =>
+            {
+              if(hashSet.has(!x.id))
+              {
+                hashSet.add(x.id)
+                return true;
+              }
+              else
+                return false;
+            })
+
+            sessionStorage.setItem('userFollowing', JSON.stringify(filteredCurrentSubList));
+            this.authService.updateSubjectForUserFollowing(filteredCurrentSubList);
+          }
+
+
+
+
+  }
+
+
+
+
+
+
+
+
 
 
 

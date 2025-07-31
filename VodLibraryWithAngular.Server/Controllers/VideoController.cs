@@ -1506,6 +1506,61 @@ namespace VodLibraryWithAngular.Server.Controllers
         }
 
 
+        [Authorize]
+        [HttpPost("subscribe")]
+        public async Task<IActionResult> SubscribeUserToVideoOwner([FromBody] SubscribingDTO body)
+        {
+            Subscriber subscribe = await _dbContext.SubScribers.FirstOrDefaultAsync(x => x.FollowerId == body.FollowerId && x.SubscribedId == body.SubscribedToId);
+
+            if (subscribe != null)
+            {
+                return BadRequest(new
+                {
+                    message = "Duplicate detected user already subbed to content creator"
+                });
+            }
+
+            subscribe = new Subscriber()
+            {
+                FollowerId = body.FollowerId,
+                FollowerUserName = body.FollowerUserName,
+                SubscribedId = body.SubscribedToId,
+                SubscribedUserName = body.SubscribedToUserName,
+                SubscribedOn = DateTime.UtcNow
+
+            };
+
+            await _dbContext.SubScribers.AddAsync(subscribe);
+            await _dbContext.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpDelete("subscribe")]
+        public async Task<IActionResult> UnSubscribeUserToVideoOwner([FromQuery] SubscribingDTO body)
+        {
+            Console.WriteLine(body.ToJson());
+            Subscriber subscriber = _dbContext.SubScribers.FirstOrDefault(x => x.FollowerId == body.FollowerId && x.SubscribedId == body.SubscribedToId);
+
+            if (subscriber == null)
+            {
+                return BadRequest(new
+                {
+                    message = "Could not find meta data for the provided un subscription"
+                });
+
+            }
+
+            _dbContext.Remove(subscriber);
+            await _dbContext.SaveChangesAsync();
+
+            return Ok();
+
+        }
+
+
+
 
 
 

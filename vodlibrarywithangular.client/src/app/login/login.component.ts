@@ -121,7 +121,8 @@ export class LoginComponent implements AfterViewInit
               this.authService.getUserFollowing().subscribe({
                 next : (following) =>
                   {
-                    this.authService.updateSubectForUserFollowing(following);
+                    sessionStorage.setItem('userFollowing', JSON.stringify(following))
+                    this.authService.updateSubjectForUserFollowing(following);
                     console.log("We recieved user's followers");
                   }
 

@@ -229,7 +229,7 @@ export class AuthService
     return headers;
   }
 
-  public updateSubectForUserFollowing(following :  ProfilesFollowingDTO[])
+  public updateSubjectForUserFollowing(following :  ProfilesFollowingDTO[])
   {
       this.userFollowingSubject.next(following);
   }
