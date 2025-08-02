@@ -72,18 +72,6 @@ namespace VodLibraryWithAngular.Server.Controllers
                     await videoUploadForm.VideoFile.CopyToAsync(videoStream);
                 }
 
-                //using (FileStream imageStream = new FileStream(thumbnail, FileMode.Create))
-                //{
-                //    await videoUploadForm.ImageFile.CopyToAsync(imageStream);
-                //} use library ImageSharp to format the given image from the user to selected sizes 
-
-                using var image = await SixLabors.ImageSharp.Image.LoadAsync(videoUploadForm.ImageFile.OpenReadStream());
-                image.Mutate(x => x.Resize(480, 360));
-
-                await using var outPutStream = new FileStream(thumbnail, FileMode.Create);
-                await image.SaveAsJpegAsync(outPutStream);//We only work with JPegs for now
-
-
 
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -91,6 +79,17 @@ namespace VodLibraryWithAngular.Server.Controllers
                 {
                     return Unauthorized("You are not authorized to upload videos!");
                 }
+                //using (FileStream imageStream = new FileStream(thumbnail, FileMode.Create))
+                //{
+                //    await videoUploadForm.ImageFile.CopyToAsync(imageStream);
+                //} use library ImageSharp to format the given image from the user to selected sizes 
+
+                using Image image = await SixLabors.ImageSharp.Image.LoadAsync(videoUploadForm.ImageFile.OpenReadStream());
+                image.Mutate(x => x.Resize(480, 360));
+
+                await using FileStream outPutStream = new FileStream(thumbnail, FileMode.Create);
+                await image.SaveAsJpegAsync(outPutStream);//We only work with JPegs for now
+
                 var mediaInfo = await Xabe.FFmpeg.FFmpeg.GetMediaInfo(videoPath); // NO IDEA HOW THIS LIBRARY WORKS
                 var videoDuration = mediaInfo.VideoStreams.First().Duration;
 
@@ -141,6 +140,9 @@ namespace VodLibraryWithAngular.Server.Controllers
 
 
         }
+
+
+
 
         [HttpGet("sections")]
         public async Task<IActionResult> GetMainMenuVideos()
@@ -1557,6 +1559,36 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             return Ok();
 
+        }
+
+        [Authorize]
+        [HttpGet("subscriptions")]
+        public async Task<IActionResult> GetUserVideosFromSubscribers()
+        {
+            string userId = _userManager.GetUserId(User);
+
+            var subs = await _dbContext.SubScribers.Where(s => s.FollowerId == userId)
+                .Select(x => new { x.SubscribedId })
+                .ToListAsync();
+
+            List<VideoWindowDTO> videos = new List<VideoWindowDTO>();
+
+            foreach (var sub in subs)
+            {
+                List<VideoRecord> vods = await _dbContext.VideoRecords.Where(x => x.VideoOwnerId == sub.SubscribedId).ToListAsync();
+
+                List<VideoWindowDTO> dtos = vods.Select(x => CreateVideoWindowDTOFromVideoRecord(x)).ToList();
+
+                videos.AddRange(dtos);
+
+            }
+
+            videos.Sort((a, b) =>
+            {
+                return b.Uploaded.CompareTo(a.Uploaded);
+            });
+
+            return Ok(videos);
         }
 
 

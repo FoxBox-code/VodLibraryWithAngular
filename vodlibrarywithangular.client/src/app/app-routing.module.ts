@@ -12,6 +12,7 @@ import { UserProfileComponent } from './user-profile/user-profile.component';
 import { SearchPageComponent } from './search-page/search-page.component';
 import { EditPageComponent } from './edit-page/edit-page.component';
 import { YouPageComponent } from './you-page/you-page.component';
+import { SubscriptionsComponent } from './subscriptions/subscriptions.component';
 const routes: Routes = [
   // {
   //   path : '',
@@ -66,7 +67,11 @@ const routes: Routes = [
   {
     path : 'you-page',
     component : YouPageComponent,
-    
+
+  },
+  {
+    path : 'subscriptions',
+    component : SubscriptionsComponent
   }
 
 

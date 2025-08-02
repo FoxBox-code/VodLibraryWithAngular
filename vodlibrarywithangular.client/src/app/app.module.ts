@@ -19,6 +19,8 @@ import { SearchPageComponent } from './search-page/search-page.component';
 import { EditPageComponent } from './edit-page/edit-page.component';
 import { YouPageComponent } from './you-page/you-page.component';
 import { YouPageSideScrollWindowComponent } from './you-page/you-page-side-scroll-window/you-page-side-scroll-window.component';
+import { SubscriptionsComponent } from './subscriptions/subscriptions.component';
+import { VideoCatalogComponent } from './video-catalog/video-catalog.component';
 
 @NgModule({
   declarations: [
@@ -35,7 +37,9 @@ import { YouPageSideScrollWindowComponent } from './you-page/you-page-side-scrol
     SearchPageComponent,
     EditPageComponent,
     YouPageComponent,
-    YouPageSideScrollWindowComponent
+    YouPageSideScrollWindowComponent,
+    SubscriptionsComponent,
+    VideoCatalogComponent
   ],
   imports: [
     BrowserModule, HttpClientModule,

@@ -588,10 +588,17 @@ export class VideoService
     .set('followerUserName', followerUserNameProp)
     .set('subscribedToId', videoOwnerId)
     .set('subscribedToUserName', subscribedToUserNameProp);
-    
+
 
     console.log(params);
-    return this.httpClient.delete(`${ApiUrls.VIDEO}/subscribe`, {headers,params})
+    return this.httpClient.delete(`${ApiUrls.VIDEO}/subscribe`, {headers,params});
+  }
+
+  getUserVideosFromSubscribers() : Observable<VideoWindow[]>
+  {
+    const headers = this.getHttpHeaders();
+
+    return this.httpClient.get<VideoWindow[]>(`${ApiUrls.VIDEO}/subscriptions`, {headers});
   }
 
 

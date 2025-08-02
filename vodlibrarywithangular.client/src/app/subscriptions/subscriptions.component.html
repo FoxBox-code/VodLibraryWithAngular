@@ -1,0 +1,11 @@
+<ng-container *ngIf="isUserLogedIn === true ; else notLogged">
+  <app-video-catalog [videosCatalog]="videosFromSubscribers"></app-video-catalog>
+</ng-container>
+
+<ng-template  #notLogged>
+      <h3>Don’t miss new videos</h3>
+      <p>Sign in to see updates from your favorite YouTube channels</p>
+      <button type="button" [routerLink]="['/login']">Sign in</button>
+</ng-template >
+
+

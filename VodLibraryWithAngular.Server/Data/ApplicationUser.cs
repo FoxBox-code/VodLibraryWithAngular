@@ -12,5 +12,10 @@ namespace VodLibraryWithAngular.Server.Data
         public ICollection<Subscriber> Followers { get; set; }
 
         public ICollection<Subscriber> Following { get; set; }
+
+        public DateTime? registeredOn { get; set; } = DateTime.UtcNow;
+
+        public string? profilePic { get; set; }
+
     }
 }

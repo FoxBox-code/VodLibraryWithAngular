@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, Subject, catchError, switchMap, throwError } from 'rxjs';
+import { HttpClient, HttpHeaders, HttpRequest } from '@angular/common/http';
+import { Observable, Subject, catchError, switchMap, throwError, timestamp } from 'rxjs';
 import { Register } from './models/register';
 import { Login } from './models/login';
 import { BehaviorSubject } from 'rxjs';
@@ -41,6 +41,17 @@ export class AuthService
           this.userName.next(this.getUserNameFromToken());
           this.userIdSubject.next(this.getUserIdFromToken());
 
+          const decode = jwtDecode(token);
+          const timeOut = (decode.exp ?? 0) * 1000; // NOTE decode.exp has a large number inside it may seem random but thats called a
+          // UNIX timesteps it shows the number of seconds passed since January 1 1970 00:00 its some kind of universal tracking standard
+
+          const date = new Date()
+
+         setTimeout(() => {
+          this.clearLocalStorageToken();
+          console.log(`User has be loged of after 30sec min`)
+         }, timeOut);//currently logging out user ater an hour
+
   }
 
   getLocalStorageToken() : string | null
@@ -59,7 +70,8 @@ export class AuthService
     this.userIdSubject.next(this.getUserIdFromToken());
     this.logOutEvent.next();
     this.userTodayWatchHistorySubject.next([]);
-
+    this.userFollowingSubject.next(null);
+    sessionStorage.removeItem('userFollowing');
 
   }
 
@@ -77,27 +89,15 @@ export class AuthService
       return this.authStatus.asObservable();
   }
 
-  register(user : Register) : Observable<Register>
+  register(form : FormData) : Observable<Register>
   {
-    console.log(JSON.stringify(user));
 
-      return this.httpClient.post<Register>(`${ApiUrls.REGISTER}`, user)
-      .pipe(catchError((error)=>
-        {
-          console.error("Registration failed",
-          {
-            message : error.message,
-            status : error.status,
-            error : error.error,
-          });
-
-          return throwError(()=> error
-          )
-        }));
-
-
+      return this.httpClient.post<Register>(`${ApiUrls.REGISTER}`, form)
 
   }
+
+
+
 
   login(user : Login) : Observable<{token : string}>
   {
@@ -232,6 +232,11 @@ export class AuthService
   public updateSubjectForUserFollowing(following :  ProfilesFollowingDTO[])
   {
       this.userFollowingSubject.next(following);
+  }
+
+  Cock()
+  {
+    return this.httpClient.get(`${ApiUrls.BASE}/auth/cock`);
   }
 
 

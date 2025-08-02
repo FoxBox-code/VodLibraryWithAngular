@@ -22,6 +22,7 @@
 
         public required string VideoOwnerId { get; set; }
         public required string VideoOwnerName { get; set; }
+        public required string VideoOwnerProfileIcon { get; set; }
 
         public required string ImagePath { get; set; }
 

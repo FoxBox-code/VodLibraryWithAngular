@@ -4,7 +4,7 @@ export interface PlayVideo
     id : number,
     title : string,
     description : string,
-    uploaded : string,
+    uploaded : Date,
     videoPath : string,
     videoOwnerId : string,
     videoOwnerName : string,

@@ -1,30 +1,38 @@
 <p>register works!</p>
 
-<form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+<form [formGroup]="registerForm" (ngSubmit)="onSubmit()" *ngIf="(errorResponseSubject$ | async) as error">
 
   <div class="form-group">
-    <div class="input-wrapper"> 
-        <label id="username">UserName: </label>
-        <input id="username" type="text" formControlName="UserName"
-      [class.invalid]="registerForm.get('UserName')?.invalid && (registerForm.get('UserName')?.dirty || registerForm.get('UserName')?.touched)">
-
+    <div class="input-wrapper">
+      <label id="username">UserName: </label>
+      <input id="username" type="text" formControlName="UserName"
+        [class.invalid]="registerForm.get('UserName')?.invalid && (registerForm.get('UserName')?.dirty || registerForm.get('UserName')?.touched)">
       <button class="invisible-button" type="button">&nbsp;</button>
     </div>
-      <div class="error-message" *ngIf="registerForm.get('UserName')?.errors && (registerForm.get('UserName')?.dirty || registerForm.get('UserName')?.touched)">
-            <span *ngIf="registerForm.get('UserName')?.errors?.['required']">User name is required</span>
-            <span *ngIf="registerForm.get('UserName')?.errors?.['minlength'] ||
-            registerForm.get('UserName')?.errors?.['maxlength']">User name must be between 3 or 22 characters long</span>
 
-          <div class="min-max-requirements">
-            <span *ngIf="registerForm.get('UserName')?.errors?.['minlength'] as minError">
-              Minimum is {{ minError.requiredLength }} characters (you typed {{ minError.actualLength }})
-            </span>
-            <span *ngIf="registerForm.get('UserName')?.errors?.['maxlength'] as maxError">
-              Maximum is {{maxError.requiredLength}} characters (you typed {{maxError.actualLength}})
-            </span>
-          </div>
+    <div class="error-message" *ngIf="registerForm.get('UserName')?.errors && (registerForm.get('UserName')?.dirty || registerForm.get('UserName')?.touched)">
+      <span *ngIf="registerForm.get('UserName')?.errors?.['required']">User name is required</span>
+      <span *ngIf="registerForm.get('UserName')?.errors?.['minlength'] || registerForm.get('UserName')?.errors?.['maxlength']">
+        User name must be between 3 or 22 characters long
+      </span>
 
+      <div class="min-max-requirements">
+        <span *ngIf="registerForm.get('UserName')?.errors?.['minlength'] as minError">
+          Minimum is {{ minError.requiredLength }} characters (you typed {{ minError.actualLength }})
+        </span>
+        <span *ngIf="registerForm.get('UserName')?.errors?.['maxlength'] as maxError">
+          Maximum is {{maxError.requiredLength}} characters (you typed {{maxError.actualLength}})
+        </span>
       </div>
+    </div>
+
+    <!-- show error from server (just example for username) -->
+    <div *ngIf="error['UserName'] as userNameErrors">
+
+      <div *ngFor="let error of userNameErrors">
+          <span>{{ error }}</span>
+      </div>
+    </div>
   </div>
 
 
@@ -39,6 +47,13 @@
 
       <div class="error-message" *ngIf="registerForm.get('Email')?.errors && (registerForm.get('Email')?.dirty || registerForm.get('Email')?.touched)">
         <span>Please enter a valid email</span>
+      </div>
+
+      <div *ngIf="error['Email'] as emailErrors">
+          <div *ngFor="let emailError of emailErrors">
+              <span>{{emailError}}</span>
+          </div>
+
       </div>
   </div>
 
@@ -80,17 +95,35 @@
 
 
     </div>
-
-
   </div>
+
+  <div class="form-group">
+    <div class="input-wrapper">
+        <label id="profileImage">Choose your own profile image:</label>
+
+
+          <input id="profileImage" (change)="onFileSelect($event)" type="file">
+          <p *ngIf="imageFileInvalidation">Invalid file format</p>
+
+        </div>
+      </div>
+
+    <div class="imageIconContainer">
+      <img [src]="userProfilePic || defaultImageUrl" alt="ImageFile" class="profileImg">
+    </div>
+
+
 
 
   <button type="submit" [disabled]="registerForm.invalid">Make an account</button>
+
 </form>
 
 <div class="serverError" *ngIf="serverError">
   Failed to register : {{serverError}}
 </div>
+
+
 
 <!-- <pre>{{ registerForm.value | json }}</pre>
 <pre>{{ registerForm.valid }}</pre> -->

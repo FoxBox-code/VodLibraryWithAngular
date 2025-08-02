@@ -107,6 +107,18 @@ html // html font size by default is set to 16 like here I write it so we can vi
       visibility: hidden;
     }
 
+
+    .profileImg
+    {
+      width: 64px;
+      height: 64px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 2px solid black;
+      
+
+    }
+
 }
 
 .serverError

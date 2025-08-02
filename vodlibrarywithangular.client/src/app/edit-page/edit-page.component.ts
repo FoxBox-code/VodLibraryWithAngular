@@ -27,7 +27,7 @@ export class EditPageComponent
     categories : Category[] = [];
     editField : string | null = null;
     textAreaHeightCal = 0;
-    newImageFile : string | undefined;
+     newImageFile : string | undefined;
     editFormOriginalValues : {[key:string]: string | number} = {}
     userMadeNoChanges : boolean = false;
     imageFileFormatIncorrect : boolean = false;

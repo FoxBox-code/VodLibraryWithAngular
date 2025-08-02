@@ -79,6 +79,7 @@ export class UploadComponent implements OnInit
   {
     this.clearLocalImageUrl();   //clean up the image from browser's memory manually before leaving the page
   }
+
   onSubmit()
   {
       if(this.uploadForm.invalid || !this.videoFile || !this.imageFile)

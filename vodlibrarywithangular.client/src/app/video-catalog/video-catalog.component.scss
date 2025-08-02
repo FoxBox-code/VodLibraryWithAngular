@@ -1,0 +1,45 @@
+.sortButtonsWrap
+{
+    button
+    {
+      margin-right: 1rem;
+      background-color: #eee;
+      color: #333;
+
+      &.active
+      {
+        background-color: #007bff;
+        color: white;
+        font-weight: bold;
+      }
+    }
+}
+.userVideoCatalog
+{
+  margin-top: 2rem;
+  display: grid;
+  gap: 3rem,;
+
+  grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+}
+
+.videoContainer
+{
+  border: 3px solid black;
+
+  img
+  {
+    width: 100%;
+  }
+
+  a
+  {
+    text-decoration: none;
+    color: inherit;
+  }
+}
+
+.videoDetails
+{
+  padding: 1rem;
+}

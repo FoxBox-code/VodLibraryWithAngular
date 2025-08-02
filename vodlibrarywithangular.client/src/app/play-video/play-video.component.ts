@@ -80,7 +80,7 @@ export class PlayVideoComponent
                 console.log(JSON.stringify(this.selectedVideo));
                 videoService.getVideoViews(this.selectedVideoId);
 
-                this.getUserFillowersForThisPage();
+                this.getUserFollowersForThisPage();
             }
 
 
@@ -113,7 +113,7 @@ export class PlayVideoComponent
 
     }
 
-    private getUserFillowersForThisPage()
+    private getUserFollowersForThisPage()
     {
       this.userFollowing$.subscribe(
           {
@@ -809,10 +809,10 @@ export class PlayVideoComponent
 
             const hashSet = new Set();
 
-            // const filteredCurrentSubList = currentSubList.filter(x => x.id !== this.selectedVideo?.videoOwnerId);
-            const filteredCurrentSubList = currentSubList.filter(x => () =>
+
+            const filteredCurrentSubList = currentSubList.filter(x =>
             {
-              if(hashSet.has(!x.id))
+              if(!hashSet.has(x.id))
               {
                 hashSet.add(x.id)
                 return true;

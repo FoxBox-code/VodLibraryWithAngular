@@ -7,6 +7,7 @@ import { NavigationEnd, NavigationStart, Router } from '@angular/router';
 import { FormControl } from '@angular/forms';
 import { VideoService } from './video.service';
 import { Category } from './models/category';
+import { ProfilesFollowingDTO } from './models/profiles-followingDTO';
 
 
 
@@ -21,6 +22,11 @@ export class AppComponent implements OnInit {
   {
     this.userNameDynamic$ = this.authService.getUserNameAsOservable();
     this.userId$ = this.authService.getUserIdAsObservable()
+    this.getUserSubscribers();
+
+    if(!this.getUserSubscribers())
+      if(!this.getUserSubscribersFromSessionStorage())
+        this.getUserSubscribersFromServer();
 
   }
 
@@ -36,8 +42,8 @@ export class AppComponent implements OnInit {
 
   dashBoardExpanded : boolean = false;
   categories : Observable<Category[]> | null = null;
-
-
+  userFollowing$ : Observable<ProfilesFollowingDTO[] | null> | null = null;
+  userFollowing : ProfilesFollowingDTO[] = []
 
   ngOnInit()
   {
@@ -82,12 +88,15 @@ export class AppComponent implements OnInit {
     })
 
     this.categories = this.videoService.getCategorys()
+
+
   }
 
   logOutUser()
   {
     this.authService.clearLocalStorageToken();
     this.authService.userTodayWatchHistorySubject.next([]);
+    this.router.navigate(['/'])
 
   }
 
@@ -101,6 +110,49 @@ export class AppComponent implements OnInit {
           queryParams: { query: userInput }
         });
     }
+  }
+
+  private getUserSubscribers() : boolean
+  {
+      this.userFollowing$ = this.authService.userFollowing$;
+
+      this.userFollowing$.subscribe(following => this.userFollowing = following ?? [])
+
+      return this.userFollowing.length > 0;
+
+
+  }
+  private getUserSubscribersFromSessionStorage() : boolean
+  {
+      const currentSubList = JSON.parse(sessionStorage.getItem('userFollowing') ?? '[]');
+
+
+      if(currentSubList.length !== 0)
+      {
+        this.authService.updateSubjectForUserFollowing(currentSubList);
+        return true;
+      }
+
+      return false
+  }
+  private getUserSubscribersFromServer()
+  {
+    this.authService.getUserFollowing()
+    .subscribe(
+      {
+        next : (following) =>
+        {
+
+
+          this.authService.updateSubjectForUserFollowing(following);
+
+
+
+
+        }
+      }
+    )
+
   }
 
   getUserIdFromAuthService()

@@ -83,7 +83,7 @@ export class LoginComponent implements AfterViewInit
 
             this.loginUser();
 
-            this.router.navigate([this.navigationAdress]);
+
         }
     }
     private loginUser()
@@ -96,7 +96,7 @@ export class LoginComponent implements AfterViewInit
               console.log("Login successful", result);
               this.authService.setLocalStorageToken(result.token);
 
-
+              //to nested subscriptions this needs a rewrite 
               this.authService.getUserTodaysWatchHistory()
               .subscribe(
                 {
@@ -130,7 +130,12 @@ export class LoginComponent implements AfterViewInit
             },
           error : (error) => console.log("Login failed", { messgae : error.message, status : error.status ,error : error.error }),
 
-          complete : () => console.log("Login completed welcome")
+          complete : () =>
+            {
+              console.log("Login completed welcome")
+              this.router.navigate([this.navigationAdress]);
+            }
+
 
         })
 

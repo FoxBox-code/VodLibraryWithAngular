@@ -47,7 +47,7 @@
   <aside class="sideBar">
     <button type="button" (click)="ExpandDashBaord()">Dash</button>
     <a routerLink="/" routerLinkActive="true" ariaCurrentWhenActive="page">Home</a>
-    <a>Subscribers</a>
+    <a [routerLink]="['/subscriptions']">Subscriptions</a>
     <div *ngIf="dashBoardExpanded === false ; else expandedView">
       <a [routerLink]="['/you-page']" routerLinkActive="true" ariaCurrentWhenActive="page">You</a>
     </div>
@@ -57,7 +57,13 @@
         <a [routerLink]="['/watch-history']">Histroy</a>
         <a [routerLink]="['/liked-videos']">Liked Videos</a>
 
-        <h4>Subscriptions</h4>
+        <section class="subscribers">
+          <h4>Subscriptions</h4>
+          <div *ngFor="let subscriber of userFollowing$ | async">
+                  <a [routerLink]="['/user-profile', subscriber.id]">{{subscriber.userName}}</a>
+          </div>
+        </section>
+
 
         <h4>Explore</h4>
         <section *ngFor="let category of categories | async">
