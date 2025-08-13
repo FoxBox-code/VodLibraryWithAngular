@@ -182,6 +182,24 @@ export class VideoService
 
         }))
   }
+  addComment5000(comment : AddCommentDTO) : Observable<AddCommentDTO>
+  {
+    const headers = this.getHttpHeaders();
+
+      return this.httpClient.post<AddCommentDTO>(`${ApiUrls.ADDCOMMENT5000}`, comment, {headers})
+      .pipe(catchError((error)=>
+        {
+          console.error("Failed to add a comments to the database",
+          {
+              message : error.message,
+              status : error.status,
+              error : error.error
+          });
+
+          return throwError(() => new Error("The server failed to add the coment of the user to the video"))
+
+        }))
+  }
 
   // getCommentsCount(videoId : number) : void
   // {

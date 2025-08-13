@@ -667,20 +667,67 @@ namespace VodLibraryWithAngular.Server.Controllers
 
         }
 
-        //[HttpGet("play/{videoId}/commentsCount")]
-        //public async Task<IActionResult> GetCommentsCount(int videoId)
-        //{
-        //    VideoRecord? video = await _dbContext.VideoRecords.FirstOrDefaultAsync(v => v.Id == videoId);
+        [Authorize]
+        [HttpPost("addComment5000")]
+        public async Task<IActionResult> AddComment5000([FromBody] AddCommentDTO model)
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogError($"The given model from the client is not valid {model}");
+                return BadRequest("ModelState failed at the back end");
+            }
 
-        //    if (video == null)
-        //    {
-        //        return BadRequest($"No such video with {videoId} exists");
-        //    }
+            VideoRecord? currentVideo = await _dbContext.VideoRecords.FirstOrDefaultAsync(v => v.Id == model.VideoRecordId);
 
-        //    int videoCommentsCount = video.CommentsCount + video.ReplyCount;
+            if (currentVideo == null)
+            {
+                return BadRequest($"No video with the model id of {model.VideoRecordId} exists, please provide valid video id");
+            }
 
-        //    return Ok(videoCommentsCount);
-        //}
+            var userName = User.FindFirst(ClaimTypes.Name)?.Value;//I used username to do something with authentication?? This could be a problem !!!!!
+
+            if (string.IsNullOrEmpty(userName) || userName != model.UserName)
+            {
+                return Unauthorized("You are not authorized to comment on  videos!");
+            }
+
+            string? userId = _userManager.GetUserId(User);//Adding Id to the comments for profile page link
+
+            if (userId == null)
+            {
+                return Unauthorized(new
+                {
+                    message = "The attempted comment was done form a user with unidentified/missing userId"
+                });
+            }
+            List<Comment> comments = new List<Comment>();
+
+            for (int i = 0; i < 5000; i++)
+            {
+                Comment addedComment = new Comment()
+                {
+                    UserName = userName,
+                    UserId = userId,
+                    Description = model.Description + $"{i}",
+                    VideoRecordId = model.VideoRecordId,
+                    RepliesCount = 0,
+
+
+                };
+
+                comments.Add(addedComment);
+            }
+
+
+            currentVideo.CommentsCount++;
+
+            await _dbContext.Comments.AddRangeAsync(comments);
+            await _dbContext.SaveChangesAsync();
+
+            return Ok(model);
+            //TODO add validations for videoId and userName from the given model
+
+        }
 
         [HttpPatch("play/{videoId}/updateViews")]
         public async Task<IActionResult> UpdateViews(int videoId)

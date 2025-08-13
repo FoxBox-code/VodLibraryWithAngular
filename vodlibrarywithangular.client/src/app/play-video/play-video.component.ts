@@ -438,21 +438,24 @@ export class PlayVideoComponent
               addCommentDTO.description = this.commentForm.value.Comment;
               addCommentDTO.videoRecordId = this.selectedVideoId;
 
-              this.videoService.addComment(addCommentDTO).subscribe(
-              {
-                next : (result) =>
+             
+                this.videoService.addComment(addCommentDTO).subscribe(
                 {
-                  console.log(`User ${result.userName} commented : ${result.description}`);
-                  this.commentsCountSubject.next(this.commentsCountSubject.value + 1);
+                  next : (result) =>
+                  {
+                    console.log(`User ${result.userName} commented : ${result.description}`);
+                    this.commentsCountSubject.next(this.commentsCountSubject.value + 1);
 
 
-                  if(this.autoLoadComments)
-                    {
-                      this.loadComments();
-                    }
-                },
-                error : (error) => console.error(`User ${addCommentDTO.userName} failed to upload comment ${error}`)
-              });
+                    if(this.autoLoadComments)
+                      {
+                        this.loadComments();
+                      }
+                  },
+                  error : (error) => console.error(`User ${addCommentDTO.userName} failed to upload comment ${error}`)
+                });
+
+
 
               this.commentForm.reset();
             }

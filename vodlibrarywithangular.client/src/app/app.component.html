@@ -1,31 +1,69 @@
-﻿<header>
-
+﻿
+<header>
   <div class="TitleAndMenu">
-      <section class="theMenu">
-        <button class="menuButton" type="button" (click)="ExpandDashBaord()"><img [src]="menuIcon" alt=""></button>
+    <div class="menuAndTitle">
+      <button class="menuButton" type="button" (click)="ExpandDashBaord()">
+        <img [src]="menuIcon" alt="">
+      </button>
+      <h1 class="Title" routerLink="/" routerLinkActive="active" ariaCurrentWhenActive="page">
+        VOD Library
+      </h1>
+    </div>
 
-         <aside class="sideBar">
+    <nav>
+      <form>
+        <input id="search" type="text" placeholder="Search"
+               [formControl]="searchBar"
+               (focus)="searchBarFocused = true"
+               (blur)="searchBarFocused = false">
+        <div *ngIf="typeof searchBar.value === 'string' && searchBar.value.length > 0 && searchBarFocused">
+          <button type="submit" (click)="performASearch()">Find</button>
+        </div>
+      </form>
+    </nav>
+
+    <div class="RegisterLogInButtons"></div>
+    <ng-container *ngIf="!userAuth; else LoggedIn">
+
+        <button class="prick" routerLink="register" routerLinkActive="active">Register</button>
+        <button class="prick" routerLink="login" routerLinkActive="active">Login</button>
+
+    </ng-container>
+    <ng-template #LoggedIn>
+      <button *ngIf="userAuth" type="button" (click)="logOutUser()">Log out </button>
+      <a *ngIf="userAuth">Hello {{userNameDynamic$ | async}}</a>
+    </ng-template>
+  </div>
+
+</header>
+
+
+<main>
+  <div class="main-container">
+
+
+    <aside class="sideBar">
 
 
     <section class="sideBarShrinked" *ngIf="!dashBoardExpanded ; else expanded">
 
     <div class="linkAndIcon"  routerLink="/" >
-      <img [src]="homeIcon" alt="home">
+      <img class="svgIcon" [src]="homeIcon" alt="home">
         <span>Home</span>
     </div>
 
     <div class="linkAndIcon" [routerLink]="['/subscriptions']" routerLinkActive="true" ariaCurrentWhenActive="page">
-      <img [src]="subscriptionIcon" alt="">
+      <img class="svgIcon" [src]="subscriptionIcon" alt="">
       <span>Subscriptions</span>
     </div>
 
     <div class="linkAndIcon" [routerLink]="['/you-page']" routerLinkActive="true" ariaCurrentWhenActive="page">
-      <img [src]="personIconUrl" alt="YouIcon">
+      <img class="svgIcon" [src]="personIconUrl" alt="YouIcon">
       <span>You</span>
     </div>
 
     <div class="linkAndIcon" [routerLink]="['/watch-history']" routerLinkActive="true" ariaCurrentWhenActive="page">
-      <img [src]="historyIconUrl" alt="HistoryIcon">
+      <img class="svgIcon" [src]="historyIconUrl" alt="HistoryIcon">
       <span>History</span>
     </div>
 
@@ -52,12 +90,12 @@
     <ng-template #expanded>
     <section class="sideBarExpand">
           <div class="linkAndIconExpanded"  routerLink="/" >
-            <img [src]="homeIcon" alt="home">
+            <img class="svgIcon" [src]="homeIcon" alt="home">
               <span>Home</span>
           </div>
 
           <div class="linkAndIconExpanded" [routerLink]="['/subscriptions']" routerLinkActive="true" ariaCurrentWhenActive="page">
-            <img [src]="subscriptionIcon" alt="">
+            <img class="svgIcon" [src]="subscriptionIcon" alt="">
             <span>Subscriptions</span>
           </div>
 
@@ -65,22 +103,22 @@
 
           <div *ngIf="(userAuth$ | async) ; else notLogged">
                 <div class="linkAndIconExpanded" [routerLink]="['/you-page']" routerLinkActive="true" ariaCurrentWhenActive="page">
-                    <img [src]="personIconUrl" alt="YouIcon">
+                    <img class="svgIcon" [src]="personIconUrl" alt="YouIcon">
                     <span>You</span>
                 </div>
 
                 <div class="linkAndIconExpanded" [routerLink]="['/watch-history']" routerLinkActive="true" ariaCurrentWhenActive="page">
-                  <img [src]="historyIconUrl" alt="HistoryIcon">
+                  <img class="svgIcon" [src]="historyIconUrl" alt="HistoryIcon">
                   <span>History</span>
                 </div>
 
                 <div class="linkAndIconExpanded"  routerLinkActive="true" ariaCurrentWhenActive="page">
-                  <img [src]="playListIcon" alt="HistoryIcon">
+                  <img class="svgIcon" [src]="playListIcon" alt="HistoryIcon">
                   <span>Playlists</span>
                 </div>
 
                 <div class="linkAndIconExpanded" [routerLink]="['/liked-videos']" routerLink="true" ariaCurrentWhenActive="page">
-                  <img [src]="likeIcon" alt="Like Icon">
+                  <img class="svgIcon" [src]="likeIcon" alt="Like Icon">
                   <span>Liked videos</span>
                 </div>
 
@@ -88,7 +126,7 @@
                 <div *ngFor="let subscriber of userFollowing$ | async" >
               <section class="individualSubscriber" [routerLink]="['/user-profile', subscriber.id]">
 
-                  <img class="userSubIconseIcon" [src]="subscriber.uesrImageIcon" alt="">
+                  <img class="svgIcon" class="userSubIconseIcon" [src]="subscriber.uesrImageIcon" alt="">
                   <p> {{subscriber.userName}}</p>
 
               </section>
@@ -101,12 +139,12 @@
 
             <ng-template #notLogged>
                   <div class="linkAndIconExpanded" [routerLink]="['/you-page']" routerLinkActive="true" ariaCurrentWhenActive="page">
-                    <img [src]="personIconUrl" alt="YouIcon">
+                    <img class="svgIcon" [src]="personIconUrl" alt="YouIcon">
                     <span>You</span>
                   </div>
 
                   <div class="linkAndIconExpanded" [routerLink]="['/watch-history']" routerLinkActive="true" ariaCurrentWhenActive="page">
-                    <img [src]="historyIconUrl" alt="HistoryIcon">
+                    <img class="svgIcon" [src]="historyIconUrl" alt="HistoryIcon">
                     <span>History</span>
                   </div>
 
@@ -114,8 +152,8 @@
 
                   <h5>Sign in to like videos, comment, and subscribe.</h5>
                   <div class="buttonWrapper">
-                      <button type="button" [routerLink]="['/register']">Sign In</button>
-                      <button type="button" [routerLink]="['/login']">Log In</button>
+                      <button  type="button" [routerLink]="['/register']">Sign In</button>
+                      <button id="button" type="button" [routerLink]="['/login']">Log In</button>
                   </div>
             </ng-template>
 
@@ -134,62 +172,6 @@
       </section>
     </ng-template>
           </aside>
-      </section>
-
-      <section class="theTitle">
-             <h1 class="Title" routerLink="/" routerLinkActive="active" ariaCurrentWhenActive="page">VOD Library</h1>
-
-             <nav>
-               <form>
-
-                     <input id="search" type="text" placeholder="Search"
-                     [formControl]="searchBar"
-                     (focus)="searchBarFocused = true"
-                     (blur)="searchBarFocused = false">
-
-                     <div *ngIf="typeof searchBar.value === 'string' && searchBar.value.length > 0 && searchBarFocused">
-                         <button type="submit" (click)="performASearch()">Find</button>
-                     </div>
-               </form>
-
-
-             </nav>
-
-             <ng-container *ngIf="!userAuth ; else LoggedIn">
-                 <div>
-                     <a routerLink="register" routerLinkActive="active" ariaCurrentWhenActive="page">
-                       Register
-                     </a>
-                     <a  routerLink="login" routerLinkActive="active" ariaCurrentWhenActive="page">
-                       Login
-                     </a>
-                 </div>
-
-               </ng-container>
-               <ng-template #LoggedIn>
-                 <button *ngIf="userAuth" type="button" (click)="logOutUser()">Log out </button>
-                 <a *ngIf="userAuth">Hello {{userNameDynamic$ | async}}</a>
-
-
-               </ng-template>
-         </section>
-
-
-
-
-
-    </div>
-
-
-
-
-</header>
-
-<main>
-  <div class="main-container">
-
-
-
 
 
 
