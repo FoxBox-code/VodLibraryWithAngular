@@ -1,11 +1,28 @@
-<ng-container *ngIf="isUserLogedIn === true ; else notLogged">
-  <app-video-catalog [videosCatalog]="videosFromSubscribers"></app-video-catalog>
+<ng-container *ngIf="userId$ | async ; else notLogged">
+  <div *ngIf="videosFromSubscribers.length > 0 ; else noSubscribers">
+      <app-video-catalog [videosCatalog]="videosFromSubscribers"></app-video-catalog>
+  </div>
+
+  <ng-template #noSubscribers>
+        <p>You haven't subscribed to any content creators</p>
+  </ng-template>
+
 </ng-container>
 
 <ng-template  #notLogged>
+    <div class="notLogged">
+      <div class="imageContainer">
+          <img [src]="playTabIconUrl" alt="Icons">
+      </div>
+
       <h3>Don’t miss new videos</h3>
-      <p>Sign in to see updates from your favorite YouTube channels</p>
-      <button type="button" [routerLink]="['/login']">Sign in</button>
+      <p>Sign in to see updates from your favorite VOD channels</p>
+      <button type="button" [routerLink]="['/register']">Sign In</button>
+      <button type="button" (click)="navigateToLogIn()">Log In</button>
+    </div>
+
 </ng-template >
+
+
 
 

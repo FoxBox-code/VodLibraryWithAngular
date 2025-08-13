@@ -6,6 +6,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using VodLibraryWithAngular.Server.Data;
+using VodLibraryWithAngular.Server.Interfaces;
 using VodLibraryWithAngular.Server.Models;
 
 namespace VodLibraryWithAngular.Server.Controllers
@@ -18,13 +19,15 @@ namespace VodLibraryWithAngular.Server.Controllers
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<AuthController> _logger;
+        private readonly IFileNameSanitizer _fileNameSanitizer;
 
-        public AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IWebHostEnvironment webHostEnvironment, ILogger<AuthController> logger)
+        public AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IWebHostEnvironment webHostEnvironment, ILogger<AuthController> logger, IFileNameSanitizer fileNameSanitizer)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _webHostEnvironment = webHostEnvironment;
             _logger = logger;
+            _fileNameSanitizer = fileNameSanitizer;
 
         }
 
@@ -101,7 +104,7 @@ namespace VodLibraryWithAngular.Server.Controllers
         private async Task<bool> CustomUserProfilePictureAsync(RegisterDTO model, ApplicationUser user)
         {
             bool imageProccessDone = false;
-            string guidAndName = Guid.NewGuid() + model.ProfilePic.FileName;
+            string guidAndName = Guid.NewGuid() + _fileNameSanitizer.SanitizeFileName(model.ProfilePic.FileName);
             string path = Path.Combine(_webHostEnvironment.WebRootPath, "ProfilePics");
             string iconsPath = Path.Combine([_webHostEnvironment.WebRootPath, path, "ProfileIcons"]);
 
@@ -116,7 +119,7 @@ namespace VodLibraryWithAngular.Server.Controllers
             }
 
             path = Path.Combine(path, guidAndName);
-            iconsPath = Path.Combine(iconsPath, "icon" + guidAndName);
+            iconsPath = Path.Combine(iconsPath, guidAndName);
 
 
             try

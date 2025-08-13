@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { VideoWindow } from '../models/video-window';
-import { Observable } from 'rxjs';
+import { concatWith, Observable } from 'rxjs';
 import { AuthService } from '../auth.service';
 import { Router } from '@angular/router';
 import { VideoService } from '../video.service';
@@ -18,11 +18,16 @@ export class VideoWindowComponent
   @Input() video : VideoWindow | undefined = undefined;
   videoTimeSpanToString! : string;
   userId$ : Observable<string | null>;
-  videoWindowScrollPosition : string = 'videoWindowScrollPosition'
+  videoWindowScrollPosition : string = 'videoWindowScrollPosition';
+  @Input() wasClickedFromAPlayList? : boolean = false;
 
   constructor(private auth : AuthService , private router : Router, private videoService : VideoService)
   {
       this.userId$ = auth.getUserIdAsObservable();
+
+      console.log(this.wasClickedFromAPlayList);
+
+
   }
 
   ngOnInit()
@@ -30,6 +35,8 @@ export class VideoWindowComponent
     if(this.video)
     {
       this.videoTimeSpanToString = this.convertVideoTimeSpanToString(this.video);
+
+      console.log(`SHOW ME THE IMAGE URL ${this.video?.imagePath}`);
     }
   }
 
@@ -44,7 +51,7 @@ export class VideoWindowComponent
     if(video.minutes === 0)
       m = '';
     else
-        m = video?.minutes < 10 && h === '' ? video.minutes + ':'  : '0' + video.minutes + ':';
+        m = video?.minutes < 10 && h === '' ? '0' + video.minutes + ':' : video.minutes + ':' ;
 
 
 

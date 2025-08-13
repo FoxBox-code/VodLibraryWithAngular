@@ -3,21 +3,21 @@
 <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
 
   <div class="input-wrapper">
-      <label id="email" >Email:</label>
-      <input id="email" type="email" formControlName="Email">
-      <button class="invisible-button" type="button">&nbsp;</button>
+      <label id="email" title="Email">Email:</label>
+      <input id="email" type="email" title="Email" formControlName="Email">
+      <button class="invisible-button" title="Button" type="button">&nbsp;</button>
   </div>
 
   <div class="input-wrapper" (focusin)="onPasswordWrapperFocus()" (focusout)="onPasswordWrapperBlur()">
-      <label id="password">Password:</label>
-      <input id="password" [type]="showPassword ? 'text' : 'password'" formControlName="Password" >
-      <button [class.invisible-button]="!focusPassWordButton" (click)="viewPassword()" type="button">
+      <label id="password" title="Password">Password:</label>
+      <input id="password" placeholder="enter password...." [type]="showPassword ? 'text' : 'password'" formControlName="Password" >
+      <button [class.invisible-button]="!showPasswordButton" (click)="viewPassword()" type="button">
         {{showPassword ? 'Hide' : 'Show'}}
       </button>
   </div>
 
   <div class="input-wrapper">
-        <label id="rememberme">Remember me</label>
+        <label for="rememberme" title="Remember me">Remember me</label>
         <input id="rememberme" type="checkbox" formControlName="RememberMe" >
   </div>
 

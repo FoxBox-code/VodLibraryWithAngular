@@ -1,17 +1,34 @@
-<p>liked-videos works!</p>
 
-<section *ngFor="let video of listOfLikedVideos; let i = index" >
-  <section class="individualVideo">
-          <a [routerLink]="['/playing', video.id]" id="indexCount">
-            <p>{{i + 1}}</p>
-          </a>
 
-    <div class="videoInfo">
-          <app-video-window [video]="video"></app-video-window>
-    </div>
-       <button type="button" (click)="deleteLikedVideoFromHistroy(video.id)">Remove this video from liked</button>
-  </section>
+<section class="component-container">
 
+  <div class="sideWindow" *ngIf="listOfLikedVideos.length > 0">
+    <img [src]="listOfLikedVideos[0].imagePath" alt="Video thumbnail">
+    <h3>Like videos</h3>
+    <p>{{userName}}</p>
+    <p>{{listOfLikedVideos.length}} videos</p>
+  </div>
+
+
+
+
+    <app-playlist *ngIf="listOfLikedVideos.length > 0" [playList]="listOfLikedVideos" (elementRemoved)="handleRemovedElement($event)"></app-playlist>
 
 
 </section>
+
+
+<div class="noContent" *ngIf="listOfLikedVideos.length === 0">
+  <h1>You have not yet liked any vidoes</h1>
+  <p>perhaps we can start from specific category</p>
+  <label for="category">Categories:</label>
+  <select id="category" (change)="something($event.target)">
+    <option value="none"></option>
+    <option value="music">Music</option>
+    <option value="sports">Sports</option>
+    <option value="gaming">Gaming</option>
+    <option value="entertainment">Entertainment</option>
+    <option value="education">Education</option>
+  </select>
+
+</div>

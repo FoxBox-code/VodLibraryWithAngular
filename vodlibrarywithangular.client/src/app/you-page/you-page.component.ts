@@ -1,15 +1,18 @@
 import { Component} from '@angular/core';
 import { AuthService } from '../auth.service';
-import { Observable } from 'rxjs';
+import { filter, forkJoin, Observable, switchMap, of, Subject, takeUntil } from 'rxjs';
 import { VideoService } from '../video.service';
 import { VideoWindow } from '../models/video-window';
+import { NavigationService } from '../navigation.service';
+import { ActivatedRoute, Router } from '@angular/router';
+import { DataCosntans } from '../dataconstants';
 
 @Component({
   selector: 'app-you-page',
   standalone: false,
 
   templateUrl: './you-page.component.html',
-  styleUrl: './you-page.component.css'
+  styleUrl: './you-page.component.scss'
 })
 export class YouPageComponent
 {
@@ -17,6 +20,11 @@ export class YouPageComponent
     userId : string|null = null;
     watchHistoryVideoInfo : VideoWindow[] = [];
     likedVideosCollection : VideoWindow[] = [];
+    //this will contain maximum of 10 items not the actual length of how many total videos has user liked
+
+    likedVideoPlayListFrontVideo : VideoWindow | null = null;
+    totalLikedVideosCount = 0;
+    private destroySubcjet = new Subject<void>();
 
 
 
@@ -24,42 +32,79 @@ export class YouPageComponent
 
 
 
-    constructor(private authService : AuthService, private videoService : VideoService)
+    constructor(private authService : AuthService, private videoService : VideoService, private navigationService : NavigationService, private router : Router)
     {
       this.userId$ = this.authService.getUserIdAsObservable();
-
-       this.videoService.getUserHistoryForYouPage()
-      .subscribe(
-        {
-          next : (history) =>
-          {
-            this.watchHistoryVideoInfo = history;
-          },
-          error : (err) => console.log(err)
-        }
-      )
-
-      this.videoService.getUsersLikedVideosHistory(10)
-      .subscribe(
-        {
-          next : (likedHistroy) =>
-          {
-            this.likedVideosCollection = likedHistroy;
-          }
-        }
-      )
-
-
     }
+
+
+
+
+
 
     ngOnInit()
     {
-      this.userId$.subscribe(data => this.userId == data)
+
+
+      this.userId$.pipe(
+        filter((usersId => usersId !== null)),
+
+        switchMap(usersId =>
+          forkJoin(
+            {
+              userId$ : of(usersId),
+              history$ : this.videoService.getUserHistoryForYouPage(),
+              likes$ : this.videoService.getUsersLikedVideosHistory(),
+              totalLikedVideos$ : this.videoService.getLikedVideosCount()
+            }
+          )
+        ),
+        takeUntil(this.destroySubcjet)
+
+      ).subscribe(({ userId$, history$, likes$ , totalLikedVideos$}) =>
+        {
+          this.userId = userId$,
+          this.watchHistoryVideoInfo = history$,
+          this.likedVideosCollection = likes$,
+          this.likedVideoPlayListFrontVideo = this.likedVideosCollection[0];
+          this.totalLikedVideosCount = totalLikedVideos$
+        });
+
 
 
       console.log(this.watchHistoryVideoInfo)
 
+
+
     }
+
+    ngOnDestroy()
+    {
+      this.destroySubcjet.next();
+      this.destroySubcjet.complete();
+    }
+
+    navigateToLogIn()
+    {
+
+
+
+        const route =
+        {
+          path : ['you-page'],
+
+        }
+
+
+        this.navigationService.updateAdress(route);
+
+
+        this.router.navigate(['login']);
+    }
+
+
+
+
 
 
 

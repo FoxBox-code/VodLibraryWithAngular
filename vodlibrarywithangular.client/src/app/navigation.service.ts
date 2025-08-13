@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { Params } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 
 @Injectable({
@@ -6,16 +7,16 @@ import { BehaviorSubject, Observable } from 'rxjs';
 })
 export class NavigationService
 {
-  routerAdress : BehaviorSubject<string> = new BehaviorSubject('/');
+  routerAdress : BehaviorSubject<{path : any[], queryParams? : Params}> = new BehaviorSubject({path : ['/']});
   constructor() { }
 
-  getAdress() : Observable<string>
+  getAdress() : Observable<{path : any[], queryParams? : Params}>
   {
      return this.routerAdress.asObservable();
   }
 
-  updateAdress(navigation : string)
+  updateAdress(router : {path : any[], queryParams? : Params})
   {
-    this.routerAdress.next(navigation);
+    this.routerAdress.next(router);
   }
 }

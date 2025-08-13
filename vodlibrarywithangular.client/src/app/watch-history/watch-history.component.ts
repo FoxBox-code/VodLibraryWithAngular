@@ -1,7 +1,10 @@
 import { Component } from '@angular/core';
 import { AuthService } from '../auth.service';
 import { WatchHistoryVideoInfo } from '../models/watch-history-video-info';
-import { Observable } from 'rxjs';
+import { concat, concatMap, filter, map, Observable, Subject, switchMap, takeUntil } from 'rxjs';
+import { DataCosntans } from '../dataconstants';
+import { NavigationService } from '../navigation.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-watch-history',
@@ -13,47 +16,104 @@ import { Observable } from 'rxjs';
 export class WatchHistoryComponent
 {
     public userTodayWatchHistory$! : Observable<WatchHistoryVideoInfo[]>;
+    public userTodayWatchHistory : WatchHistoryVideoInfo[] = [];
     public userPastWatchHistory : WatchHistoryVideoInfo[][] = [];
     public today : Date = new Date();
-    constructor(private authService : AuthService)
-    {
+    public userId$ : Observable<string | null>;
+    public currentUserId : string | null = null;
+    public historyIconUrl = DataCosntans.historyIcon;
 
+
+    private destroy$ = new Subject<void>();
+
+    constructor(private authService : AuthService, private navigationService : NavigationService, private router : Router)
+    {
+        const datete = new Date();
+
+        const something = datete.getDate();
+
+        console.log(something)
+
+        this.userId$ = authService.getUserIdAsObservable();
     }
 
 
     ngOnInit()
     {
 
-      this.authService.getUserPastTodaysWatchHistory()
-      .subscribe(
-        {
-          next : (data) =>
-          {
-            this.userPastWatchHistory = data;
-          }
-        }
+      // this.authService.getUserPastTodaysWatchHistory()
+      // .subscribe(
+      //   {
+      //     next : (data) =>
+      //     {
+      //       this.userPastWatchHistory = data;
+      //     }
+      //   }
+      // )
+
+      // if(0 === 0)//????????????????????????????????????????????????????????????????????????
+      // {
+      //   this.authService.getUserTodaysWatchHistory()
+      //     .subscribe({
+      //           next: (data) => {
+      //       const converted : WatchHistoryVideoInfo[] = data.map(item => ({
+      //     videoId : item.videoId,
+      //     watchedOn : new Date(item.watchedOn),
+      //     video : item.video,
+      //     primaryKeyId : item.primaryKeyId
+      //   }));
+      //   this.authService.userTodayWatchHistorySubject.next(converted);
+      //   this.userTodayWatchHistory$ = this.authService.userTodayWatchHistory$
+      //       }
+      //     });
+
+      // }
+
+
+      this.userId$.pipe(
+        filter((userId)=> userId !== null),
+
+        switchMap((userId) =>
+          this.authService.getUserTodaysWatchHistory()
+        .pipe(
+          concatMap((todayHistory)=>
+            this.authService.getUserPastTodaysWatchHistory()
+          .pipe(
+            map(pastHistory => ({userId , todayHistory, pastHistory}))
+          )
+           )
+        )
+
+        ),
+        takeUntil(this.destroy$)
+
+
       )
+      .subscribe({
+          next: ({ userId, todayHistory, pastHistory }) => {
+            this.currentUserId = userId;
+            this.userTodayWatchHistory = todayHistory;
+            this.userPastWatchHistory = pastHistory;
+          },
+          error: (err) => {
+            console.error('stream error', err);
+          },
 
-      if(0 === 0)//????????????????????????????????????????????????????????????????????????
-      {
-        this.authService.getUserTodaysWatchHistory()
-          .subscribe({
-                next: (data) => {
-            const converted : WatchHistoryVideoInfo[] = data.map(item => ({
-          videoId : item.videoId,
-          watchedOn : new Date(item.watchedOn),
-          video : item.video,
-          primaryKeyId : item.primaryKeyId
-        }));
-        this.authService.userTodayWatchHistorySubject.next(converted);
-        this.userTodayWatchHistory$ = this.authService.userTodayWatchHistory$
-      }
-    });
+        });
 
 
-      }
+
+
+
+
 
 }
+
+  ngOnDestroy()
+  {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
     deleteUserWatchHistory()
     {
@@ -68,6 +128,21 @@ export class WatchHistoryComponent
             }
           }
         )
+    }
+
+    public GetDayFromWatchedHistory(today : Date)
+    {
+        const newDate = new Date(today); //today is not actually a real TS/JS object what we give from the data base is something called ISO 8601 date string a format Date object can natively convert to real date
+
+        const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+        const videoDay = days[newDate.getDay()];
+        console.log(`Print me the current day of the vidoes watched history ---${videoDay}`)
+
+
+
+        // console.log(wasAt.getDay());
+        return videoDay;
     }
 
     deleteIndividuaVideoRecordFromHistoryTODAY(primaryKeyId : number)
@@ -121,6 +196,24 @@ export class WatchHistoryComponent
           }
         )
     }
+
+      navigateToLogIn()
+      {
+
+
+
+          const route =
+          {
+            path : ['watch-history'],
+
+          }
+
+
+          this.navigationService.updateAdress(route);
+
+
+          this.router.navigate(['login']);
+      }
 }
 
 

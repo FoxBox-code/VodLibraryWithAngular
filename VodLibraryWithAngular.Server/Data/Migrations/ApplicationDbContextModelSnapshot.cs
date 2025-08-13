@@ -232,10 +232,16 @@ namespace VodLibraryWithAngular.Server.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ImagePath")
+                        .HasColumnType("text");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
+
+                    b.Property<int>("VideosCount")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -245,27 +251,32 @@ namespace VodLibraryWithAngular.Server.Migrations
                         new
                         {
                             Id = 1,
-                            Name = "Music"
+                            Name = "Music",
+                            VideosCount = 0
                         },
                         new
                         {
                             Id = 2,
-                            Name = "Sports"
+                            Name = "Sports",
+                            VideosCount = 0
                         },
                         new
                         {
                             Id = 3,
-                            Name = "Gaming"
+                            Name = "Gaming",
+                            VideosCount = 0
                         },
                         new
                         {
                             Id = 4,
-                            Name = "Entertainment"
+                            Name = "Entertainment",
+                            VideosCount = 0
                         },
                         new
                         {
                             Id = 5,
-                            Name = "Education"
+                            Name = "Education",
+                            VideosCount = 0
                         });
                 });
 
@@ -484,8 +495,16 @@ namespace VodLibraryWithAngular.Server.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<int>("VideoId")
                         .HasColumnType("integer");
+
+                    b.Property<string>("VideoTitle")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -717,7 +736,7 @@ namespace VodLibraryWithAngular.Server.Migrations
                     b.HasOne("VodLibraryWithAngular.Server.Data.Models.VideoRecord", "Video")
                         .WithMany("WatchHistories")
                         .HasForeignKey("VideoId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");

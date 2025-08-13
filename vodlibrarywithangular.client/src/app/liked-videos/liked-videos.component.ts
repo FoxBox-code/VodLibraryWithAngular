@@ -2,10 +2,16 @@ import { Component } from '@angular/core';
 import { VideoService } from '../video.service';
 import { AuthService } from '../auth.service';
 import { VideoWindow } from '../models/video-window';
+import { PlaylistService } from '../playlist.service';
+import { ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectorRef } from '@angular/core';
+import { Router } from '@angular/router';
+
 
 @Component({
   selector: 'app-liked-videos',
   standalone: false,
+  changeDetection : ChangeDetectionStrategy.OnPush,//THIS FEATURE IS NOT WORKING
 
   templateUrl: './liked-videos.component.html',
   styleUrl: './liked-videos.component.scss'
@@ -13,44 +19,53 @@ import { VideoWindow } from '../models/video-window';
 export class LikedVideosComponent
 {
     listOfLikedVideos : VideoWindow[] = [];
-    dictionaryOfLikedVideos : {[videoId : number] : VideoWindow} = {};
-    constructor(private videoService : VideoService , private authService: AuthService)
-    {
+    firstVideoOnList : VideoWindow  | null=  null;
+    userName : string | null;
 
+
+
+
+    constructor(private videoService : VideoService , private authService: AuthService, private playListService : PlaylistService, private cd: ChangeDetectorRef, private router : Router)
+    {
+        this.userName = authService.getUserNameFromToken();
+
+        this.playListService.getUserLikedVideos()
+        .subscribe(
+          {
+            next : (data) =>
+            {
+
+              this.listOfLikedVideos = [...data];
+              this.firstVideoOnList = this.listOfLikedVideos[0];
+              this.playListService.playList = this.listOfLikedVideos;
+              sessionStorage.setItem('likePlayList', JSON.stringify(data));
+               this.cd.markForCheck();
+            }
+          }
+        );
     }
 
     ngOnInit()
     {
-        this.videoService.getUsersLikedVideosHistory()
-        .subscribe(
-          {
-            next : (data) =>
-            {
-
-              this.listOfLikedVideos = data;
-            }
-          }
-        );
+        this.playListService.getUserLikedVideos().subscribe(data => this.listOfLikedVideos)
     }
 
-    deleteLikedVideoFromHistroy(videoId : number)
+    handleRemovedElement(emittedValue : VideoWindow[])
     {
-        this.videoService.deleteLikedVideoFromHistory(videoId)
-        .subscribe(
-          {
-            next : (data) =>
-            {
-              console.log(data.message);
-              this.listOfLikedVideos = this.listOfLikedVideos.filter(x => x.id !== videoId);
-
-            },
-            error : (err) =>
-            {
-              console.error(err.message);
-            }
-          }
-        );
+      this.listOfLikedVideos = emittedValue;
+      this.playListService.playList = this.listOfLikedVideos;
+      sessionStorage.setItem('likePlayList', JSON.stringify(emittedValue))
     }
+
+    public something(eventTarget : EventTarget | null)
+    {
+      const element = eventTarget as HTMLSelectElement
+      const selectedGenre = element.value;
+
+      this.router.navigate(['genre-video', selectedGenre]);
+    }
+
+
 
 
 }

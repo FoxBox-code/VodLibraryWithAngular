@@ -1,14 +1,14 @@
 import { Injectable,inject } from '@angular/core';
 import { BehaviorSubject, Observable, retry } from 'rxjs';
 import { Category } from './models/category';
-import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams, HttpParamsOptions } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams, HttpParamsOptions, HttpRequest } from '@angular/common/http';
 import { ApiUrls } from './api-URLS';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 import { CategoryWithVideos } from './models/category-with-videos';
 import { PlayVideo } from './models/play-video';
-import { AddCommentDTO } from './models/add-comment';
-import { VideoComment } from './models/comment';
+import { AddCommentDTO } from './models/add-CommentDTO';
+import { VideoComment } from './models/videoComment';
 import { ReplyForm } from './models/reply-form';
 import { Reply } from './models/reply';
 import { Reaction } from './models/reaction';
@@ -21,6 +21,8 @@ import { WatchHistoryVideoInfo } from './models/watch-history-video-info';
 import { FormGroup } from '@angular/forms';
 import { EditVideoFormControls } from './models/EditVideoFormControls';
 import { SubscribingDTO } from './models/subscribingDTO';
+import { VideoLikeDislikeCountDTO } from './models/video-like-dislike-countDTO';
+import { CategoryStatsDTO } from './models/categorystatsDTO';
 
 @Injectable({
   providedIn: 'root'
@@ -38,7 +40,7 @@ export class VideoService
   private commentsCountSubject = new BehaviorSubject<number>(0);
   commentsCount$ = this.commentsCountSubject.asObservable();
 
-  private videoCommentsSubject = new BehaviorSubject<VideoComment[]>([]);
+  public videoCommentsSubject = new BehaviorSubject<VideoComment[]>([]);
   videoComment$ = this.videoCommentsSubject.asObservable();
 
   private viewsSubject = new BehaviorSubject<number>(0);
@@ -47,6 +49,7 @@ export class VideoService
   private commentRepliesSubject : {[commentId:number] : BehaviorSubject<Reply[]>} = {};
 
   public userCommentReactions: { [commentId: number]: boolean | undefined } = {};
+
   public userReplyReactions : {[replyId : number] : boolean | undefined} = {};
 
   private categoriesSubject = new BehaviorSubject<Category[]>([]);
@@ -55,6 +58,8 @@ export class VideoService
   private selectedVideoSubcjet = new BehaviorSubject<VideoWindow | null>(null);
   public  selectedVideo$ = this.selectedVideoSubcjet.asObservable();
 
+  private userVideoReactionSubect = new BehaviorSubject<Reaction | null>(null);
+  public userVideoReaction$ = this.userVideoReactionSubect.asObservable();
 
   getCategorys() : Observable <Category[]>
   {
@@ -126,9 +131,9 @@ export class VideoService
     }))
 
   }
-  getVideoComments(videoId : number) : void
+  getVideoComments(videoId : number)
   {
-      this.httpClient.get<VideoComment[]>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/comments`)
+      return this.httpClient.get<VideoComment[]>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/comments`)
       .pipe(catchError((error)=>
       {
         console.error("Failed to get a comments from the server",
@@ -140,36 +145,9 @@ export class VideoService
 
         return throwError(()=> new Error("Could not get the comments from the selected video"))
 
-      })).subscribe(
-      {
-          next : (result) =>
-          {
-              result = result.map(x => (
-                {
-                  ...x,
-                  uploaded : new Date(x.uploaded)
-                }
-              ))
-              this.videoCommentsSubject.next(result);
-          },
-          error : (error) =>
-          {
-              console.error("Could not retrive the commets from the server", error);
-
-          }
-      })
+      }))
   }
-  increaseClientSideCommentReplyCount(commentId : number, videComments$ : Observable<VideoComment[]> | undefined)
-  {
-    const comments = this.videoCommentsSubject.getValue();
 
-    const upDatedComments = comments.map(comment =>
-      comment.id === commentId ? {...comment, repliesCount : comment.repliesCount + 1} : comment
-    );//Yeah fuck this syntax NOTE(...object writes all its properties for you syntax sugar)
-
-
-    this.videoCommentsSubject.next(upDatedComments);
-  }
   locallyUpdateCommentCountAfterUserReply()
   {
     this.commentsCountSubject.next(this.commentsCountSubject.getValue() + 1);
@@ -205,38 +183,26 @@ export class VideoService
         }))
   }
 
-  getCommentsCount(videoId : number) : void
-  {
-      this.httpClient.get<number>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/commentsCount`)
-      .subscribe(
-      {
-          next : (result) => this.commentsCountSubject.next(result),
-          error : (error) => console.error(`Failed to fetch the comments count from the server ${error}`)
+  // getCommentsCount(videoId : number) : void
+  // {
+  //     this.httpClient.get<number>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/commentsCount`)
+  //     .subscribe(
+  //     {
+  //         next : (result) => this.commentsCountSubject.next(result),
+  //         error : (error) => console.error(`Failed to fetch the comments count from the server ${error}`)
 
-      })
-  }
+  //     })
+  // }
 
-  refreshCommentsCount(videoId : number)
-  {
-    this.getCommentsCount(videoId);
-  }
+  // refreshCommentsCount(videoId : number)
+  // {
+  //   this.getCommentsCount(videoId);
+  // }
 
-  getVideoViews(videoId : number)
-  {
-    this.httpClient.get<number>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/updateViews`)
-    .subscribe(
-    {
-        next : (result) =>
-        {
-            this.viewsSubject.next(result);
-        },
-        error : (error) =>
-        {
-            console.error('Failed to get the video views from the server', error);
-
-        }
-    })
-  }
+ updateViews(selectedVideoId : number)
+ {
+    return this.httpClient.patch(`${ApiUrls.SELECTEDVIDEO}/${selectedVideoId}/updateViews`, null);
+ }
 
   addReplyToComment(reply : ReplyForm) : Observable<Reply>
   {
@@ -309,7 +275,9 @@ export class VideoService
 
   getVideoReactions(videoId: number) : Observable<Reaction>
   {
-    return this.httpClient.get<Reaction>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/reactions`)
+    const headers = this.authService.getHttpHeaders();
+
+    return this.httpClient.get<Reaction>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/reactions`, {headers})
   }
 
   deleteVideoReaction(videoId: number) : Observable<Reaction>
@@ -459,6 +427,8 @@ export class VideoService
       }
     )
 
+
+
     return this.httpClient.post<WatchHistoryVideoInfo>(`${ApiUrls.ADDVODTOHISTORY}/${videoId}`,null,{headers});
   }
 
@@ -501,8 +471,7 @@ export class VideoService
 
   clearSelectedVIdeo()
   {
-    const video : VideoWindow | null = null;
-    this.selectedVideoSubcjet.next(video);
+    this.selectedVideoSubcjet.next(null);
   }
 
   getEditVideoInfo(videoId : number) : Observable<VideoWindow>
@@ -599,6 +568,28 @@ export class VideoService
     const headers = this.getHttpHeaders();
 
     return this.httpClient.get<VideoWindow[]>(`${ApiUrls.VIDEO}/subscriptions`, {headers});
+  }
+
+  getLikedVideosCount() : Observable<number>
+  {
+    const headers = this.getHttpHeaders();
+
+    return this.httpClient.get<number>(`${ApiUrls.VIDEO}/collection`, {headers});
+  }
+
+  getVideoLikesDislikeCount(videoId : number) : Observable<VideoLikeDislikeCountDTO>
+  {
+    return this.httpClient.get<VideoLikeDislikeCountDTO>(`${ApiUrls.VIDEO}/${videoId}/likeDislikeCount`);
+  }
+
+  getCategoryStatsInViedoDescription(video : number) : Observable<CategoryStatsDTO>
+  {
+    return this.httpClient.get<CategoryStatsDTO>(`${ApiUrls.VIDEO}/${video}/descriptionCategory`);
+  }
+
+  getCategoryVideos(categoryId : number) : Observable<VideoWindow[]>
+  {
+    return this.httpClient.get<VideoWindow[]>(`${ApiUrls.VIDEO}/${categoryId}`);
   }
 
 

@@ -11,7 +11,7 @@
 
 <div></div>
 
-<div class="userVideoCatalog">
+<!-- <div class="userVideoCatalog">
   <ng-container *ngFor="let video of userVideoCatalog">
   <div class="videoContainer">
       <a [routerLink]="['/playing', video.id]">
@@ -27,4 +27,12 @@
   </div>
 
   </ng-container>
+</div> -->
+
+
+<div class="userVideoCatalog">
+
+  <app-video-catalog [videosCatalog]="userVideoCatalog"></app-video-catalog>
+
 </div>
+

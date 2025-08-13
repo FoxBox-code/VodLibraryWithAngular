@@ -8,6 +8,7 @@ import { FormControl } from '@angular/forms';
 import { VideoService } from './video.service';
 import { Category } from './models/category';
 import { ProfilesFollowingDTO } from './models/profiles-followingDTO';
+import { DataCosntans } from './dataconstants';
 
 
 
@@ -21,17 +22,32 @@ export class AppComponent implements OnInit {
   constructor(private http: HttpClient, private authService : AuthService, private router : Router, private videoService : VideoService)
   {
     this.userNameDynamic$ = this.authService.getUserNameAsOservable();
-    this.userId$ = this.authService.getUserIdAsObservable()
-    this.getUserSubscribers();
+    this.userId$ = this.authService.getUserIdAsObservable();
 
-    if(!this.getUserSubscribers())
-      if(!this.getUserSubscribersFromSessionStorage())
-        this.getUserSubscribersFromServer();
+    authService.checkTokenExpiration()
+
 
   }
+  historyIconUrl = DataCosntans.historyIcon;
+  personIconUrl = DataCosntans.personIcon;
+  homeIcon = DataCosntans.homeIcon;
+  subscriptionIcon = DataCosntans.subscriptionsIcon;
+  menuIcon = DataCosntans.menuIcon;
+  likeIcon = DataCosntans.likeIcon;
+  playListIcon = DataCosntans.playListIcon;
+
+  musicIcon = DataCosntans.musicIcon;
+  gamingIcon = DataCosntans.gamingIcon;
+  educationIcon = DataCosntans.educationIcon;
+  entertainmentIcon = DataCosntans.entertainmentIcon;
+  sportsIcon = DataCosntans.sportsIcon;
+
+
+  genreIconsArray = [this.musicIcon , this.sportsIcon , this.gamingIcon , this.entertainmentIcon , this.educationIcon]
 
 
   userAuth = false; //cheks if user is loged in
+  userAuth$ : Observable<boolean> | null = null;
   userName : string | null = '';
   userNameDynamic$ : Observable<string | null>
   userId$ : Observable<string | null>
@@ -47,10 +63,22 @@ export class AppComponent implements OnInit {
 
   ngOnInit()
   {
+    this.userAuth$ = this.authService.getAuthStatus()
     this.authService.getAuthStatus().subscribe((authStatus)=>
       {
         this.userAuth = authStatus;
+
+        if(this.userAuth)
+        {
+        this.getUserSubscribers();
+
+         if(!this.getUserSubscribers())
+          if(!this.getUserSubscribersFromSessionStorage())
+            this.getUserSubscribersFromServer();
+        }
       });
+
+
 
 
 
@@ -89,6 +117,14 @@ export class AppComponent implements OnInit {
 
     this.categories = this.videoService.getCategorys()
 
+    this.categories.subscribe(next =>
+      {
+        next.forEach(element => {
+            console.log(`Show me category ${element.name}`)
+        });
+      }
+      )
+
 
   }
 
@@ -111,6 +147,8 @@ export class AppComponent implements OnInit {
         });
     }
   }
+
+
 
   private getUserSubscribers() : boolean
   {

@@ -21,6 +21,10 @@ import { YouPageComponent } from './you-page/you-page.component';
 import { YouPageSideScrollWindowComponent } from './you-page/you-page-side-scroll-window/you-page-side-scroll-window.component';
 import { SubscriptionsComponent } from './subscriptions/subscriptions.component';
 import { VideoCatalogComponent } from './video-catalog/video-catalog.component';
+import { PlaylistComponent } from './playlist/playlist.component';
+import { PlaylistminiComponent } from './playlistmini/playlistmini.component';
+import { ClickOutSideDirective } from './directives/click-outside-directive';
+import { GenreVidoesComponent } from './genre-vidoes/genre-vidoes.component';
 
 @NgModule({
   declarations: [
@@ -39,14 +43,19 @@ import { VideoCatalogComponent } from './video-catalog/video-catalog.component';
     YouPageComponent,
     YouPageSideScrollWindowComponent,
     SubscriptionsComponent,
-    VideoCatalogComponent
+    VideoCatalogComponent,
+    PlaylistComponent,
+    PlaylistminiComponent,
+    GenreVidoesComponent,
+
   ],
   imports: [
     BrowserModule, HttpClientModule,
     AppRoutingModule,
     ReactiveFormsModule,
     CommonModule,
-    FormsModule
+    FormsModule,
+    ClickOutSideDirective
   ],
   providers: [],
   bootstrap: [AppComponent]

@@ -1,17 +1,10 @@
-<p>you-page works!</p>
+
 
 
 <ng-container *ngIf="userId$ | async as userId ;else notLogged">
   <p>Debug userId: {{ userId }}</p>
 
   <p>Enjoy</p>
-
-</ng-container>
-
-
-  <ng-template #notLogged>
-    <p>Please login</p>
-  </ng-template>
 
   <div class="history">
     <h2>History</h2>
@@ -25,6 +18,55 @@
       <h2>Liked videos</h2>
       <app-you-page-side-scroll-window [video]="likedVideosCollection"></app-you-page-side-scroll-window>
   </div>
+
+  <div class="likedVideosPlaylist">
+    <ng-container *ngIf="likedVideosCollection.length > 0">
+      <h2>PlayLists</h2>
+        <div class="playlistCard" >
+              <h3>Liked videos</h3>
+              <div class="image-count-wrapper">
+                  <img [src]="likedVideoPlayListFrontVideo?.imagePath" alt="Video Thumnail">
+                  <span>Videos count {{totalLikedVideosCount}}</span>
+              </div>
+
+
+              <a [routerLink]="['/liked-videos']">Preview list</a>
+        </div>
+    </ng-container>
+
+  </div>
+
+</ng-container>
+
+
+  <ng-template #notLogged>
+
+    <div class="notLoggedIn">
+        <div class="imageContainer">
+          <img src="https://localhost:7156/Youtube%20ScreenShots/youtube_icon_1.png" alt="Some Image">
+        </div>
+
+        <h3>Enjoy your favorite videos</h3>
+        <p>Sign in to access videos that you’ve liked or saved</p>
+        <div class="buttonWrapper">
+            <button type="button" [routerLink]="['/register']">Sign In</button>
+            <button type="button" (click)="navigateToLogIn()">Log In</button>
+        </div>
+        <section>
+
+           
+        </section>
+
+
+
+    </div>
+
+
+  </ng-template>
+
+
+
+
 
 
 

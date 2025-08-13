@@ -13,6 +13,7 @@ import { SearchPageComponent } from './search-page/search-page.component';
 import { EditPageComponent } from './edit-page/edit-page.component';
 import { YouPageComponent } from './you-page/you-page.component';
 import { SubscriptionsComponent } from './subscriptions/subscriptions.component';
+import { GenreVidoesComponent } from './genre-vidoes/genre-vidoes.component';
 const routes: Routes = [
   // {
   //   path : '',
@@ -48,7 +49,7 @@ const routes: Routes = [
   {
     path : 'watch-history',
     component : WatchHistoryComponent,
-    canActivate : [authGuard]
+    
   },
   {
     path : 'user-profile/:userId',
@@ -72,6 +73,10 @@ const routes: Routes = [
   {
     path : 'subscriptions',
     component : SubscriptionsComponent
+  },
+  {
+    path : 'genre-video/:genre',
+    component : GenreVidoesComponent
   }
 
 

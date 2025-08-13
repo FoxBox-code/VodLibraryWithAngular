@@ -8,11 +8,13 @@ export interface PlayVideo
     videoPath : string,
     videoOwnerId : string,
     videoOwnerName : string,
+    videoOwnerProfileIcon : string,
     categoryName : string,
     views : number,
     likes : number,
     disLikes : number,
-    commentCount : 0,
+    commentCount : number,
+    videoOwnerSubscribersCount : number
 
 }
 

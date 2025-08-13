@@ -7,5 +7,9 @@
         public required string Id { get; set; }
 
         public required DateTime SubscribedOn { get; set; }
+
+        public required string UesrImageIcon { get; set; }
+
+
     }
 }

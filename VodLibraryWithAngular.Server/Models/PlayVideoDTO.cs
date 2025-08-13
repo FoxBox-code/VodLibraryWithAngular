@@ -16,6 +16,10 @@
 
         public string VideoOwnerName { get; set; }
 
+        public string VideoOwnerProfileIcon { get; set; }
+
+        public int VideoOwnerSubscribersCount { get; set; }
+
         public string CategoryName { get; set; }
 
         public int Views { get; set; }

@@ -1,6 +1,6 @@
 .videos-category-wrapper
 {
-  border: 2px whitesmoke solid;
+  cursor: pointer;
 
 
   .video-window-wrapper
@@ -11,16 +11,38 @@
 
   }
 
+  .titleAndDate
+  {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+
+    p
+    {
+      font-size: 0.8rem;
+      margin-left: auto;
+    }
+  }
+
+  .textVideoInfoData
+  {
+    width: 100%;
+
+  }
+
+
 .image-wrapper {
   display: grid;
-  width: fit-content;
+  width: 100%;
 
   img {
     grid-area: 1 / 1;
     display: block;
     overflow: hidden;
     width: 100%;
-    
+    border-radius: 12px;
+    overflow: hidden;
+
   }
 
   span {
@@ -34,17 +56,46 @@
     border-radius: 4px;
     margin: 5px;
   }
+
+  div
+  {
+    grid-area: 1/1;
+  }
 }
 
 .video-details-wrapper
 {
+  display: flex;
+  flex-direction: row;
   padding: 0 1rem;
+  gap: 1rem;
+  
 
   a {
     text-decoration: none;
     color: inherit;
   }
+
+  .userProfileIcon
+  {
+    margin-top: 1rem;
+    width: 64px;
+      height: 64px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 2px solid black;
+  }
 }
 
 }
+.editIcon
+{
 
+  background-color: white;
+  border-radius: 36px;
+  padding: 2px;
+  height: 32px;
+  width: 32px;
+  z-index: 5;
+
+}

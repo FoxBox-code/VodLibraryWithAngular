@@ -1,4 +1,19 @@
-.individualVideo
+.component-container
+{
+  display: flex;
+  flex-direction: row;
+  padding: 2rem;
+
+  .sideWindow
+  {
+  position: sticky;
+  top: 0; /* or any offset you want */
+  align-self: flex-start; /* if inside a flex container */
+  z-index: 10; /* optional: helps stay above other elements */
+  padding: 1rem;
+  }
+
+  .individualVideo
 {
   display: flex;
   flex-direction: row;
@@ -34,5 +49,20 @@ a
 {
   text-decoration: none;
   color: inherit;
+}
+
+}
+
+
+.noContent
+{
+  align-items: center;
+  justify-content: center;
+  border: 2px solid black;
+  background-color:whitesmoke;
+  border-radius: 15px;
+  display: inline-block;
+  padding: 1rem;
+
 }
 

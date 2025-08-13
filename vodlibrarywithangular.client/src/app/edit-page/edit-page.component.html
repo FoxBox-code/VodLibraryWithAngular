@@ -19,7 +19,7 @@
           <div class="titleEdit">
             <div (click)="fieldToEdit('title')"  *ngIf="editField === 'title'; else standardTitle ">
 
-                  <input id="title" type="text" formControlName="Title" (blur)="fieldToEdit(null)" #titleInput>
+                  <input title="Title" id="title" type="text" formControlName="Title" (blur)="fieldToEdit(null)" #titleInput>
 
 
             </div>

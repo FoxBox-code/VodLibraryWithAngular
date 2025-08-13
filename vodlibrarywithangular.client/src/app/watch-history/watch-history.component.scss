@@ -18,3 +18,57 @@ a
     margin: 1rem 0;
   }
 }
+
+
+
+
+
+.notLoggedIn
+{
+  height: 600px;
+  justify-self: center;
+  align-content: center;
+
+  .imageContainer
+  {
+    width: 100%;
+
+    img
+    {
+      margin: 0 auto;
+      display: block;
+      width: 96px;
+      height: 96px;
+    }
+  }
+
+  h3
+  {
+
+    justify-self: center;
+  }
+
+  .buttonWrapper
+  {
+    width: inherit;
+    justify-content: center;
+    justify-self: center;
+    button
+      {
+        margin: 0.5rem;
+        width: 70px;
+        border: 2px;
+        border-radius: 15px;
+        display: block;
+
+      }
+  }
+
+
+}
+
+.svg
+{
+  width: 100px;
+  height: 100px;
+}

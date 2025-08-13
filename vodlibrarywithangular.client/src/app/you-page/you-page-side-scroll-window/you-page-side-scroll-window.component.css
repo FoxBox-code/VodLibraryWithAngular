@@ -6,21 +6,59 @@
   position: relative;
   display: inline-block;
 
+
+
   /* Element that we move */
   .videosWrapper
   {
+    margin-top: 1rem;
   display: flex;
   flex-direction: row;
   gap: 12px;
   transition: transform 0.3s ease;
 
 
+    img
+    {
+      border-radius: 15px;
+      overflow: hidden;
+    }
 
 
     .Panel
     {
+      a
+      {
+        text-decoration: none;
+        color: inherit;
+
+
+      }
+
       width: 480px;
       flex-shrink: 0;
+
+      .imageAndLengthWrapper
+      {
+        display: grid;
+        width: 100%;
+        img
+        {
+            grid-area: 1/1;
+        }
+        p
+        {
+            grid-area: 1/1;
+            color: white;
+            align-self: self-end;
+            justify-self: end;
+            margin-right: 1.5rem;
+            background-color: black;
+            border-radius: 6px;
+            padding: 0.3rem;
+
+        }
+      }
     }
 
 

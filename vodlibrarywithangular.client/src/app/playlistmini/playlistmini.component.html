@@ -1,0 +1,35 @@
+<div class="miniContiner">
+
+  <h1>Liked videos</h1>
+
+<h2>{{userName}} - Total {{playListMapper?.playList?.toArray()?.length}}</h2>
+
+
+
+  <section *ngFor="let video of playListMapper?.playList?.toArray(); let i = index">
+  <a (click)="navigateToPlayVideo(video.videoId)">
+
+
+  <div class="index-video" [class.active]="video.videoId === selectedVideoID">
+      <span>{{i + 1}}</span>
+      <div class="imageTimeSpan">
+        <img [src]="video.thumbnail" alt="pic">
+        <span><p>{{videoLengthString(video.hours , video.minutes , video.seconds)}}</p></span>
+      </div>
+
+      <div class="windowDetails">
+        <h3>{{video.title}}</h3>
+        <p>{{video.videoOwnerName}}</p>
+      </div>
+
+
+  </div>
+
+  </a>
+  <button type="button" (click)="removeFromList(video.videoId)">X</button>
+  </section>
+</div>
+
+
+
+

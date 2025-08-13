@@ -4,24 +4,31 @@ import { PlayVideo } from '../models/play-video';
 import { ActivatedRoute } from '@angular/router';
 import { FormGroup, FormBuilder, Validators, RequiredValidator } from '@angular/forms';
 import { AuthService } from '../auth.service';
-import { Observable, Subject } from 'rxjs';
+import { BehaviorSubject, firstValueFrom, Observable, of, pipe, Subject } from 'rxjs';
 import { take } from 'rxjs/operators';
 
 import { NavigationService } from '../navigation.service';
 import { Router } from '@angular/router';
-import { AddCommentDTO } from '../models/add-comment';
-import { VideoComment } from '../models/comment';
+import { AddCommentDTO } from '../models/add-CommentDTO';
+import { VideoComment } from '../models/videoComment';
 import { ReplyForm } from '../models/reply-form';
 import { Reply } from '../models/reply';
 import { Reaction } from '../models/reaction';
 import { ReplyLikeDislikeCountUpdateDTO } from '../models/replyLikeDislikeCountUpdateDTO';
 import { WatchHistoryVideoInfo } from '../models/watch-history-video-info';
 import { ProfilesFollowingDTO } from '../models/profiles-followingDTO';
+import { VideoWindow } from '../models/video-window';
+import { PlayListMapper } from '../models/playListMaper';
+import { PlaylistService } from '../playlist.service';
+import { VideoLikeDislikeCountDTO } from '../models/video-like-dislike-countDTO';
+import { CategoryStatsDTO } from '../models/categorystatsDTO';
+
 
 
 @Component({
   selector: 'app-play-video',
   standalone: false,
+
 
   templateUrl: './play-video.component.html',
   styleUrl: './play-video.component.scss'
@@ -31,31 +38,45 @@ export class PlayVideoComponent
     selectedVideo : PlayVideo | null = null;
     selectedVideoId : number;
     commentForm : FormGroup;
-    replyForm? : FormGroup;
-    replyCommentId? : number;
 
+    replyCommentId? : number;
+    currentUserId : string | null = null;
 
     activeCommentReplyThreadDictionary = new Map<number , FormGroup>();
 
 
     activeReplyThreadDictionary = new Map<number , FormGroup>();
-    commentsCountObservable : Observable<number>
+
+    unRegisteredUserWantsToSubscribe = false;
+
+    commentsCountSubject = new BehaviorSubject<number>(0);
+    commentsCountObservable = this.commentsCountSubject.asObservable();
+    public userCommentReactions: { [commentId: number]: boolean | undefined } = {};
+
+    public userReplyReactions : {[replyId : number] : boolean | undefined} = {};
+
+
     userNameAsObservable : Observable<string | null>;
     userName : string | null = null;
-    nagivationService = inject(NavigationService);
+    navigationService = inject(NavigationService);
     router = inject(Router);
-    videoComments$? : Observable<VideoComment[]>;
+
 
     commentReplies$ : {[commentId : number] :Observable<Reply[]>} = {};
     isUserClickingCommentForm : boolean = false;
-
+    selectedComment : number = 0;
+    selectedReply : number = 0;
     expandRepliesComments : {[commentId : number] :  boolean} = {};
     autoLoadComments : boolean = false;
     views$? : Observable<number>;
 
-    reaction? : Reaction;
+    userWatchedEnoughTimeForViewToCount : boolean = false;
 
-    videoCommentsSnapshot: VideoComment[] = [];//probably needs to be removed
+    userVideoReaction? : Reaction;
+    likeDislike : VideoLikeDislikeCountDTO | null = null;//THIS SHOULD NEVER BE NULL we ust did it for type safety
+
+    public videoCommentsSubject = new BehaviorSubject<VideoComment[]>([]);
+    public videoComments$$ = this.videoCommentsSubject.asObservable();
 
     public sortMenuOpen : boolean = false;
     public criteria : 'popular' | 'newest' = 'newest';
@@ -63,29 +84,40 @@ export class PlayVideoComponent
     public userFollowing : ProfilesFollowingDTO[] = [];
     public hasUserSubscribedToVideoOwner : boolean = false;
 
+    public loadPlayList : string | null= null;
+    public playList : VideoWindow[] | null = null;
+    public playListMapper : PlayListMapper | null = null;
+
+    public descriptionShowMore : boolean = false;
+    public maxHeight : Number = 0;
+
+    public unfollowUser = false;//unsubscribing is done via two button confirmations
+
+    public categoryStats : CategoryStatsDTO | null = null;
 
     @ViewChild('sortWrapper', {static : false}) sortWrapper? : ElementRef //this makes a dom element to a variable
+    @ViewChild('videoElement') videoElement! : ElementRef<HTMLVideoElement>
+    @ViewChild('description') description! : ElementRef<HTMLElement>
 
 
 
-    constructor(private videoService : VideoService, private activatedRoute:ActivatedRoute, private formBuilder : FormBuilder, private authService : AuthService)
+    constructor(private videoService : VideoService,
+      private activatedRoute:ActivatedRoute,
+      private formBuilder : FormBuilder,
+      private authService : AuthService,
+      private playListService : PlaylistService,
+
+
+      )
     {
         this.selectedVideoId = Number(this.activatedRoute.snapshot.paramMap.get('id'));
-
-        videoService.getCurrentVideo(this.selectedVideoId).subscribe(
-        {
-            next : (result) =>
-            {
-                this.selectedVideo = result;
-                console.log(JSON.stringify(this.selectedVideo));
-                videoService.getVideoViews(this.selectedVideoId);
-
-                this.getUserFollowersForThisPage();
-            }
+        this.loadPlayList = (this.activatedRoute.snapshot.queryParamMap.get('showPlayList'));
+        const giveMeSomething = this.activatedRoute.snapshot.queryParamMap.get('showPlayList');
 
 
+        // this.getVideo(this.selectedVideoId);
 
-        })
+
 
         this.commentForm = formBuilder.group(
         {
@@ -101,99 +133,278 @@ export class PlayVideoComponent
 
           })
 
-        videoService.getCommentsCount(this.selectedVideoId);
-        this.commentsCountObservable = videoService.commentsCount$;
-        this.views$ = videoService.views$;
-        this.userFollowing$ = this.authService.userFollowing$;
+          this.userFollowing$ = this.authService.userFollowing$;
+
+
+   }
 
 
 
-
-
-
-    }
-
-    private getUserFollowersForThisPage()
-    {
-      this.userFollowing$.subscribe(
+  ngOnInit() : void
+  {
+        this.activatedRoute.params.subscribe(
           {
-            next : (following) =>
+            next : (params) =>
             {
-              this.hasUserSubscribedToVideoOwner = following?.some(x => x.id == this.selectedVideo?.videoOwnerId) ?? false;
-              this.userFollowing = following ?? [];
+              const id = +params['id'];
+              this.selectedVideoId = id;//this shit is a mess
+
+              this.getVideo(id);
+              this.resetDependenciesWhenPlayerSwitchesVideos();
+
+
             }
           }
         )
 
-        if(this.userFollowing.length === 0)
+        this.loadLikeDislikeCount()
+
+        if(this.userName)
+            this.loadReactions();
+
+
+
+
+        this.currentUserId = this.authService.getUserIdFromToken();
+
+        if(this.loadPlayList === "true")
         {
-          const userFollowingFromStorage = sessionStorage.getItem('userFollowing');
-          const userFollowingFromStorageParse : ProfilesFollowingDTO[] = userFollowingFromStorage ? JSON.parse(userFollowingFromStorage) : []
-
-          if(userFollowingFromStorageParse.length !== 0)
-          {
-            this.authService.updateSubjectForUserFollowing(userFollowingFromStorageParse);
-             this.hasUserSubscribedToVideoOwner = userFollowingFromStorageParse?.some(x => x.id == this.selectedVideo?.videoOwnerId) ?? false;
-          }
-        }
-    }
-
-    ngOnInit() : void
-    {
-        this.loadReactions();
-        console.log("PlayVideoComponent loaded");
-
-        if(this.userName !== null)
-        {
-          this.authService.userTodayWatchHistory$
-          .pipe(take(1))
-          .subscribe(history =>
+          this.playListService.getLikedListMini().subscribe(data => this.playListMapper = data)
+          this.videoService.getUsersLikedVideosHistory()
+          .subscribe(
             {
-              const exists = history.find(h => h.videoId == this.selectedVideoId)
-
-
-              this.videoService.addUpdateUserWatchHistory(this.selectedVideoId)
-                .subscribe(
-                {
-                    next : (data) =>
-                    {
-                      let updatedWatchedHistory : WatchHistoryVideoInfo[];
-                      if(!exists)
-                      {
-                          data.watchedOn = new Date(data.watchedOn);
-                          updatedWatchedHistory = [...history, data];
-
-                      }
-                      else
-                      {
-                          let index = history.findIndex(h => h.videoId === this.selectedVideoId);
-
-                          const [topElement] = history.splice(index,1);
-
-                          topElement.watchedOn = new Date(data.watchedOn);
-
-                          updatedWatchedHistory = [topElement, ...history]
-
-                      }
-
-                      this.authService.userTodayWatchHistorySubject.next(updatedWatchedHistory);
-
-
-                    }
-                })
-
-            })
-
-
+              next : (list) =>
+              {
+                this.playList = list;
+              },
+              error : (err) =>
+              {
+                console.error(err);
+              }
+            }
+          )
         }
 
 
 
     }
+
+    ngAfterViewInit()
+    {
+      const video = this.videoElement.nativeElement;
+
+
+        //Timeupdate is an event tha hanldes media elements it thicks time only when the video is playing making it useful for trakcing
+        video.addEventListener('timeupdate', () =>
+        {
+            const videoTime = video.duration;
+            const currentTime = video.currentTime;
+
+            if(!this.userWatchedEnoughTimeForViewToCount && currentTime >= 20)
+            {
+              this.userWatchedEnoughTimeForViewToCount = true;//SUCH A TRASH VARIABLE
+              this.videoService.updateViews(this.selectedVideo!.id).subscribe({
+                next : () =>
+                  {
+                    console.log("View counted");
+
+
+                     if(this.userName !== null)
+                      {
+                          this.authService.userTodayWatchHistory$
+                          .pipe(take(1))
+                          .subscribe(history =>
+                            {
+                              const exists = history.find(h => h.videoId == this.selectedVideoId)
+
+
+                              this.videoService.addUpdateUserWatchHistory(this.selectedVideoId)
+                                .subscribe(
+                                {
+                                    next : (data) =>
+                                    {
+                                      let updatedWatchedHistory : WatchHistoryVideoInfo[];
+                                      if(!exists)
+                                      {
+                                          data.watchedOn = new Date(data.watchedOn);
+                                          updatedWatchedHistory = [...history, data];
+
+                                      }
+                                      else
+                                      {
+                                          let index = history.findIndex(h => h.videoId === this.selectedVideoId);
+
+                                          const [topElement] = history.splice(index,1);
+
+                                          topElement.watchedOn = new Date(data.watchedOn);
+
+                                          updatedWatchedHistory = [topElement, ...history]
+
+                                      }
+
+                                      this.authService.userTodayWatchHistorySubject.next(updatedWatchedHistory);
+                                    }
+
+
+                                })
+
+                            })
+
+
+                       }
+                  }
+              })
+
+
+            }
+
+            if(this.loadPlayList !== null && currentTime >= videoTime)
+            {
+              const nextVideo = this.playListMapper?.currentNode?.next;
+
+              if(nextVideo)
+              {
+                this.playListMapper!.currentNode = nextVideo;
+                 this.router.navigate(['/playing', nextVideo.value.videoId], {queryParams : {showPlayList : true }});
+              }
+            }
+          });
+
+          setTimeout(() => {
+              this.measureDescription();
+          }, 0);
+
+
+
+
+    }
+
+    private measureDescription()
+    {
+      const element = this.description.nativeElement;
+
+      const full = element.scrollHeight;
+
+
+
+
+      this.maxHeight = (full * 40)/100;
+    }
+
+    showHideDescription(event : Event, descriptionContainer : HTMLElement)
+    {
+      this.descriptionShowMore = !this.descriptionShowMore;
+      // const full = descriptionContainer.scrollHeight;
+      const full = this.description.nativeElement.scrollHeight;
+
+      if(this.descriptionShowMore)
+      {
+          this.maxHeight = full;
+          descriptionContainer.style.overflow = "auto";
+      }
+
+
+      else
+      {
+        descriptionContainer.style.overflow = "hidden";
+        this.maxHeight = (full * 40)/100;
+      }
+
+    }
+
+
+
+
+     getVideo(selectedVideoId : number)
+   {
+      this.videoService.getCurrentVideo(selectedVideoId).subscribe(
+        {
+            next : (result) =>
+            {
+                this.selectedVideo = result;
+                console.log(JSON.stringify(this.selectedVideo));
+                this.commentsCountSubject.next(this.selectedVideo.commentCount);
+
+                this.getUserFollowersForThisPage();
+                this.requestCategoryStats(selectedVideoId);
+            }
+
+
+
+        })
+   }
+
+   private requestCategoryStats(videoId : number)
+   {
+    this.videoService.getCategoryStatsInViedoDescription(videoId).subscribe(
+      {
+        next : (data) => this.categoryStats = data,
+        error : (err) => console.error(err)
+      }
+    )
+   }
+
+  //  loadNewVideo(playListMapper : PlayListMapper)
+  //  {
+  //    this.playListMapper = playListMapper;
+  //     this.getVideo(playListMapper.selectedVideoId);
+
+  //     this.videoService.videoCommentsSubject.next([]);
+  //  }
+
+
+   private async getUserFollowersForThisPage()
+   {
+
+       const ProfilesFollowingasyncResult = await firstValueFrom(this.userFollowing$.pipe(take(1)));
+       if(ProfilesFollowingasyncResult === null)
+       {
+          console.error("getUserFollowersForThisPage is not working correctly, the observable userFOllowing$ returned a null");
+          return;
+       }
+       this.userFollowing = ProfilesFollowingasyncResult as ProfilesFollowingDTO[];//THIS MIGHT BE A PROBLEM
+
+       if(this.userFollowing.length === 0)
+       {
+         const userFollowingFromStorage = sessionStorage.getItem('userFollowing');
+         const userFollowingFromStorageParse : ProfilesFollowingDTO[] = userFollowingFromStorage ? JSON.parse(userFollowingFromStorage) : []
+
+         if(userFollowingFromStorageParse.length !== 0)
+         {
+            this.authService.updateSubjectForUserFollowing(userFollowingFromStorageParse);
+            this.hasUserSubscribedToVideoOwner = userFollowingFromStorageParse?.some(x => x.id == this.selectedVideo?.videoOwnerId) ?? false;
+            console.log(`What is the state of hasUserSubscribedToVideoOwner :${this.hasUserSubscribedToVideoOwner}`);
+            return;
+         }
+        }
+        this.hasUserSubscribedToVideoOwner = ProfilesFollowingasyncResult?.some(x => x.id == this.selectedVideo?.videoOwnerId) ?? false;
+        console.log(`What is the state of hasUserSubscribedToVideoOwner: ${this.hasUserSubscribedToVideoOwner}`);
+
+      }
+
+  private resetDependenciesWhenPlayerSwitchesVideos()
+  {
+      this.videoService.videoCommentsSubject.next([]);
+
+      this.activeCommentReplyThreadDictionary = new Map<number , FormGroup>();
+
+      this.activeReplyThreadDictionary = new Map<number , FormGroup>();
+
+      this.commentForm.reset();
+
+      this.commentReplies$ = {};
+      this.expandRepliesComments = {}
+
+
+
+
+  }
+
     commentFormClicked()
     {
         this.isUserClickingCommentForm = true;
     }
+
     cancelUserComment()
     {
       this.commentForm.reset();
@@ -232,8 +443,8 @@ export class PlayVideoComponent
                 next : (result) =>
                 {
                   console.log(`User ${result.userName} commented : ${result.description}`);
+                  this.commentsCountSubject.next(this.commentsCountSubject.value + 1);
 
-                  this.videoService.refreshCommentsCount(this.selectedVideoId);
 
                   if(this.autoLoadComments)
                     {
@@ -248,12 +459,20 @@ export class PlayVideoComponent
 
 
     }
-    addCommentReaction(commentId : number, reaction : boolean)
-    {
-      if(this.userName === null) return
 
-      const userReactions = this.videoService.userCommentReactions;
-      const exists = userReactions[commentId];
+    addCommentReaction(commentId : number, reaction : boolean, individualComment?: HTMLElement)
+    {
+      this.selectedComment = commentId;
+      this.userNameAsObservable.subscribe(next => console.log(`Printing whats inside userName as observable ${next}`))
+      if(this.userName === null)
+        {
+
+          return;
+        }
+
+      this.userCommentReactions = this.videoService.userCommentReactions;
+      console.log(`Current reaction of user for this comment is ${this.userCommentReactions[commentId]}`)
+      const exists = this.userCommentReactions[commentId];
 
       if(exists == undefined)
       {
@@ -269,11 +488,18 @@ export class PlayVideoComponent
       }
     }
 
+    leaveLogInMessage()
+    {
+        this.selectedComment = 0;
+
+    }
+
     private createCommentReaction(commentId : number , reaction : boolean)
     {
         this.videoService.addUpdateUserCommentReaction(commentId, reaction)
         .subscribe(result => {
         this.videoService.userCommentReactions[commentId] = result.like;
+        this.userCommentReactions = this.videoService.userCommentReactions;
         this.updateCommentCounts(commentId, result.likeCount, result.dislikeCount);
     });
     }
@@ -282,6 +508,7 @@ export class PlayVideoComponent
         this.videoService.deleteUserCommentReaction(commentId)
         .subscribe(result => {
         delete this.videoService.userCommentReactions[commentId];
+        this.userCommentReactions = this.videoService.userCommentReactions;
         this.updateCommentCounts(commentId, result.likeCount, result.dislikeCount);
     });
     }
@@ -290,6 +517,8 @@ export class PlayVideoComponent
         this.videoService.addUpdateUserCommentReaction(commentId, reaction)
       .subscribe(result => {
       this.videoService.userCommentReactions[commentId] = result.like;
+      this.userCommentReactions = this.videoService.userCommentReactions;
+
       this.updateCommentCounts(commentId, result.likeCount, result.dislikeCount);
       });
     }
@@ -301,26 +530,44 @@ export class PlayVideoComponent
       {
         comment.likes = likeCount;
         comment.disLikes = dislikeCount;
-        }
       }
+    }
 
 
 
 
-    findComment(commentId: number) : VideoComment | undefined
+    findComment(commentId: number) : VideoComment | undefined //REMOVE THIS LATER
     {
-      return this.videoCommentsSnapshot.find(x => x.id === commentId);
+      const comments = this.videoCommentsSubject.getValue();
+      return comments.find(c => c.id === commentId);
     }
 
     loadComments()//THIS WOULD BE SO MUCH BETTER IF I REWRITE IT
     {
 
         this.autoLoadComments = true;
-        this.videoService.getVideoComments(this.selectedVideoId);
-        this.videoComments$ = this.videoService.videoComment$;
-        this.videoComments$.subscribe(data =>
-          this.videoCommentsSnapshot = data
-        )
+        this.videoService.getVideoComments(this.selectedVideoId).subscribe(
+      {
+          next : (result) =>
+          {
+              result = result.map(x => (
+                {
+                  ...x,
+                  uploaded : new Date(x.uploaded)
+                }
+              ))
+              this.videoCommentsSubject.next(result);
+          },
+          error : (error) =>
+          {
+              console.error("Could not retrive the commets from the server", error);
+
+          }
+      });
+
+
+
+
         var userId : string | null = null;
         this.userNameAsObservable.subscribe((data)=>
           {
@@ -334,10 +581,11 @@ export class PlayVideoComponent
               {
                 next : (data) =>
                 {
-                    for(var commentReaction of data)//Possible source of why another user delets anothers likes and dislikes
+                    for(var commentReaction of data)
                     {
 
                       this.videoService.userCommentReactions[commentReaction.commentId] = commentReaction.like;
+                      this.userCommentReactions = this.videoService.userCommentReactions;
                     }
 
                 }
@@ -362,8 +610,19 @@ export class PlayVideoComponent
 
     navigateToLogIn()
     {
-        this.nagivationService.updateAdress(this.router.url);
-        console.log(`Changing router to ${this.router.url}`);
+
+        const param = this.activatedRoute.snapshot.paramMap.get('id');
+        const query = this.activatedRoute.snapshot.queryParamMap.get('showPlayList');
+        const bool = query === 'true';
+        const route =
+        {
+          path : ['/playing', param],
+          querryParam : { ["showPlayList"]  : bool }
+        }
+
+
+        this.navigationService.updateAdress(route);
+
 
         this.router.navigate(['login']);
     }
@@ -379,7 +638,10 @@ export class PlayVideoComponent
           }
         )
 
-        this.activeReplyThreadDictionary.set(replyId, form)
+
+
+        this.activeReplyThreadDictionary.set(replyId, form);
+        //this is for nested reply - replies
       }
 
       else if(commentId !== undefined && !this.activeCommentReplyThreadDictionary.has(commentId))
@@ -389,7 +651,7 @@ export class PlayVideoComponent
             Reply : ["",[Validators.required]]
           }
         )
-
+        //my god this function is so ass , this dic can open multiple comment reply forms
         this.activeCommentReplyThreadDictionary.set(commentId, form);
       }
     }
@@ -434,6 +696,7 @@ export class PlayVideoComponent
             for(var replyReaction of data)
             {
                 this.videoService.userReplyReactions[replyReaction.replyId] = replyReaction.like;
+                this.userReplyReactions = this.videoService.userReplyReactions;
             }
 
           }
@@ -447,6 +710,7 @@ export class PlayVideoComponent
 
     addReplyReaction(commentId : number, replyId : number , reaction : boolean)
     {
+        this.selectedReply = replyId;
         if(this.userName === null) return;
 
         if(!this.videoService.userReplyReactions.hasOwnProperty(replyId))//Make a reaction
@@ -463,6 +727,12 @@ export class PlayVideoComponent
         }
     }
 
+    deSelectCommentAndReply()
+    {
+      this.selectedComment = 0;
+      this.selectedReply = 0;
+    }
+
     private createReplyReaction(commentId : number, replyId : number , reaction : boolean)
     {
         this.videoService.addUpdateReplyReaction(replyId, reaction)
@@ -471,6 +741,7 @@ export class PlayVideoComponent
             next : (data) =>
             {
               this.videoService.userReplyReactions[replyId] = reaction
+              this.userReplyReactions = this.videoService.userReplyReactions
 
               this.updateReplyLikeDislikeCounts(commentId ,replyId ,data)
             }
@@ -485,6 +756,7 @@ export class PlayVideoComponent
             next : (data) =>
             {
               delete this.videoService.userReplyReactions[replyId];
+              this.userReplyReactions = this.videoService.userReplyReactions
 
               this.updateReplyLikeDislikeCounts(commentId ,replyId ,data)
             }
@@ -500,6 +772,7 @@ export class PlayVideoComponent
             next : (replyLikeDislikeCountUpdateDTO) =>
             {
               this.videoService.userReplyReactions[replyId] = reaction
+              this.userReplyReactions = this.videoService.userReplyReactions
 
               this.updateReplyLikeDislikeCounts(commentId ,replyId ,replyLikeDislikeCountUpdateDTO)
             }
@@ -571,9 +844,10 @@ export class PlayVideoComponent
                   newReply.uploaded = new Date(newReply.uploaded);
 
                   this.videoService.updateCommentRepliesSubject(commentId, newReply);
-                  this.videoService.increaseClientSideCommentReplyCount(commentId , this.videoComments$);
-                  this.videoService.locallyUpdateCommentCountAfterUserReply();
+                  this.increaseClientSideCommentReplyCount(commentId);
+                  this.videoService.locallyUpdateCommentCountAfterUserReply();//probably delete
                   // this.updateLocalyCommentReplyOnUser(commentId) probably don t need
+                  this.commentsCountSubject.next(this.commentsCountSubject.value + 1);
 
 
                   this.cancelReplyForm(commentId , replyId);
@@ -587,6 +861,18 @@ export class PlayVideoComponent
 
         }
     }
+
+    increaseClientSideCommentReplyCount(commentId : number| undefined)
+  {
+    const comments = this.videoCommentsSubject.getValue();
+
+    const upDatedComments = comments.map(comment =>
+      comment.id === commentId ? {...comment, repliesCount : comment.repliesCount + 1} : comment
+    );
+
+
+    this.videoCommentsSubject.next(upDatedComments);
+  }
 
     updateLocalyCommentReplyOnUser(commentId : number)
     {
@@ -606,13 +892,36 @@ export class PlayVideoComponent
     {
 
 
-       this.videoService.getVideoReactions(this.selectedVideoId)
-       .subscribe(data =>
-       {
-          this.reaction = data;
+      this.videoService.getVideoReactions(this.selectedVideoId)
+      .subscribe(data =>
+      {
+          this.userVideoReaction = data;
 
-       }
-       )
+      }
+      )
+    }
+
+    loadLikeDislikeCount()
+    {
+      const videoIdFromUrl = parseInt(this.activatedRoute.snapshot.paramMap.get('id') ?? '-1');
+
+      this.videoService.getVideoLikesDislikeCount(videoIdFromUrl)
+      .subscribe(
+        {
+          next : (data) =>
+          {
+            this.likeDislike = data;
+
+            console.log(this.likeDislike);
+            console.log(`Like ${this.likeDislike.likes}`);
+            console.log(`Dislike ${this.likeDislike.dislikes}`);
+          },
+          error : (err) =>
+          {
+            console.error(err)
+          }
+        }
+      )
     }
 
     areaAutoGrowth(event : Event) :  void
@@ -631,7 +940,7 @@ export class PlayVideoComponent
     {
         this.sortMenuOpen = !this.sortMenuOpen;
 
-        this.videoComments$?.subscribe(
+        this.videoComments$$?.subscribe(
           {
             next : (data) =>
             {
@@ -656,12 +965,12 @@ export class PlayVideoComponent
     @HostListener('document:click', ['$event'])
     handleOutsideClick(event : MouseEvent)
     {
-       if(this.sortMenuOpen
+      if(this.sortMenuOpen
         && this.sortWrapper
         && !this.sortWrapper.nativeElement.contains(event.target))
-       {
+      {
           this.sortMenuOpen = false;
-       }
+      }
     }
 
     @HostListener('window:keydown', ['$event'])
@@ -673,24 +982,20 @@ export class PlayVideoComponent
       }
     }
 
-    addReaction(reactionClicked : string)
+    async addReaction(reactionClicked : string)
     {
-         var currentUser : string | null = null;
-         this.userNameAsObservable.subscribe(
-          {
-            next : (name) =>
-              {
-                currentUser = name;
-              }
-          })
+        var currentUser : string | null = null;
+        currentUser = await firstValueFrom(this.userNameAsObservable)
 
 
-         if(currentUser === null)
-         {
+
+        if(currentUser === null)
+        {
             return;
-         }
+        }
 
-         if(this.reaction?.reaction === reactionClicked)
+
+        if(this.userVideoReaction?.reaction === reactionClicked)
           {
 
             this.videoService.deleteVideoReaction(this.selectedVideoId)
@@ -698,7 +1003,10 @@ export class PlayVideoComponent
               {
                 next : (data) =>
                 {
-                    this.reaction = data;
+                    this.userVideoReaction = data;
+                    this.likeDislike!.likes = data.likeCount;
+                    this.likeDislike!.dislikes = data.disLikeCount;
+
                 }
                 ,
                 error : (err) =>
@@ -716,7 +1024,10 @@ export class PlayVideoComponent
               {
                 next : (data) =>
                 {
-                  this.reaction = data;
+                  this.userVideoReaction = data;
+                  this.likeDislike!.likes = data.likeCount;
+                  this.likeDislike!.dislikes = data.disLikeCount;
+
                 }
                 ,
                 error : (err) =>
@@ -729,17 +1040,25 @@ export class PlayVideoComponent
           }
         }
 
+
+
         public subscribeToUser()
         {
           const subscribingTo = this.selectedVideo?.videoOwnerId;
-          const currentUser = this.authService.getUserIdFromToken();
+          const theCurrentUserId = this.authService.getUserIdFromToken();
 
           const userName = this.authService.getUserNameFromToken();
+
+          if(userName === null)
+          {
+            this.unRegisteredUserWantsToSubscribe = true;
+            return;
+          }
           const videoOwner = this.selectedVideo?.videoOwnerName;
 
           if(!this.hasUserSubscribedToVideoOwner)
           {
-            if(currentUser && userName && subscribingTo && videoOwner)
+            if(theCurrentUserId && userName && subscribingTo && videoOwner)
             {
 
 
@@ -749,7 +1068,8 @@ export class PlayVideoComponent
               {
                 userName : this.selectedVideo!.videoOwnerName,
                 id : this.selectedVideo!.videoOwnerId,
-                subscribedOn : new Date()
+                subscribedOn : new Date(),
+                uesrImageIcon : this.selectedVideo!.videoOwnerProfileIcon//No way video is not selected here
 
               }
               this.userFollowing.push(newProfileFollowingDTO);
@@ -759,18 +1079,20 @@ export class PlayVideoComponent
               this.authService.updateSubjectForUserFollowing(this.userFollowing);
               sessionStorage.setItem('userFollowing', JSON.stringify(this.userFollowing))
 
-              this.videoService.subscribeUserToVideoOwner(currentUser , userName, subscribingTo, videoOwner)
+              this.videoService.subscribeUserToVideoOwner(theCurrentUserId , userName, subscribingTo, videoOwner)
               .subscribe(
                 {
                     next : () =>
                     {
                       console.log(`Server returned succsess`);
+                      this.hasUserSubscribedToVideoOwner = true;
                     },
                     error : (err) =>
                       {
                         console.error(err);
                         if(err.status = 400)
                         {
+                          //UH WTF IS THIS SHIT
                             this.hasUserSubscribedToVideoOwner = true;//status 400 from the server means that a duplicate subscription was made
                             this.removeSubscription()
                         }
@@ -781,27 +1103,34 @@ export class PlayVideoComponent
 
             }
           }
-          else //Unfollowing the content creator
-          {
+
+
+
+        }
+
+        public unSubscribeFromUser()
+        {
+            const subscribingTo = this.selectedVideo?.videoOwnerId;
+            const theCurrentUserId = this.authService.getUserIdFromToken();
+
+            const userName = this.authService.getUserNameFromToken();
+            const videoOwner = this.selectedVideo?.videoOwnerName;
+
             this.removeSubscription()
             this.hasUserSubscribedToVideoOwner = false;
 
-            if(currentUser && userName && subscribingTo && videoOwner)
-                this.videoService.unSubscribeUserToVideoOwner(currentUser , userName, subscribingTo, videoOwner)
+            if(theCurrentUserId && userName && subscribingTo && videoOwner)
+                this.videoService.unSubscribeUserToVideoOwner(theCurrentUserId , userName, subscribingTo, videoOwner)
                 .subscribe({
                   next : () =>
                   {
-
+                      console.log(`${userName} unfollowed ${videoOwner}`);
+                      this.unfollowUser = false;
                   },
                   error : (err) => console.log(err)
                 });
+        }
 
-
-
-          }
-
-
-          }
 
           private removeSubscription()
           {
@@ -810,25 +1139,66 @@ export class PlayVideoComponent
             const hashSet = new Set();
 
 
-            const filteredCurrentSubList = currentSubList.filter(x =>
-            {
-              if(!hashSet.has(x.id))
-              {
-                hashSet.add(x.id)
-                return true;
-              }
-              else
-                return false;
-            })
+            const filteredCurrentSubList = currentSubList.filter(x => x.id !== this.selectedVideo?.videoOwnerId)
+
 
             sessionStorage.setItem('userFollowing', JSON.stringify(filteredCurrentSubList));
             this.authService.updateSubjectForUserFollowing(filteredCurrentSubList);
           }
 
+          formatNum(views : number)
+          {
+
+            if(Math.floor(views / 1_000_000) > 0)
+              return Math.floor(views / 1_000_000) + 'M'
+
+            else if(Math.floor(views / 1_000) > 0)
+              return Math.floor(views / 1_000) + 'K'
+
+            return views
+          }
+
+          formatDateTime(date : Date)
+          {
+            const newDate = new Date();
+
+            if(newDate.getFullYear() === date.getFullYear())
+            {
+              if(newDate.getMonth() === date.getMonth())
+              {
+                if(newDate.getDay() === date.getDay())
+                {
+                  if(newDate.getHours() === date.getHours())
+                  {
+                    const minutesGap = newDate.getMinutes() - date.getMinutes();
+                    return minutesGap === 1 ? minutesGap + ' minute ago' : minutesGap + ' minutes ago'
+                  }
+                  const hourGap = newDate.getHours() - date.getHours();
+                  return hourGap === 1 ? hourGap + ' hour ago' : hourGap + ' hours ago'
+                }
+                const daysGap = newDate.getMonth() - date.getMonth();
+                return daysGap === 1 ? daysGap + ' day ago' : daysGap + ' days ago'
+              }
+              const monthGap = newDate.getMonth() - date.getMonth();
+              return monthGap > 1 ? monthGap + ' months ago' : monthGap + ' month ago'
+            }
+
+            const yearGap = newDate.getFullYear() - date.getFullYear()
+            return yearGap > 1 ? yearGap + ' years ago' : yearGap + ' year ago'
+          }
+
+
+
 
 
 
   }
+
+
+
+
+
+
 
 
 

@@ -124,7 +124,7 @@ namespace VodLibraryWithAngular.Server.Data
                 .HasOne(x => x.Video)
                 .WithMany(v => v.WatchHistories)
                 .HasForeignKey(x => x.VideoId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.Entity<Subscriber>()
                 .HasOne(f => f.Follower)

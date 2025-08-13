@@ -41,18 +41,13 @@ export class AuthService
           this.userName.next(this.getUserNameFromToken());
           this.userIdSubject.next(this.getUserIdFromToken());
 
-          const decode = jwtDecode(token);
-          const timeOut = (decode.exp ?? 0) * 1000; // NOTE decode.exp has a large number inside it may seem random but thats called a
-          // UNIX timesteps it shows the number of seconds passed since January 1 1970 00:00 its some kind of universal tracking standard
-
-          const date = new Date()
-
-         setTimeout(() => {
-          this.clearLocalStorageToken();
-          console.log(`User has be loged of after 30sec min`)
-         }, timeOut);//currently logging out user ater an hour
-
+          this.checkTokenExpiration();
   }
+
+
+
+
+
 
   getLocalStorageToken() : string | null
   {
@@ -60,6 +55,34 @@ export class AuthService
 
 
   }
+
+  checkTokenExpiration() : boolean
+  {
+    const token = this.getLocalStorageToken();
+    if(token === null)
+    {
+      return false;
+    }
+    const atop = atob(token.split('.')[1])
+    const atopToJson = JSON.parse(atop);
+
+    const timeNow = Date.now();
+    const tokenExpiresTimeToMs = atopToJson.exp * 1000;
+
+    setTimeout(() => {
+      this.clearLocalStorageToken();
+    }, tokenExpiresTimeToMs - timeNow);
+
+    if(tokenExpiresTimeToMs > timeNow)
+    {
+      return true;
+    }
+    else
+      return false;
+
+  }
+
+
 
   clearLocalStorageToken()
   {
@@ -88,6 +111,8 @@ export class AuthService
   {
       return this.authStatus.asObservable();
   }
+
+  
 
   register(form : FormData) : Observable<Register>
   {
@@ -216,7 +241,7 @@ export class AuthService
 
   }
 
-  private getHttpHeaders() : HttpHeaders
+  public getHttpHeaders() : HttpHeaders
   {
     const token = this.getLocalStorageToken();
     const headers = new HttpHeaders

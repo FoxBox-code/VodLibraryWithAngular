@@ -7,6 +7,7 @@ using NuGet.Protocol;
 using System.Security.Claims;
 using VodLibraryWithAngular.Server.Data;
 using VodLibraryWithAngular.Server.Data.Models;
+using VodLibraryWithAngular.Server.Interfaces;
 using VodLibraryWithAngular.Server.Models;
 
 
@@ -20,14 +21,16 @@ namespace VodLibraryWithAngular.Server.Controllers
         private readonly IWebHostEnvironment _environment;
         private readonly ILogger<VideoController> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IFileNameSanitizer _fileNameSanitizer;
 
 
-        public VideoController(ApplicationDbContext context, IWebHostEnvironment enviroment, ILogger<VideoController> logger, UserManager<ApplicationUser> userManager)
+        public VideoController(ApplicationDbContext context, IWebHostEnvironment enviroment, ILogger<VideoController> logger, UserManager<ApplicationUser> userManager, IFileNameSanitizer fileNameSanitizer)
         {
             _dbContext = context;
             _environment = enviroment;
             _logger = logger;
             _userManager = userManager;
+            _fileNameSanitizer = fileNameSanitizer;
         }
 
         [HttpGet("categories")]
@@ -54,7 +57,7 @@ namespace VodLibraryWithAngular.Server.Controllers
 
         [Authorize]
         [HttpPost("upload")]
-        [RequestSizeLimit(104857600)] //100MB
+        [RequestSizeLimit(209715200)] //200MB
         public async Task<IActionResult> UploadVideo([FromForm] VideoUploadDTO videoUploadForm)
         {
             if (!ModelState.IsValid)
@@ -64,8 +67,9 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             try
             {
-                string videoPath = Path.Combine(_environment.WebRootPath, "videos", Guid.NewGuid() + videoUploadForm.VideoFile.FileName);
-                string thumbnail = Path.Combine(_environment.WebRootPath, "thumbnail", Guid.NewGuid() + videoUploadForm.ImageFile.FileName); // Guid.NewGuid generates unique names in order to prevent colliding
+
+                string videoPath = Path.Combine(_environment.WebRootPath, "videos", Guid.NewGuid() + _fileNameSanitizer.SanitizeFileName(videoUploadForm.VideoFile.FileName));
+                string thumbnail = Path.Combine(_environment.WebRootPath, "thumbnail", Guid.NewGuid() + _fileNameSanitizer.SanitizeFileName(videoUploadForm.ImageFile.FileName)); // Guid.NewGuid generates unique names in order to prevent colliding
 
                 using (FileStream videoStream = new FileStream(videoPath, FileMode.Create))
                 {
@@ -109,6 +113,19 @@ namespace VodLibraryWithAngular.Server.Controllers
 
 
                 };
+
+                Category category = await _dbContext.Categories.FirstOrDefaultAsync(x => x.Id == video.CategoryId);
+
+                if (category == null)
+                {
+                    _logger.LogInformation($"The added video was made with an unknown category id {video.CategoryId}");
+                    return BadRequest(new
+                    {
+                        message = "Unable to create video invalid category"
+                    });
+                }
+
+                category.VideosCount++;
 
                 await _dbContext.VideoRecords.AddAsync(video);
                 await _dbContext.SaveChangesAsync();
@@ -214,6 +231,8 @@ namespace VodLibraryWithAngular.Server.Controllers
                 Views = video.Views,
                 VideoOwnerId = video.VideoOwnerId,
                 VideoOwnerName = video.VideoOwner.UserName,
+                VideoOwnerProfileIcon = $"{Request.Scheme}://{Request.Host}/ProfilePics/ProfileIcons/{Path.GetFileName(video.VideoOwner.profilePic)}",
+
                 ImagePath = $"{Request.Scheme}://{Request.Host}/thumbnail/{Path.GetFileName(video.ImagePath)}",
                 CategoryId = video.CategoryId,
                 CategoryName = video.Category.Name,
@@ -231,7 +250,7 @@ namespace VodLibraryWithAngular.Server.Controllers
         }
 
         [HttpGet("play/{videoId}")]
-        public async Task<IActionResult> GetCurrentVideo(int videoId)//THIS needs to be rewritten since we load the comments when we get the video but have a seprate method for that
+        public async Task<IActionResult> GetCurrentVideo(int videoId)//getCurrentVideo
         {
 
 
@@ -240,68 +259,19 @@ namespace VodLibraryWithAngular.Server.Controllers
                 VideoRecord? video = await _dbContext.VideoRecords
                 .Include(v => v.VideoOwner)
                 .Include(v => v.Category)
-                .Include(v => v.Comments)
-                .ThenInclude(c => c.Replies)
                 .FirstOrDefaultAsync(x => x.Id == videoId);
 
-
-                var comments = video.Comments.ToList();
-
-                List<CommentDTO> commentDTOs = new List<CommentDTO>();
-
-                foreach (var com in comments)
+                if (video == null)
                 {
-                    int likeCount = await _dbContext.CommentLikesDisLikes
-                        .CountAsync(x => x.Id == com.Id && x.Like);
-
-                    int disLikeCout = await _dbContext.CommentLikesDisLikes
-                        .CountAsync(x => x.Id == com.Id && !x.Like);
-
-                    var replies = await _dbContext.Replies.Where(x => x.CommentId == com.Id).ToListAsync();
-
-                    List<ReplieDTO> repliesDTOs = new List<ReplieDTO>();
-
-                    foreach (var rep in replies)
-                    {
-                        int repLikeCount = await _dbContext.RepliesLikesDisLikes
-                            .CountAsync(x => x.Id == rep.Id && x.Like);
-
-                        int repDisLikeCount = await _dbContext.RepliesLikesDisLikes
-                            .CountAsync(x => x.Id == rep.Id && !x.Like);
-
-                        ReplieDTO currentReply = new ReplieDTO()
-                        {
-                            Id = rep.Id,
-                            UserName = rep.UserName,
-                            UserId = rep.UserId,
-                            Description = rep.Description,
-                            VideoRecordId = rep.VideoRecordId,
-                            CommentId = rep.CommentId,
-                            Uploaded = rep.Uploaded,
-                            Likes = repLikeCount,
-                            DisLikes = repDisLikeCount
-                        };
-
-                        repliesDTOs.Add(currentReply);
-                    }
-
-                    CommentDTO current = new CommentDTO()
-                    {
-                        Id = com.Id,
-                        UserName = com.UserName,
-                        UserId = com.UserId,
-                        Description = com.Description,
-                        VideoRecordId = com.VideoRecordId,
-                        Uploaded = com.Uploaded,
-                        Likes = likeCount,
-                        DisLikes = disLikeCout,
-                        RepliesCount = com.RepliesCount,
-                        Replies = repliesDTOs
-
-                    };
-
-
+                    _logger.LogError($"The video that was suppose to play with id {videoId} was not found in the data base");
+                    return NotFound(new { message = $"Video was not found" });
                 }
+
+                int subscribersCount = await _dbContext.SubScribers.CountAsync(x => x.SubscribedId == video.VideoOwnerId);
+
+
+
+
 
                 PlayVideoDTO selectedVideo = new PlayVideoDTO()
                 {
@@ -312,13 +282,16 @@ namespace VodLibraryWithAngular.Server.Controllers
                     VideoPath = $"{Request.Scheme}://{Request.Host}/videos/{Path.GetFileName(video.VideoPath)}",
                     VideoOwnerId = video.VideoOwnerId,
                     VideoOwnerName = video.VideoOwner.UserName,
+                    VideoOwnerProfileIcon = $"{Request.Scheme}://{Request.Host}/ProfilePics/ProfileIcons/{Path.GetFileName(video.VideoOwner.profilePic)}",
+                    VideoOwnerSubscribersCount = subscribersCount,
                     CategoryName = video.Category.Name,
                     Views = video.Views,
 
-                    CommentCount = video.CommentsCount,
-                    Comments = commentDTOs
+                    CommentCount = video.CommentsCount + video.ReplyCount,
+
 
                 };
+
 
 
 
@@ -348,8 +321,9 @@ namespace VodLibraryWithAngular.Server.Controllers
 
         }
 
-        [HttpGet("play/{videoId}/reactions")]//THIS MIGHT BE a source of problem , we use _userManager on a method that is not authorized
-        public async Task<IActionResult> GetCurrentReactions(int videoId)
+        [Authorize]
+        [HttpGet("play/{videoId}/reactions")]//THIS METHOD MIGHT NEED TO BE FIXED , were using user id without an authentication , plus even normal users should be able to get the count of the likes/dislikes 
+        public async Task<IActionResult> GetCurrentVideoReactions(int videoId) //getVideoReactions
         {
             int likeCount = await _dbContext.VideoLikesDislikes
                 .CountAsync(x => x.VideoId == videoId && x.Liked);
@@ -361,7 +335,7 @@ namespace VodLibraryWithAngular.Server.Controllers
             string? userId = _userManager.GetUserId(User);
 
             VideoLikesDislikes? userVote = await _dbContext.VideoLikesDislikes
-                .FirstOrDefaultAsync(x => x.UserId == userId);
+                .FirstOrDefaultAsync(x => x.UserId == userId && x.VideoId == videoId);
 
             var userReact = userVote == null ? "None" : userVote.Liked ? "Like" : "Dislike";
 
@@ -485,11 +459,11 @@ namespace VodLibraryWithAngular.Server.Controllers
         }
 
         [Authorize]
-        [HttpPost("play/{videoId}/reactions")]
+        [HttpPost("play/{videoId}/reactions")]//addOrUpdateVideoReaction
         public async Task<IActionResult> AddOrUpdateVideoReaction(int videoId, [FromBody] ReactionDTO dto)
         {
             string? userId = _userManager.GetUserId(User);
-
+            string? userName = _userManager.GetUserName(User);
             if (userId == null)
                 return Unauthorized(new
                 {
@@ -499,14 +473,18 @@ namespace VodLibraryWithAngular.Server.Controllers
             var exists = await _dbContext.VideoLikesDislikes
                 .FirstOrDefaultAsync(x => x.VideoId == videoId && userId == x.UserId);
 
+            VideoRecord video = await _dbContext.VideoRecords.FirstOrDefaultAsync();
+
             if (exists == null)
             {
                 VideoLikesDislikes reaction = new VideoLikesDislikes()
                 {
                     VideoId = videoId,
                     UserId = userId,
+                    UserName = userName,
                     Liked = dto.ReactionType == "Like",
-                    TimeOfLike = DateTime.UtcNow
+                    TimeOfLike = DateTime.UtcNow,
+                    VideoTitle = video.Title
                 };
 
                 await _dbContext.VideoLikesDislikes.AddAsync(reaction);
@@ -536,7 +514,7 @@ namespace VodLibraryWithAngular.Server.Controllers
         }
 
         [Authorize]
-        [HttpDelete("play/{videoId}/reactions")]
+        [HttpDelete("play/{videoId}/reactions")] //deleteVideoReaction
         public async Task<IActionResult> RemoveUserReaction(int videoId)
         {
             string? userId = _userManager.GetUserId(User);
@@ -586,7 +564,7 @@ namespace VodLibraryWithAngular.Server.Controllers
             {
                 List<CommentDTO> comments = await _dbContext.Comments
                     .Where(c => c.VideoRecordId == videoId)
-                    .OrderByDescending(c => c.Uploaded)
+                    .AsNoTracking()
                     .Select(c => new CommentDTO()
                     {
                         Id = c.Id,
@@ -599,7 +577,10 @@ namespace VodLibraryWithAngular.Server.Controllers
                         DisLikes = c.LikesDisLikes.Count(x => !x.Like),
                         RepliesCount = c.RepliesCount,
                     })
+                    .OrderByDescending(x => x.Likes)
+                    .ThenByDescending(x => x.RepliesCount)
                     .ToListAsync();
+
 
                 if (comments.IsNullOrEmpty())
                 {
@@ -686,22 +667,22 @@ namespace VodLibraryWithAngular.Server.Controllers
 
         }
 
-        [HttpGet("play/{videoId}/commentsCount")]
-        public async Task<IActionResult> GetCommentsCount(int videoId)
-        {
-            VideoRecord? video = await _dbContext.VideoRecords.FirstOrDefaultAsync(v => v.Id == videoId);
+        //[HttpGet("play/{videoId}/commentsCount")]
+        //public async Task<IActionResult> GetCommentsCount(int videoId)
+        //{
+        //    VideoRecord? video = await _dbContext.VideoRecords.FirstOrDefaultAsync(v => v.Id == videoId);
 
-            if (video == null)
-            {
-                return BadRequest($"No such video with {videoId} exists");
-            }
+        //    if (video == null)
+        //    {
+        //        return BadRequest($"No such video with {videoId} exists");
+        //    }
 
-            int videoCommentsCount = video.CommentsCount + video.ReplyCount;
+        //    int videoCommentsCount = video.CommentsCount + video.ReplyCount;
 
-            return Ok(videoCommentsCount);
-        }
+        //    return Ok(videoCommentsCount);
+        //}
 
-        [HttpGet("play/{videoId}/updateViews")]
+        [HttpPatch("play/{videoId}/updateViews")]
         public async Task<IActionResult> UpdateViews(int videoId)
         {
             VideoRecord? video = await _dbContext.VideoRecords.FirstOrDefaultAsync(v => v.Id == videoId);
@@ -715,7 +696,7 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             await _dbContext.SaveChangesAsync();
 
-            return Ok(video.Views);
+            return Ok();
         }
 
         [Authorize]
@@ -942,7 +923,7 @@ namespace VodLibraryWithAngular.Server.Controllers
 
         [Authorize]
         [HttpGet("liked")]
-        public async Task<IActionResult> GetUserLikedHistory([FromQuery] int take)
+        public async Task<IActionResult> GetUserLikedHistory([FromQuery] int take) //  getUsersLikedVideosHistory
         {
             string userId = _userManager.GetUserId(User);
 
@@ -992,7 +973,7 @@ namespace VodLibraryWithAngular.Server.Controllers
 
         [Authorize]
         [HttpDelete("liked/{videoId}")]
-        public async Task<IActionResult> RemoveVideoLikeFromHistory(int videoId)
+        public async Task<IActionResult> RemoveVideoLikeFromHistory(int videoId)//deleteLikedVideoFromHistory
         {
             string userId = _userManager.GetUserId(User);
 
@@ -1455,6 +1436,15 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             }
 
+            Category category = await _dbContext.Categories.FirstOrDefaultAsync(x => x.Id == video.CategoryId);
+
+            if (category == null)
+            {
+                _logger.LogInformation($"Unable to delete the video of user with id {userId} somehow the video was made with an category id that is not provided in the data base -error happens at VideoController DeleteVideo");
+                return BadRequest();
+            }
+            category.VideosCount++;
+
             _dbContext.VideoRecords.Remove(video);
             await _dbContext.SaveChangesAsync();
 
@@ -1492,13 +1482,16 @@ namespace VodLibraryWithAngular.Server.Controllers
         {
             string userId = _userManager.GetUserId(User);
 
-            var queryResult = await _dbContext.SubScribers.Where(s => s.FollowerId == userId).ToListAsync();
+            var queryResult = await _dbContext.SubScribers.Include(x => x.Subscribed).Where(s => s.FollowerId == userId).ToListAsync();
+
+            Console.WriteLine("ARE WE EVEN HERERERERERE!!!!!!!!!!!");
 
             List<ProfilesFollowingDTO> following = queryResult.Select(q => new ProfilesFollowingDTO
             {
                 Id = q.SubscribedId,
                 UserName = q.SubscribedUserName,
-                SubscribedOn = q.SubscribedOn
+                SubscribedOn = q.SubscribedOn,
+                UesrImageIcon = $"{Request.Scheme}://{Request.Host}/ProfilePics/ProfileIcons/{Path.GetFileName(q.Subscribed.profilePic)}"
 
             })
             .ToList();
@@ -1591,6 +1584,105 @@ namespace VodLibraryWithAngular.Server.Controllers
             return Ok(videos);
         }
 
+        [Authorize]
+        [HttpGet("collection")]
+        public async Task<IActionResult> GetLikedVideosCount()
+        {
+            string userId = _userManager.GetUserId(User);
+
+
+
+            int vodIds = await _dbContext.VideoLikesDislikes.CountAsync(x => x.UserId == userId && x.Liked == true);
+
+
+
+            return Ok(vodIds);
+        }
+
+        [Authorize]
+        [HttpGet("likedVideosPlayList")]
+        public async Task<IActionResult> GetUserLikedVideos()
+        {
+
+            string userId = _userManager.GetUserId(User);
+
+            List<VideoRecord> vods = await _dbContext.VideoLikesDislikes.Include(x => x.Video).Where(x => x.UserId == userId && x.Liked == true).OrderByDescending(x => x.TimeOfLike).Select(x => x.Video).ToListAsync();
+
+            List<VideoWindowDTO> videoWindowDTOs = vods.Select(x => CreateVideoWindowDTOFromVideoRecord(x)).ToList();
+
+            return Ok(videoWindowDTOs);
+        }
+
+        [HttpGet("{videoId}/likeDislikeCount")]
+        public async Task<IActionResult> GetVideoLikesDislikeCount(int videoId)
+        {
+
+
+            var counterDB = await _dbContext.VideoLikesDislikes.Where(x => x.VideoId == videoId)
+                .GroupBy(x => x.Liked)
+                .Select(x => new { Like = x.Key, Count = x.Count() })
+                .ToListAsync();
+
+
+
+            VideoLikesDislikeCountDTO counter = new VideoLikesDislikeCountDTO();
+
+            foreach (var item in counterDB)
+            {
+                if (item.Like)
+                    counter.Likes = item.Count;
+
+                else
+                    counter.Dislikes = item.Count;
+            }
+
+
+
+            return Ok(counter);
+        }
+
+        [HttpGet("{videoId}/descriptionCategory")]
+        public async Task<IActionResult> GetCategoryStatsInViedoDescription(int videoId)
+        {
+            var videoRecord = await _dbContext.VideoRecords.Include(x => x.Category).FirstOrDefaultAsync(x => x.Id == videoId);
+
+            if (videoRecord == null)
+            {
+                _logger.LogInformation($"Inside Task GetCategoryStatsInViedoDescription with video id {videoId} we could not find the actual video , this API is only used inside playVideo COmponent");
+                return NotFound("Video not found ");
+            }
+
+            CategoryStatsDTO res = new CategoryStatsDTO();
+
+            res.Id = videoRecord.Category.Id;
+            res.Name = videoRecord.Category.Name;
+            res.ImagePath = $"{Request.Scheme}://{Request.Host}/Category Images/{Path.GetFileName(videoRecord.Category.ImagePath)}";
+            res.VideosCount = videoRecord.Category.VideosCount;
+
+
+            return Ok(res);
+        }
+
+        [HttpGet("{categoryId}")]
+        public async Task<IActionResult> GetCategoryVideos(int categoryId)
+        {
+
+            Category category = await _dbContext.Categories.FirstOrDefaultAsync(x => x.Id == categoryId);
+
+            if (category == null)
+            {
+                _logger.LogInformation($"Invalid category , the searched category id {categoryId} does not exist in the database");
+                return NotFound(new { message = "404 CATEGORY NOT FOUND" });
+            }
+
+            var res = await _dbContext.VideoRecords.Where(x => x.CategoryId == categoryId).ToListAsync();
+
+
+            List<VideoWindowDTO> videos = res.Select(x => CreateVideoWindowDTOFromVideoRecord(x)).ToList();
+
+            return Ok(videos);
+
+        }
 
 
 
@@ -1598,3 +1690,8 @@ namespace VodLibraryWithAngular.Server.Controllers
 
     }
 }
+
+
+
+
+

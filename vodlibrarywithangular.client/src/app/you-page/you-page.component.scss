@@ -1,0 +1,85 @@
+.playlistCard
+{
+  width: 480px;
+
+  .image-count-wrapper
+  {
+    display: grid;
+
+    width: 480px;
+
+    img
+    {
+      grid-area: 1/1;
+      width: 100%;
+      display: block;
+    }
+
+    span
+    {
+      grid-area: 1/1;
+      align-self: end;
+      justify-self: end;
+      color: whitesmoke;
+      border: 2px solid black;
+      background-color: black;
+      margin-right: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    a
+    {
+      text-decoration: none;
+      color: inherit;
+      background-color: black;
+    }
+
+  }
+}
+
+.notLoggedIn
+{
+  height: 600px;
+  justify-self: center;
+  align-content: center;
+
+  .imageContainer
+  {
+    width: 100%;
+
+    img
+    { margin: 0 auto;
+      display: block;
+    }
+  }
+
+  h3
+  {
+
+    justify-self: center;
+  }
+
+  .buttonWrapper
+  {
+    width: inherit;
+    justify-content: center;
+    justify-self: center;
+    button
+      {
+        margin: 0.5rem;
+        width: 70px;
+        border: 2px;
+        border-radius: 15px;
+        display: block;
+
+      }
+  }
+
+
+}
+
+.svg
+{
+  width: 100px;
+  height: 100px;
+}

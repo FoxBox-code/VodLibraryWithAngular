@@ -10,6 +10,7 @@ export interface VideoWindow
   views : number,
   videoOwnerId : string,
   videoOwnerName : string,
+  videoOwnerProfileIcon : string,
   imagePath : string,
   categoryId : number,
   categoryName : string,

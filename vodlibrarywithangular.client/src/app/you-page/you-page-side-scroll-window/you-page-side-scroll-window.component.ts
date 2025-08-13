@@ -70,6 +70,30 @@ export class YouPageSideScrollWindowComponent
 
     }
 
+     convertVideoTimeSpanToString(video : VideoWindow) : string
+  {
+    const h = video?.hours === 0 ? '' : video?.hours + ':';
+
+    let m : string;
+    if(video.minutes === 0)
+      m = '';
+    else
+        m = video?.minutes < 10 && h !== '' ? '0' + video.minutes + ':' : video.minutes + ':' ;
+
+
+
+    let s : string;
+    if(m === '')
+    {
+      s = video.seconds + 'sec';
+    }
+    else
+      s = video.seconds < 10 ? '0' + video.seconds : video.seconds.toString();
+
+
+    return `${h}${m}${s}`;
+  }
+
     calculateMaxIndex()
     {
       const fullWidth  = this.sideScrollContainer.nativeElement.scrollWidth;

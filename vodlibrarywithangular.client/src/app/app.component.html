@@ -1,76 +1,192 @@
 ﻿<header>
-  <nav>
-    <a routerLink="/" routerLinkActive="active" ariaCurrentWhenActive="page">
-     logo
-    </a>
+
+  <div class="TitleAndMenu">
+      <section class="theMenu">
+        <button class="menuButton" type="button" (click)="ExpandDashBaord()"><img [src]="menuIcon" alt=""></button>
+
+         <aside class="sideBar">
 
 
-    <a routerLink="upload" routerLinkActive="active" ariaCurrentWhenActive="page">
-      Go to upload
-    </a>
+    <section class="sideBarShrinked" *ngIf="!dashBoardExpanded ; else expanded">
 
-
-
-    <ng-container *ngIf="!userAuth; else LoggedIn">
-      <a routerLink="register" routerLinkActive="active" ariaCurrentWhenActive="page">
-        Register
-      </a>
-      <a  routerLink="login" routerLinkActive="active" ariaCurrentWhenActive="page">
-        Login
-      </a>
-    </ng-container>
-    <ng-template #LoggedIn>
-      <button *ngIf="userAuth" type="button" (click)="logOutUser()">Log out </button>
-      <a *ngIf="userAuth">Hello {{userNameDynamic$ | async}}</a>
-      <a *ngIf="userAuth" routerLink="liked-videos" routerLinkActive="active" ariaCurrentWhenActive="page"> Liked Videos</a>
-      <a *ngIf="userAuth" routerLink="watch-history" routerLinkActive="active" ariaCurrentWhenActive="page"> Watch History</a>
-    </ng-template>
-
-    <form>
-          <label for="search">Search</label>
-          <input id="search" type="text"
-          [formControl]="searchBar"
-          (focus)="searchBarFocused = true"
-          (blur)="searchBarFocused = false">
-
-          <div *ngIf="typeof searchBar.value === 'string' && searchBar.value.length > 0 && searchBarFocused">
-              <button type="submit" (click)="performASearch()">Find</button>
-          </div>
-    </form>
-  </nav>
-</header>
-
-<main>
-  <div class="main-container">
-
-
-  <aside class="sideBar">
-    <button type="button" (click)="ExpandDashBaord()">Dash</button>
-    <a routerLink="/" routerLinkActive="true" ariaCurrentWhenActive="page">Home</a>
-    <a [routerLink]="['/subscriptions']">Subscriptions</a>
-    <div *ngIf="dashBoardExpanded === false ; else expandedView">
-      <a [routerLink]="['/you-page']" routerLinkActive="true" ariaCurrentWhenActive="page">You</a>
+    <div class="linkAndIcon"  routerLink="/" >
+      <img [src]="homeIcon" alt="home">
+        <span>Home</span>
     </div>
+
+    <div class="linkAndIcon" [routerLink]="['/subscriptions']" routerLinkActive="true" ariaCurrentWhenActive="page">
+      <img [src]="subscriptionIcon" alt="">
+      <span>Subscriptions</span>
+    </div>
+
+    <div class="linkAndIcon" [routerLink]="['/you-page']" routerLinkActive="true" ariaCurrentWhenActive="page">
+      <img [src]="personIconUrl" alt="YouIcon">
+      <span>You</span>
+    </div>
+
+    <div class="linkAndIcon" [routerLink]="['/watch-history']" routerLinkActive="true" ariaCurrentWhenActive="page">
+      <img [src]="historyIconUrl" alt="HistoryIcon">
+      <span>History</span>
+    </div>
+
+
+
+
 
     <ng-template #expandedView>
         <a [routerLink]="['/you-page']" routerLinkActive="true" ariaCurrentWhenActive="page">You</a>
         <a [routerLink]="['/watch-history']">Histroy</a>
         <a [routerLink]="['/liked-videos']">Liked Videos</a>
 
+        <h4>Subscriptions</h4>
         <section class="subscribers">
-          <h4>Subscriptions</h4>
-          <div *ngFor="let subscriber of userFollowing$ | async">
-                  <a [routerLink]="['/user-profile', subscriber.id]">{{subscriber.userName}}</a>
-          </div>
+
         </section>
 
 
-        <h4>Explore</h4>
-        <section *ngFor="let category of categories | async">
-          <p>{{category.name}}</p>
-        </section>
+
 
     </ng-template>
+    </section>
+
+    <ng-template #expanded>
+    <section class="sideBarExpand">
+          <div class="linkAndIconExpanded"  routerLink="/" >
+            <img [src]="homeIcon" alt="home">
+              <span>Home</span>
+          </div>
+
+          <div class="linkAndIconExpanded" [routerLink]="['/subscriptions']" routerLinkActive="true" ariaCurrentWhenActive="page">
+            <img [src]="subscriptionIcon" alt="">
+            <span>Subscriptions</span>
+          </div>
+
+          <hr>
+
+          <div *ngIf="(userAuth$ | async) ; else notLogged">
+                <div class="linkAndIconExpanded" [routerLink]="['/you-page']" routerLinkActive="true" ariaCurrentWhenActive="page">
+                    <img [src]="personIconUrl" alt="YouIcon">
+                    <span>You</span>
+                </div>
+
+                <div class="linkAndIconExpanded" [routerLink]="['/watch-history']" routerLinkActive="true" ariaCurrentWhenActive="page">
+                  <img [src]="historyIconUrl" alt="HistoryIcon">
+                  <span>History</span>
+                </div>
+
+                <div class="linkAndIconExpanded"  routerLinkActive="true" ariaCurrentWhenActive="page">
+                  <img [src]="playListIcon" alt="HistoryIcon">
+                  <span>Playlists</span>
+                </div>
+
+                <div class="linkAndIconExpanded" [routerLink]="['/liked-videos']" routerLink="true" ariaCurrentWhenActive="page">
+                  <img [src]="likeIcon" alt="Like Icon">
+                  <span>Liked videos</span>
+                </div>
+
+                <h4>Subscriptions</h4>
+                <div *ngFor="let subscriber of userFollowing$ | async" >
+              <section class="individualSubscriber" [routerLink]="['/user-profile', subscriber.id]">
+
+                  <img class="userSubIconseIcon" [src]="subscriber.uesrImageIcon" alt="">
+                  <p> {{subscriber.userName}}</p>
+
+              </section>
+
+          </div>
+
+
+
+          </div>
+
+            <ng-template #notLogged>
+                  <div class="linkAndIconExpanded" [routerLink]="['/you-page']" routerLinkActive="true" ariaCurrentWhenActive="page">
+                    <img [src]="personIconUrl" alt="YouIcon">
+                    <span>You</span>
+                  </div>
+
+                  <div class="linkAndIconExpanded" [routerLink]="['/watch-history']" routerLinkActive="true" ariaCurrentWhenActive="page">
+                    <img [src]="historyIconUrl" alt="HistoryIcon">
+                    <span>History</span>
+                  </div>
+
+                  <hr>
+
+                  <h5>Sign in to like videos, comment, and subscribe.</h5>
+                  <div class="buttonWrapper">
+                      <button type="button" [routerLink]="['/register']">Sign In</button>
+                      <button type="button" [routerLink]="['/login']">Log In</button>
+                  </div>
+            </ng-template>
+
+
+
+          <hr>
+
+          <h4>Explore</h4>
+        <section class="genreList" *ngFor="let category of categories | async ; let i = index" >
+          <div class="genreAndIcon">
+            <img class="svgIcon" [src]="genreIconsArray[i]" alt="Icon">
+            <p class="ganreSelector" [routerLink]="['genre-video', category.name]">{{category.name}}</p>
+
+          </div>
+        </section>
+      </section>
+    </ng-template>
+          </aside>
+      </section>
+
+      <section class="theTitle">
+             <h1 class="Title" routerLink="/" routerLinkActive="active" ariaCurrentWhenActive="page">VOD Library</h1>
+
+             <nav>
+               <form>
+
+                     <input id="search" type="text" placeholder="Search"
+                     [formControl]="searchBar"
+                     (focus)="searchBarFocused = true"
+                     (blur)="searchBarFocused = false">
+
+                     <div *ngIf="typeof searchBar.value === 'string' && searchBar.value.length > 0 && searchBarFocused">
+                         <button type="submit" (click)="performASearch()">Find</button>
+                     </div>
+               </form>
+
+
+             </nav>
+
+             <ng-container *ngIf="!userAuth ; else LoggedIn">
+                 <div>
+                     <a routerLink="register" routerLinkActive="active" ariaCurrentWhenActive="page">
+                       Register
+                     </a>
+                     <a  routerLink="login" routerLinkActive="active" ariaCurrentWhenActive="page">
+                       Login
+                     </a>
+                 </div>
+
+               </ng-container>
+               <ng-template #LoggedIn>
+                 <button *ngIf="userAuth" type="button" (click)="logOutUser()">Log out </button>
+                 <a *ngIf="userAuth">Hello {{userNameDynamic$ | async}}</a>
+
+
+               </ng-template>
+         </section>
+
+
+
+
+
+    </div>
+
+
+
+
+</header>
+
+<main>
+  <div class="main-container">
 
 
 
@@ -78,7 +194,8 @@
 
 
 
-  </aside>
+
+
 
   <section class="mainContent">
       <ng-container *ngIf="mainMenu; else DifferentComponent">

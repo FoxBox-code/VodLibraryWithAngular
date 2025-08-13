@@ -2,7 +2,7 @@ import { Component, inject , AfterViewInit, ChangeDetectorRef} from '@angular/co
 import { AuthService } from '../auth.service';
 import { Login } from '../models/login';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Params, Router } from '@angular/router';
 import { NavigationService } from '../navigation.service';
 
 @Component({
@@ -12,7 +12,7 @@ import { NavigationService } from '../navigation.service';
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
-export class LoginComponent implements AfterViewInit
+export class LoginComponent
 {
     user : Login =
     {
@@ -20,7 +20,7 @@ export class LoginComponent implements AfterViewInit
       Password : '',
       RememberMe : false
     }
-    navigationAdress : string = '/';
+    navigationAdress : {path : any[], querryParams? : Params} = {path : ['/']};
     router = inject(Router);
 
     loginForm : FormGroup;
@@ -41,6 +41,13 @@ export class LoginComponent implements AfterViewInit
         navigationService.getAdress().subscribe(result => this.navigationAdress = result)
     }
 
+    get showPasswordButton() : boolean
+    {
+      const fuck = this.loginForm.get('Password')?.value as string;
+      const verdict = (this.focusPassWordButton && fuck.length > 0);
+      return verdict;
+    }
+
     ngOnInit()
     {
       const nav = this.router.getCurrentNavigation();
@@ -52,14 +59,7 @@ export class LoginComponent implements AfterViewInit
       }
     }
 
-    ngAfterViewInit()
-    {
-      setTimeout(() =>
-      {
-        this.focusPassWordButton = this.loginForm.get('Password')?.value?.length > 0
-        this.cdr.detectChanges();
-      }, 200);
-    }
+
 
     onPasswordWrapperFocus()
     {
@@ -68,12 +68,11 @@ export class LoginComponent implements AfterViewInit
 
     onPasswordWrapperBlur()
     {
-      if(!this.showPassword)
-      {
-        this.focusPassWordButton = false;
-      }
 
+      this.focusPassWordButton = false;
+      this.showPassword = false;
     }
+
 
     onSubmit()
     {
@@ -96,7 +95,7 @@ export class LoginComponent implements AfterViewInit
               console.log("Login successful", result);
               this.authService.setLocalStorageToken(result.token);
 
-              //to nested subscriptions this needs a rewrite 
+              //to nested subscriptions this needs a rewrite
               this.authService.getUserTodaysWatchHistory()
               .subscribe(
                 {
@@ -133,7 +132,7 @@ export class LoginComponent implements AfterViewInit
           complete : () =>
             {
               console.log("Login completed welcome")
-              this.router.navigate([this.navigationAdress]);
+              this.router.navigate(this.navigationAdress.path , this.navigationAdress.querryParams);
             }
 
 

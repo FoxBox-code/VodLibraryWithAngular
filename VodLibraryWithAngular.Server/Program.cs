@@ -7,6 +7,8 @@ using System.Security.Claims;
 using System.Text;
 using VodLibraryWithAngular.Server;
 using VodLibraryWithAngular.Server.Data;
+using VodLibraryWithAngular.Server.Interfaces;
+using VodLibraryWithAngular.Server.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,12 +23,12 @@ builder.Services.AddLogging();
 
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.Limits.MaxRequestBodySize = 104857600; //100MB
+    options.Limits.MaxRequestBodySize = 209715200; //200MB
 });
 
 builder.Services.Configure<FormOptions>(options =>
 {
-    options.MultipartBodyLengthLimit = 104857600; //100MB
+    options.MultipartBodyLengthLimit = 209715200; //200MB
 });
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -96,7 +98,8 @@ builder.Services.AddAuthentication(options =>
         };
     });
 
-//builder.Services.AddScoped<DataMigrationService>(); This places our migration service in the DI container for a blueprint on how to use it
+builder.Services.AddScoped<DataMigrationService>(); //This places our migration service in the DI container for a blueprint on how to use it
+builder.Services.AddScoped<IFileNameSanitizer, FileNameSanitizer>();
 
 var app = builder.Build();
 
@@ -106,8 +109,10 @@ directoriesConfiguration.ConfigureDirectories();
 //using (var scope = app.Services.CreateScope())
 //{
 //    var migrationService = scope.ServiceProvider.GetRequiredService<DataMigrationService>();
-//    migrationService.Run();
-//} This calls one time our service to populate comment/reply with userIds since we forgot to do it in the beginning of the project, we comment it out because we don t need to run it again but i want it to remain so i can see it
+//    await migrationService.FillCategoriesWithVideoCount();
+//    await migrationService.SetCategoryWithImage();
+//}
+//This calls one time our service to populate comment/reply with userIds since we forgot to do it in the beginning of the project, we comment it out because we don t need to run it again but i want it to remain so i can see it
 
 app.UseDefaultFiles();
 app.UseStaticFiles();

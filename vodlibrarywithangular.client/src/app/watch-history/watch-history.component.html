@@ -1,6 +1,8 @@
-<div class="watchHistoryContainer">
 
 
+
+
+<div class="watchHistoryContainer" *ngIf="userId$ |async ; else notLogged">
 <button type="button" (click)="deleteUserWatchHistory()">Delete watch history</button>
 
 <ng-container *ngIf="(userTodayWatchHistory$ | async) as history">
@@ -12,7 +14,7 @@
 
   <a [routerLink]="['/playing', history.video.id]">
 
-     <p>Video last watched on {{history.watchedOn | date : 'HH:mm dd-MM-yyyy'}}</p>
+      <p>Video last watched on date {{history.watchedOn | date : 'dd-MM-yyyy'}} at {{history.watchedOn | date : 'HH:mm'}} o clock</p>
   </a>
   <app-video-window [video]="history.video">
 
@@ -21,7 +23,7 @@
 </section>
 
 <section *ngFor="let day of userPastWatchHistory; let dayIndex = index">
-    <h3>Will display today or date here, in the near future  {{day[0].watchedOn | date : 'dd-MM-yyyy'}}</h3>
+    <h3>{{GetDayFromWatchedHistory(day[0].watchedOn)}} {{day[0].watchedOn | date : 'dd-MM-yyyy'}}</h3>
     <div *ngFor="let currVideo of day ; let videoIndex = index">
       <!-- we need to slap videoWindowComponent here without breaking anything -->
        <app-video-window [video]="currVideo.video">
@@ -29,7 +31,7 @@
        </app-video-window>
 
         <a [routerLink]="['/playing', currVideo.video.id]">
-         <p>Video last watched on {{currVideo.watchedOn | date : 'HH:mm dd-MM-yyyy'}}</p>
+         <p>Video last watched on date {{currVideo.watchedOn | date : 'dd-MM-yyyy'}} at {{currVideo.watchedOn | date : 'HH:mm'}} o clock</p>
         </a>
 
 
@@ -38,3 +40,28 @@
     </div>
 </section>
 </div>
+
+ <ng-template #notLogged>
+
+    <div class="notLoggedIn">
+        <div class="imageContainer">
+          <img [src]="historyIconUrl" alt="Some Image">
+        </div>
+
+        <h3>Keep track of what you watch</h3>
+        <p>Watch history isn't viewable when signed out</p>
+        <div class="buttonWrapper">
+            <button type="button" [routerLink]="['/register']">Sign In</button>
+            <button type="button" (click)="navigateToLogIn()">Log In</button>
+        </div>
+        <section>
+
+
+        </section>
+
+
+
+    </div>
+
+
+  </ng-template>

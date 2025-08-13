@@ -1,6 +1,6 @@
 import { Component, ElementRef, ViewChild} from '@angular/core';
 import { FormGroup, FormBuilder, Validators, FormControl } from '@angular/forms';
-import { EditVideoDataDTO } from '../models/editVideoData';
+import { EditVideoDataDTO } from '../models/edit-Video-DataDTO';
 import { VideoService } from '../video.service';
 import { Observable, combineLatest, filter, of, switchMap, throwError } from 'rxjs';
 import { VideoWindow } from '../models/video-window';
@@ -399,7 +399,9 @@ export class EditPageComponent
           error : (err) =>
           {
             console.log(err);
-          }
+          },
+
+
         }
       )
 

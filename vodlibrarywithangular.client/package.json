@@ -21,6 +21,7 @@
     "@angular/platform-browser": "^19.1.0",
     "@angular/platform-browser-dynamic": "^19.1.0",
     "@angular/router": "^19.1.0",
+    "@fortawesome/fontawesome-free": "^7.0.0",
     "jest-editor-support": "*",
     "jwt-decode": "^4.0.0",
     "run-script-os": "*",

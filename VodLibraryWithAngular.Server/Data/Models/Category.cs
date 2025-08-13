@@ -11,6 +11,10 @@ namespace VodLibraryWithAngular.Server.Data.Models
         [MaxLength(CategoryNameMaxLength, ErrorMessage = "{0} must contain a max of {1} symbols")]
         public string Name { get; set; }
 
+        public string? ImagePath { get; set; }
+
+        public int VideosCount { get; set; } = 0;
+
         public IEnumerable<VideoRecord> Videos { get; set; } = new List<VideoRecord>();
     }
 }
