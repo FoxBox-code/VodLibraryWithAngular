@@ -222,11 +222,11 @@
 
         </section>
 
-        <div *ngIf="(videoComments$$ | async) as videoComments">
+      </section>
+
+      <div *ngIf="(videoComments$$ | async) as videoComments" #commentLoadThreshold>
               <button *ngIf="videoComments.length > 0" (click)="loadComments()">Load next comments</button>
         </div>
-
-      </section>
 
     </ng-container>
 

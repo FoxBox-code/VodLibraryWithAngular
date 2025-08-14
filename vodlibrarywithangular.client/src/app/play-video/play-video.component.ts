@@ -101,7 +101,9 @@ export class PlayVideoComponent
     @ViewChild('sortWrapper', {static : false}) sortWrapper? : ElementRef //this makes a dom element to a variable
     @ViewChild('videoElement') videoElement! : ElementRef<HTMLVideoElement>
     @ViewChild('description') description! : ElementRef<HTMLElement>
+    @ViewChild('commentLoadThreshold') commentLoadThreshold! : ElementRef<HTMLElement>
 
+    intersectionObserver! : IntersectionObserver;
 
 
     constructor(private videoService : VideoService,
@@ -275,13 +277,43 @@ export class PlayVideoComponent
 
           setTimeout(() => {
               this.measureDescription();
-          }, 0);
+              this.setUpIntersection();
+          }, 1000);
 
 
 
 
     }
 
+    ngOnDestroy()
+    {
+      if(this.intersectionObserver)
+      {
+        this.intersectionObserver.disconnect();
+      }
+    }
+
+    private setUpIntersection()
+    {
+        this.intersectionObserver = new IntersectionObserver((entry)=>
+        {
+          if(entry[0].isIntersecting)
+          {
+            console.log("WE MADE CONTACT")
+            this.loadComments();
+          }
+        },
+        {
+          root : null,
+          rootMargin : "100px 0px 0px 0px",
+          threshold : 0.2
+        })
+
+
+        console.log(`HTML element ${this.commentLoadThreshold}`)
+        if(this.commentLoadThreshold)
+            this.intersectionObserver.observe(this.commentLoadThreshold.nativeElement);
+    }
     private measureDescription()
     {
       const element = this.description.nativeElement;
@@ -362,7 +394,7 @@ export class PlayVideoComponent
        const ProfilesFollowingasyncResult = await firstValueFrom(this.userFollowing$.pipe(take(1)));
        if(ProfilesFollowingasyncResult === null)
        {
-          console.error("getUserFollowersForThisPage is not working correctly, the observable userFOllowing$ returned a null, NOTE User is likely not logged in ");
+          console.log("getUserFollowersForThisPage is not working correctly, the observable userFOllowing$ returned a null, NOTE User is likely not logged in ");
           return;
        }
        this.userFollowing = ProfilesFollowingasyncResult as ProfilesFollowingDTO[];//THIS MIGHT BE A PROBLEM

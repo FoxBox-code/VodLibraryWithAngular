@@ -43,8 +43,8 @@ export class LoginComponent
 
     get showPasswordButton() : boolean
     {
-      const fuck = this.loginForm.get('Password')?.value as string;
-      const verdict = (this.focusPassWordButton && fuck.length > 0);
+      const pass = this.loginForm.get('Password')?.value as string;
+      const verdict = (this.focusPassWordButton && pass.length > 0);
       return verdict;
     }
 
