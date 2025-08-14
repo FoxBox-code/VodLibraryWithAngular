@@ -131,9 +131,15 @@ export class VideoService
     }))
 
   }
-  getVideoComments(videoId : number)
+  getVideoComments(videoId : number, takeCommentCount : number, skipCommentCount : number)
   {
-      return this.httpClient.get<VideoComment[]>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/comments`)
+      const params : {[key : string]: number  }=
+        {
+          'Take' : takeCommentCount,
+          'Skip' : skipCommentCount
+        };
+
+      return this.httpClient.get<VideoComment[]>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/comments`, {params})
       .pipe(catchError((error)=>
       {
         console.error("Failed to get a comments from the server",

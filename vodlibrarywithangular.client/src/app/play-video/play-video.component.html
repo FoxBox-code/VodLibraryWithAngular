@@ -221,6 +221,11 @@
           </section>
 
         </section>
+
+        <div *ngIf="(videoComments$$ | async) as videoComments">
+              <button *ngIf="videoComments.length > 0" (click)="loadComments()">Load next comments</button>
+        </div>
+
       </section>
 
     </ng-container>

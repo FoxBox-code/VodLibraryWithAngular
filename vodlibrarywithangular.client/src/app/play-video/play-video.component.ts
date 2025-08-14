@@ -95,6 +95,9 @@ export class PlayVideoComponent
 
     public categoryStats : CategoryStatsDTO | null = null;
 
+    takeCommentCount = 50;
+    skipCommentCount = 0;
+
     @ViewChild('sortWrapper', {static : false}) sortWrapper? : ElementRef //this makes a dom element to a variable
     @ViewChild('videoElement') videoElement! : ElementRef<HTMLVideoElement>
     @ViewChild('description') description! : ElementRef<HTMLElement>
@@ -359,7 +362,7 @@ export class PlayVideoComponent
        const ProfilesFollowingasyncResult = await firstValueFrom(this.userFollowing$.pipe(take(1)));
        if(ProfilesFollowingasyncResult === null)
        {
-          console.error("getUserFollowersForThisPage is not working correctly, the observable userFOllowing$ returned a null");
+          console.error("getUserFollowersForThisPage is not working correctly, the observable userFOllowing$ returned a null, NOTE User is likely not logged in ");
           return;
        }
        this.userFollowing = ProfilesFollowingasyncResult as ProfilesFollowingDTO[];//THIS MIGHT BE A PROBLEM
@@ -438,7 +441,7 @@ export class PlayVideoComponent
               addCommentDTO.description = this.commentForm.value.Comment;
               addCommentDTO.videoRecordId = this.selectedVideoId;
 
-             
+
                 this.videoService.addComment(addCommentDTO).subscribe(
                 {
                   next : (result) =>
@@ -549,17 +552,22 @@ export class PlayVideoComponent
     {
 
         this.autoLoadComments = true;
-        this.videoService.getVideoComments(this.selectedVideoId).subscribe(
+        this.videoService.getVideoComments(this.selectedVideoId, this.takeCommentCount, this.skipCommentCount).subscribe(
       {
           next : (result) =>
           {
+              const currentComments = this.videoCommentsSubject.getValue();
               result = result.map(x => (
                 {
                   ...x,
                   uploaded : new Date(x.uploaded)
                 }
               ))
-              this.videoCommentsSubject.next(result);
+
+              const upDatedComments : VideoComment[] = [...currentComments , ...result];
+              this.videoCommentsSubject.next(upDatedComments);
+              this.skipCommentCount +=50;
+
           },
           error : (error) =>
           {

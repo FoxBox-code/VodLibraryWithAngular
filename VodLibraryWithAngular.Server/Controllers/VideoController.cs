@@ -9,6 +9,7 @@ using VodLibraryWithAngular.Server.Data;
 using VodLibraryWithAngular.Server.Data.Models;
 using VodLibraryWithAngular.Server.Interfaces;
 using VodLibraryWithAngular.Server.Models;
+using VodLibraryWithAngular.Server.QueryHttpParams;
 
 
 namespace VodLibraryWithAngular.Server.Controllers
@@ -558,13 +559,18 @@ namespace VodLibraryWithAngular.Server.Controllers
         }
 
         [HttpGet("play/{videoId}/comments")]
-        public async Task<IActionResult> GetVideoComments(int videoId)
+        public async Task<IActionResult> GetVideoComments(int videoId, [FromQuery] CommentParams par)
         {
             try
             {
+                int take = par.Take;
+                int skip = par.Skip;
+
                 List<CommentDTO> comments = await _dbContext.Comments
                     .Where(c => c.VideoRecordId == videoId)
                     .AsNoTracking()
+                    .Skip(skip)
+                    .Take(take)
                     .Select(c => new CommentDTO()
                     {
                         Id = c.Id,
