@@ -138,12 +138,13 @@
         </div>
   </div>
 
+  <!-- Rendering comments -->
       <section *ngIf="autoLoadComments">
           <section *ngFor="let comment of videoComments$$ | async" class="forloop-comments-wrapper" #individualComment>
 
             <div class="commentNameAndDate">
                   <a [routerLink]="['/user-profile', comment.userId]">{{comment.userName }}</a>
-                  <span style="font-size: 0.8rem;">{{formatDateTime(comment.uploaded)}}</span>
+                  <span style="font-size: 0.8rem;">{{formatDateTimeReWrite(comment.uploaded)}}</span>
             </div>
 
           <p>{{comment.description}}</p>

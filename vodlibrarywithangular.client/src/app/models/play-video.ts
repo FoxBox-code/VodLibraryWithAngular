@@ -13,6 +13,7 @@ export interface PlayVideo
     views : number,
     likes : number,
     disLikes : number,
+    totalCommentReplyCount : number,
     commentCount : number,
     videoOwnerSubscribersCount : number
 

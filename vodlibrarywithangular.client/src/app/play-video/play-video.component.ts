@@ -358,7 +358,7 @@ export class PlayVideoComponent
             {
                 this.selectedVideo = result;
                 console.log(JSON.stringify(this.selectedVideo));
-                this.commentsCountSubject.next(this.selectedVideo.commentCount);
+                this.commentsCountSubject.next(this.selectedVideo.totalCommentReplyCount);
 
                 this.getUserFollowersForThisPage();
                 this.requestCategoryStats(selectedVideoId);
@@ -582,68 +582,76 @@ export class PlayVideoComponent
 
     loadComments()//THIS WOULD BE SO MUCH BETTER IF I REWRITE IT
     {
-
-        this.autoLoadComments = true;
-        this.videoService.getVideoComments(this.selectedVideoId, this.takeCommentCount, this.skipCommentCount).subscribe(
-      {
-          next : (result) =>
-          {
-              const currentComments = this.videoCommentsSubject.getValue();
-              result = result.map(x => (
-                {
-                  ...x,
-                  uploaded : new Date(x.uploaded)
-                }
-              ))
-
-              const upDatedComments : VideoComment[] = [...currentComments , ...result];
-              this.videoCommentsSubject.next(upDatedComments);
-              this.skipCommentCount +=50;
-
-          },
-          error : (error) =>
-          {
-              console.error("Could not retrive the commets from the server", error);
-
-          }
-      });
-
-
-
-
-        var userId : string | null = null;
-        this.userNameAsObservable.subscribe((data)=>
-          {
-            userId = data;
-
-            if(userId !== null)
+        if(this.selectedVideo && !this.checkIfAllCommentsWereLoadedAlread(this.videoCommentsSubject.getValue().length, this.selectedVideo!.commentCount))
         {
-            this.videoService.getUserCommentLikesDislikes(this.selectedVideoId)
-            .subscribe
-            (
-              {
-                next : (data) =>
+                  this.autoLoadComments = true;
+              this.videoService.getVideoComments(this.selectedVideoId, this.takeCommentCount, this.skipCommentCount).subscribe(
+            {
+                next : (result) =>
                 {
-                    for(var commentReaction of data)
-                    {
+                    const currentComments = this.videoCommentsSubject.getValue();
+                    result = result.map(x => (
+                      {
+                        ...x,
+                        uploaded : new Date(x.uploaded)
+                      }
+                    ))
 
-                      this.videoService.userCommentReactions[commentReaction.commentId] = commentReaction.like;
-                      this.userCommentReactions = this.videoService.userCommentReactions;
-                    }
+                    const upDatedComments : VideoComment[] = [...currentComments , ...result];
+                    this.videoCommentsSubject.next(upDatedComments);
+                    this.skipCommentCount +=50;
 
-                }
-                ,
+                },
                 error : (error) =>
                 {
-                    console.error(`Error while getting the userCommentReactions`, error)
+                    console.error("Could not retrive the commets from the server", error);
+
                 }
+            });
 
+
+
+
+              var userId : string | null = null;
+              this.userNameAsObservable.subscribe((data)=>
+                {
+                  userId = data;
+
+                  if(userId !== null)
+              {
+                  this.videoService.getUserCommentLikesDislikes(this.selectedVideoId)
+                  .subscribe
+                  (
+                    {
+                      next : (data) =>
+                      {
+                          for(var commentReaction of data)
+                          {
+
+                            this.videoService.userCommentReactions[commentReaction.commentId] = commentReaction.like;
+                            this.userCommentReactions = this.videoService.userCommentReactions;
+                          }
+
+                      }
+                      ,
+                      error : (error) =>
+                      {
+                          console.error(`Error while getting the userCommentReactions`, error)
+                      }
+
+                    }
+                  )
               }
-            )
-        }
-          })
+                })
+         }
 
 
+
+    }
+
+    checkIfAllCommentsWereLoadedAlread(currentCommentCollectionCount: number , totalFoundInVideo : number)
+    {
+        return currentCommentCollectionCount == totalFoundInVideo;
     }
 
     toggleCommentsShowHide()
@@ -1205,6 +1213,8 @@ export class PlayVideoComponent
           {
             const newDate = new Date();
 
+
+
             if(newDate.getFullYear() === date.getFullYear())
             {
               if(newDate.getMonth() === date.getMonth())
@@ -1219,7 +1229,7 @@ export class PlayVideoComponent
                   const hourGap = newDate.getHours() - date.getHours();
                   return hourGap === 1 ? hourGap + ' hour ago' : hourGap + ' hours ago'
                 }
-                const daysGap = newDate.getMonth() - date.getMonth();
+                const daysGap = newDate.getDay() - date.getDay();
                 return daysGap === 1 ? daysGap + ' day ago' : daysGap + ' days ago'
               }
               const monthGap = newDate.getMonth() - date.getMonth();
@@ -1228,6 +1238,41 @@ export class PlayVideoComponent
 
             const yearGap = newDate.getFullYear() - date.getFullYear()
             return yearGap > 1 ? yearGap + ' years ago' : yearGap + ' year ago'
+          }
+
+          formatDateTimeReWrite(date : Date)
+          {
+            const Now = new Date();
+
+            const gapInMs = Now.getTime() - date.getTime();
+
+
+            const gapInMinutes = Math.floor(gapInMs/1000/60);
+            if(gapInMinutes < 60)
+            {
+              return  gapInMinutes === 1 ? gapInMinutes + ' minute ago' : gapInMinutes + ' minutes ago';
+            }
+
+            const gapInHrs = Math.floor(gapInMinutes / 60)
+            if(gapInHrs < 24)
+            {
+              return gapInHrs === 1 ? gapInHrs + ' hour ago' : gapInHrs + ' hours ago';
+            }
+
+            const gapInDays = Math.floor(gapInHrs / 24);
+            if(gapInDays < 31)
+            {
+               return gapInDays === 1 ? gapInDays + ' day ago' : gapInDays + ' days ago';
+            }
+
+            const gapInMonth = Math.floor(gapInDays/ 31)
+            if(gapInMonth < 12)
+            {
+              return gapInMonth > 1 ? gapInMonth + ' months ago' : gapInMonth + ' month ago';
+            }
+
+            const gapInYears = Math.floor(gapInMonth / 12)
+            return gapInYears > 1 ? gapInYears + ' years ago' : gapInYears + ' year ago';
           }
 
 

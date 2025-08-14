@@ -112,7 +112,7 @@ export class AuthService
       return this.authStatus.asObservable();
   }
 
-  
+
 
   register(form : FormData) : Observable<Register>
   {
@@ -127,14 +127,7 @@ export class AuthService
   login(user : Login) : Observable<{token : string}>
   {
       return this.httpClient.post<{token : string}>(`${ApiUrls.LOGIN}`, user)
-      .pipe(catchError((error)=>
-      {
-          console.error("Login failed", error)
-          return throwError(()=>
-          {
-              new Error("Login error");
-          });
-      }))
+      
 
   }
 

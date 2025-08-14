@@ -263,7 +263,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                 return Unauthorized("Invalid email or password");
             }
 
-            var result = await _signInManager.PasswordSignInAsync(user.UserName, model.Password, model.RememberMe, false);
+            var result = await _signInManager.PasswordSignInAsync(user.UserName, model.Password, model.RememberMe ?? false, false);
 
 
 

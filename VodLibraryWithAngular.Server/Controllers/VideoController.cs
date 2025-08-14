@@ -260,7 +260,9 @@ namespace VodLibraryWithAngular.Server.Controllers
                 VideoRecord? video = await _dbContext.VideoRecords
                 .Include(v => v.VideoOwner)
                 .Include(v => v.Category)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Id == videoId);
+
 
                 if (video == null)
                 {
@@ -269,7 +271,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                 }
 
                 int subscribersCount = await _dbContext.SubScribers.CountAsync(x => x.SubscribedId == video.VideoOwnerId);
-
+                int commentCount = await _dbContext.Comments.CountAsync(x => x.VideoRecordId == videoId);
 
 
 
@@ -288,7 +290,8 @@ namespace VodLibraryWithAngular.Server.Controllers
                     CategoryName = video.Category.Name,
                     Views = video.Views,
 
-                    CommentCount = video.CommentsCount + video.ReplyCount,
+                    TotalCommentReplyCount = commentCount + video.ReplyCount,
+                    CommentCount = commentCount,
 
 
                 };

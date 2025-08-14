@@ -4,7 +4,7 @@
 
   <div class="input-wrapper">
       <label id="email" title="Email">Email:</label>
-      <input id="email" type="email" title="Email" formControlName="Email">
+      <input id="email" type="email" title="Email" formControlName="Email" placeholder="@email.com">
       <button class="invisible-button" title="Button" type="button">&nbsp;</button>
   </div>
 
@@ -14,6 +14,10 @@
       <button [class.invisible-button]="!showPasswordButton" (click)="viewPassword()" type="button">
         {{showPassword ? 'Hide' : 'Show'}}
       </button>
+  </div>
+
+  <div *ngIf="failedLogInAttempt">
+      <p class="errorMessage">{{emailOrPasswordWrongError}}</p>
   </div>
 
   <div class="input-wrapper">

@@ -29,6 +29,9 @@ export class LoginComponent
     showPassword : boolean = false;
     focusPassWordButton : boolean = false;
 
+    emailOrPasswordWrongError : string | null = null;
+    failedLogInAttempt : boolean = false;
+
     constructor(private authService : AuthService, formBuilder : FormBuilder, private navigationService : NavigationService, private cdr : ChangeDetectorRef)
     {
       this.loginForm = formBuilder.group(
@@ -127,7 +130,14 @@ export class LoginComponent
 
               })
             },
-          error : (error) => console.log("Login failed", { messgae : error.message, status : error.status ,error : error.error }),
+          error : (error) =>
+            {
+              console.log("Login failed", { messgae : error.message, status : error.status ,error : error.error });
+              this.emailOrPasswordWrongError = error.error;
+              this.failedLogInAttempt = true;
+              this.loginForm.reset();
+            }
+            ,
 
           complete : () =>
             {

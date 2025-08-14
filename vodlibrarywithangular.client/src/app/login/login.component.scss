@@ -19,7 +19,7 @@ form
     {
       width: 100px;
     }
-    
+
 
     button
     {
@@ -48,4 +48,10 @@ form
   background-color: gold;
   border-radius: 10px;
   color: green;
+}
+
+.errorMessage
+{
+  color: red;
+  justify-self: center;
 }

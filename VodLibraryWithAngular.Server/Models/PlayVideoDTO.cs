@@ -28,6 +28,8 @@
 
         public int DisLikes { get; set; }
 
+        public int TotalCommentReplyCount { get; set; }
+
         public int CommentCount { get; set; }
 
         public IEnumerable<CommentDTO> Comments { get; set; } = new List<CommentDTO>();
