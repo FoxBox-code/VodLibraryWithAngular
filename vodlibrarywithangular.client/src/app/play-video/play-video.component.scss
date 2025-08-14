@@ -312,13 +312,22 @@
   {
     padding: 2rem;
 
-
+    a
+    {
+      text-decoration: none;
+      color: inherit;
+    }
     .buttons-wrapper
     {
       margin-right: 0.5rem;
     }
 
-
+    span
+    {
+      display: inline-block;
+      width: 90px;
+      margin-left: 1rem;
+    }
   }
 
   .reply-form-wrapper

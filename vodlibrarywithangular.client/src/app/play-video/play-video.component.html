@@ -144,8 +144,21 @@
 
             <div class="commentNameAndDate">
                   <a [routerLink]="['/user-profile', comment.userId]">{{comment.userName }}</a>
-                  <span style="font-size: 0.8rem;">{{formatDateTimeReWrite(comment.uploaded)}}</span>
-            </div>
+
+                    <span style="font-size: 0.8rem; width: 80px;" (mouseenter)="commentRevealDateMouseHover(true, comment.id)" (mouseleave)="commentRevealDateMouseHover(false, comment.id)">
+                        <ng-container *ngIf="commentRevealDate && commentToRevealId === comment.id ; else dontShow">
+                                {{comment.uploaded | date :'dd-MM-yyyy'}}
+
+                        </ng-container>
+                        <ng-template #dontShow>
+                            {{formatDateTimeReWrite(comment.uploaded)}}
+                        </ng-template>
+                      </span>
+
+
+
+              </div>
+
 
           <p>{{comment.description}}</p>
           <div class="comment-likes-dislikes-reply-wrapper">
@@ -184,7 +197,16 @@
               <section *ngIf="expandRepliesComments[comment.id]">
                 <ng-container *ngFor="let reply of commentReplies$[comment.id] | async" >
                 <div class="reply-forcycle-wrapper">
-                  <p><a [routerLink]="['/user-profile', reply.userId]">{{reply.userName}}</a> : {{formatDateTime(reply.uploaded)}}</p>
+                  <a [routerLink]="['/user-profile', reply.userId]">{{reply.userName }}</a>
+                  <span style="font-size: 0.8rem;" (mouseenter)="replyRevealDateMouseHover(true, reply.id)" (mouseleave)="replyRevealDateMouseHover(false, reply.id)">
+                        <ng-container *ngIf="replyRevealDate && replyToRevealId === reply.id ; else dontShow">
+                                {{reply.uploaded | date :'dd-MM-yyyy'}}
+
+                        </ng-container>
+                        <ng-template #dontShow>
+                            {{formatDateTimeReWrite(reply.uploaded)}}
+                        </ng-template>
+                      </span>
                   <p>{{reply.description}}</p>
                   <div>
                   <section class="buttons-wrapper">

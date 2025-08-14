@@ -51,6 +51,12 @@ export class PlayVideoComponent
 
     commentsCountSubject = new BehaviorSubject<number>(0);
     commentsCountObservable = this.commentsCountSubject.asObservable();
+    commentRevealDate = false;
+    commentToRevealId = 0;
+
+    replyRevealDate = false;
+    replyToRevealId = 0;
+
     public userCommentReactions: { [commentId: number]: boolean | undefined } = {};
 
     public userReplyReactions : {[replyId : number] : boolean | undefined} = {};
@@ -1013,6 +1019,34 @@ export class PlayVideoComponent
 
     }
 
+    commentRevealDateMouseHover(mouseEntered : boolean, commentId : number)
+    {
+      if(mouseEntered)
+      {
+        this.commentRevealDate = true;
+        this.commentToRevealId = commentId;
+      }
+      else
+      {
+        this.commentRevealDate = false;
+        this.commentToRevealId = 0;
+      }
+    }
+
+    replyRevealDateMouseHover(mouseEntered : boolean, replyId : number)
+    {
+      if(mouseEntered)
+      {
+        this.replyRevealDate = true;
+        this.replyToRevealId = replyId;
+      }
+      else
+      {
+        this.replyRevealDate = false;
+        this.replyToRevealId = 0;
+      }
+    }
+
     @HostListener('document:click', ['$event'])
     handleOutsideClick(event : MouseEvent)
     {
@@ -1209,7 +1243,7 @@ export class PlayVideoComponent
             return views
           }
 
-          formatDateTime(date : Date)
+          formatDateTime(date : Date)//This one sucks and it does not work
           {
             const newDate = new Date();
 
@@ -1240,7 +1274,7 @@ export class PlayVideoComponent
             return yearGap > 1 ? yearGap + ' years ago' : yearGap + ' year ago'
           }
 
-          formatDateTimeReWrite(date : Date)
+          formatDateTimeReWrite(date : Date) : string
           {
             const Now = new Date();
 
@@ -1265,14 +1299,26 @@ export class PlayVideoComponent
                return gapInDays === 1 ? gapInDays + ' day ago' : gapInDays + ' days ago';
             }
 
-            const gapInMonth = Math.floor(gapInDays/ 31)
-            if(gapInMonth < 12)
+            let month = (Now.getFullYear() - date.getFullYear()) * 12;
+            month += Now.getMonth() - date.getMonth();
+            if(Now.getDate() < date.getDate()) month--;
+
+            if(month < 12)
             {
-              return gapInMonth > 1 ? gapInMonth + ' months ago' : gapInMonth + ' month ago';
+              return month > 1 ? month + ' months ago' : month + ' month ago';
             }
 
-            const gapInYears = Math.floor(gapInMonth / 12)
-            return gapInYears > 1 ? gapInYears + ' years ago' : gapInYears + ' year ago';
+            const gapInYears = Math.floor(month / 12)
+            let answer = gapInYears > 1 ? gapInYears + ' years ago' : gapInYears + ' year ago';
+            const moduleDivisior = month % 12;
+
+            if(moduleDivisior > 0)
+            {
+              let concat = moduleDivisior > 1 ? moduleDivisior + ' months ago' : moduleDivisior + ' month ago';
+              answer = answer + concat;
+            }
+            return answer;
+
           }
 
 
