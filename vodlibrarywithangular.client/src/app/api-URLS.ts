@@ -15,6 +15,7 @@ export class ApiUrls
     static readonly ADDCOMMENT = `${this.BASE}/video/addComment`;
     static readonly ADDCOMMENT5000 = `${this.BASE}/video/addComment5000`;
     static readonly ADDREPLY = `${this.BASE}/video/addReply`;
+    static readonly ADDREPLY5000 = `${this.BASE}/video/addReply5000`;
     static readonly LIKEDVIDEOS = `${this.BASE}/video/liked`
 
     //WatchHistory API calls located at authService

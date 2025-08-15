@@ -46,7 +46,7 @@ export class VideoService
   private viewsSubject = new BehaviorSubject<number>(0);
   views$ = this.viewsSubject.asObservable();
 
-  private commentRepliesSubject : {[commentId:number] : BehaviorSubject<Reply[]>} = {};
+  public commentRepliesSubject : {[commentId:number] : BehaviorSubject<Reply[]>} = {};
 
   public userCommentReactions: { [commentId: number]: boolean | undefined } = {};
 
@@ -60,6 +60,8 @@ export class VideoService
 
   private userVideoReactionSubect = new BehaviorSubject<Reaction | null>(null);
   public userVideoReaction$ = this.userVideoReactionSubect.asObservable();
+
+  public didWeTookRepliesCorrecty = false
 
   getCategorys() : Observable <Category[]>
   {
@@ -131,7 +133,7 @@ export class VideoService
     }))
 
   }
-  getVideoComments(videoId : number, takeCommentCount : number, skipCommentCount : number)
+  getVideoComments(videoId : number, takeCommentCount : number, skipCommentCount : number)//loadcomments
   {
       const params : {[key : string]: number  }=
         {
@@ -251,6 +253,19 @@ export class VideoService
       }))
   }
 
+  addReplyToComment5000(reply : ReplyForm) : Observable<Reply>
+  {
+      const token = this.authService.getLocalStorageToken();
+
+      const headers = new HttpHeaders(
+      {
+        Authorization : `Bearer ${token}`
+      })
+
+      return this.httpClient.post<Reply>(`${ApiUrls.ADDREPLY5000}`, reply , {headers});
+
+  }
+
   updateCommentRepliesSubject(commentId : number, reply : Reply)
   {
     const subject = this.commentRepliesSubject[commentId];
@@ -266,34 +281,45 @@ export class VideoService
     subject.next(clientSideUpdatedReplies);
   }
 
-  getCommentReplies(videoId : number , commentId: number) : Observable<Reply[]>
+  getCommentReplies(videoId : number , commentId: number, skip : number) : Promise<Reply[]>
   {
-    if(!this.commentRepliesSubject[commentId])
-    {
-      this.commentRepliesSubject[commentId] = new BehaviorSubject<Reply[]>([]);
+      if(!this.commentRepliesSubject.hasOwnProperty(commentId))
+        this.commentRepliesSubject[commentId] = new BehaviorSubject<Reply[]>([]);
 
-      this.httpClient.get<Reply[]>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/${commentId}/replies`)
-      .pipe(
-        catchError(error =>
-        {
-            console.log(error);
-            return throwError(() => new Error(`Failed to load replires`))
-        })
-          )
-      .subscribe(replies =>
+      const params = {'skip' : skip};
+
+      return new Promise((resolve , reject) =>
       {
-        replies = replies.map(x => (
+            this.httpClient.get<Reply[]>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/${commentId}/replies`, {params})
+        .pipe(
+          catchError(error =>
           {
-            ...x,
-            uploaded : new Date(x.uploaded)
-          }//Change if it causes issues
-        ))
-        this.commentRepliesSubject[commentId].next(replies);
-      }
-      )
-    }
+              console.log(error);
+              this.didWeTookRepliesCorrecty = false;
+              reject(error);
+              return throwError(() => new Error(`Failed to load replires`))
+          })
+            )
+        .subscribe(replies =>
+        {
+          replies = replies.map(x => (
+            {
+              ...x,
+              uploaded : new Date(x.uploaded)
 
-        return this.commentRepliesSubject[commentId].asObservable();
+            }//Change if it causes issues
+          ))
+          const previous = this.commentRepliesSubject[commentId]?.getValue() ?? [];
+          this.commentRepliesSubject[commentId].next([...previous, ...replies]);//This build is O(n) kind a shit
+          this.didWeTookRepliesCorrecty = true;
+          resolve(replies);
+        }
+      )
+      })
+
+
+
+
 
   }
 

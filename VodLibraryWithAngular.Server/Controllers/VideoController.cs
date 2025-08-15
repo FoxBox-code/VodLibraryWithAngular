@@ -562,7 +562,7 @@ namespace VodLibraryWithAngular.Server.Controllers
         }
 
         [HttpGet("play/{videoId}/comments")]
-        public async Task<IActionResult> GetVideoComments(int videoId, [FromQuery] CommentParams par)
+        public async Task<IActionResult> GetVideoComments(int videoId, [FromQuery] CommentParams par)//getcomment or loadcomment
         {
             try
             {
@@ -584,7 +584,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                         Uploaded = c.Uploaded,
                         Likes = c.LikesDisLikes.Count(x => x.Like),
                         DisLikes = c.LikesDisLikes.Count(x => !x.Like),
-                        RepliesCount = c.RepliesCount,
+                        RepliesCount = c.Replies.Count(r => r.CommentId == c.Id),
                     })
                     .OrderByDescending(x => x.Likes)
                     .ThenByDescending(x => x.RepliesCount)
@@ -846,8 +846,107 @@ namespace VodLibraryWithAngular.Server.Controllers
 
         }
 
+        [Authorize]
+        [HttpPost("addReply5000")]
+        public async Task<IActionResult> AddReplyToComment5000([FromBody] ReplyFormDTO model)
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogError($"The given model from the client is not valid {model}");
+                return BadRequest("ModelState failed at the back end");
+            }
+
+            VideoRecord? currentVideo = await _dbContext.VideoRecords.FirstOrDefaultAsync(v => v.Id == model.VideoId);
+
+            if (currentVideo == null)
+            {
+                return BadRequest($"No video with the model id of {model.VideoId} exists, please provide valid video id");
+            }
+
+            Comment? comment = await _dbContext.Comments.FirstOrDefaultAsync(c => c.Id == model.CommentId);
+
+            if (comment == null)
+            {
+                return BadRequest($"No comment with the model id of {model.CommentId} exists, please provide valid comment id");
+            }
+
+            var userName = User.FindFirst(ClaimTypes.Name)?.Value;
+
+            if (string.IsNullOrEmpty(userName) || userName != model.UserName)
+            {
+                return Unauthorized("You are not authorized to reply on comments!");
+            }
+
+            string? userId = _userManager.GetUserId(User);
+
+            if (userId == null)
+            {
+                return Unauthorized(new
+                {
+                    message = "During the adding of a reply the user id was not found!"
+                });
+            }
+            List<Reply> replies = new List<Reply>();
+
+            for (int i = 0; i < 5000; i++)
+            {
+
+                Reply reply = new Reply()
+                {
+                    UserName = userName,
+                    UserId = userId,
+                    Description = model.ReplyContent + $"special reply{i}",
+                    CommentId = model.CommentId,
+                    VideoRecordId = model.VideoId,
+                    Uploaded = model.Uploaded
+
+
+                };
+
+                replies.Add(reply);
+            }
+
+
+            currentVideo.ReplyCount++;
+            comment.RepliesCount++;
+
+            await _dbContext.Replies.AddRangeAsync(replies);
+            await _dbContext.SaveChangesAsync();
+
+            Reply? userReply = await _dbContext.Replies.FirstOrDefaultAsync(r => r.UserId == userId
+                                && r.CommentId == model.CommentId
+                                && r.Uploaded == model.Uploaded);
+
+
+
+            if (userReply == null)
+            {
+                _logger.LogError($"Even though we have added a reply we could not get the added user reply from the data base using this filter {userId}, {model.CommentId}, {model.Uploaded}");
+                return BadRequest(new
+                {
+                    message = "Could not updade the UI with user's latest reply"
+                });
+            }
+
+            ReplieDTO answer = new ReplieDTO()
+            {
+                Id = userReply.Id,
+                UserName = userReply.UserName,
+                UserId = userReply.UserId,
+                Description = userReply.Description,
+                CommentId = userReply.CommentId,
+                Uploaded = userReply.Uploaded,
+                VideoRecordId = userReply.VideoRecordId
+            };
+
+            return Ok(answer);
+
+
+
+        }
+
         [HttpGet("play/{videoId}/{commentId}/replies")]
-        public async Task<IActionResult> GetRepliesForComment(int videoId, int commentId)
+        public async Task<IActionResult> GetRepliesForComment(int videoId, int commentId, [FromQuery] int skip)
         {
             VideoRecord? video = await _dbContext.VideoRecords.FirstOrDefaultAsync(v => v.Id == videoId);
 
@@ -865,6 +964,8 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             List<ReplieDTO> replieDTOs = await _dbContext.Replies
                 .Where(r => r.VideoRecordId == videoId && r.CommentId == commentId)
+                .Skip(skip)
+                .Take(20)
                 .Select(r => new ReplieDTO()
                 {
                     Id = r.Id,

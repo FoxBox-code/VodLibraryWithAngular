@@ -69,10 +69,13 @@ export class PlayVideoComponent
 
 
     commentReplies$ : {[commentId : number] :Observable<Reply[]>} = {};
+
+
     isUserClickingCommentForm : boolean = false;
     selectedComment : number = 0;
     selectedReply : number = 0;
     expandRepliesComments : {[commentId : number] :  boolean} = {};
+    skipTrackerForReplies : {[commendId : number] : number} = {};
     autoLoadComments : boolean = false;
     views$? : Observable<number>;
 
@@ -727,19 +730,26 @@ export class PlayVideoComponent
 
     }
 
-    getRepliesForCommnet(commentId : number)
+    getRepliesForCommnet(commentId : number, comment : VideoComment, initial? : boolean)
     {
-      if(this.expandRepliesComments[commentId])
+      if(this.expandRepliesComments[commentId] && initial)
       {
         this.expandRepliesComments[commentId] = false;
         return;
       }
 
+          const repliesUnderComment = this.videoService.commentRepliesSubject[commentId]?.getValue() ?? undefined;
+          if(initial && repliesUnderComment === undefined)
+          {
+              this.paginateReplyUnderComments(commentId);
+          }
 
-      if(!this.commentReplies$[commentId])
-      {
-          this.commentReplies$[commentId] = this.videoService.getCommentReplies(this.selectedVideoId, commentId);
-      }
+          else if(!initial && (comment.repliesCount > repliesUnderComment.length))
+          {
+              this.paginateReplyUnderComments(commentId);
+          }
+
+          console.log(`Comment reply max cap ${comment.repliesCount} vs how much we got now replies loaded count ${this.videoService.commentRepliesSubject[commentId]?.getValue()}`)
 
       this.expandRepliesComments[commentId] = true;
 
@@ -761,6 +771,18 @@ export class PlayVideoComponent
       )
       }
 
+
+
+    }
+    async paginateReplyUnderComments(commentId : number)
+    {
+        const skip = this.skipTrackerForReplies[commentId] ?? 0;
+              await this.videoService.getCommentReplies(this.selectedVideoId, commentId , skip);
+              this.commentReplies$[commentId] = this.videoService.commentRepliesSubject[commentId].asObservable();
+              if(this.videoService.didWeTookRepliesCorrecty)//this check here is a big if didWeTookRepliesCorrecty gets updated only in subscibe next or error
+              {
+                this.skipTrackerForReplies[commentId] = (this.skipTrackerForReplies[commentId] ?? 0) + 20;
+              }
 
 
     }
@@ -892,6 +914,8 @@ export class PlayVideoComponent
               uploaded : new Date()
             }
 
+
+
             this.videoService.addReplyToComment(reply).subscribe(
             {
                 next : (newReply) =>
@@ -903,7 +927,7 @@ export class PlayVideoComponent
                   this.videoService.updateCommentRepliesSubject(commentId, newReply);
                   this.increaseClientSideCommentReplyCount(commentId);
                   this.videoService.locallyUpdateCommentCountAfterUserReply();//probably delete
-                  // this.updateLocalyCommentReplyOnUser(commentId) probably don t need
+
                   this.commentsCountSubject.next(this.commentsCountSubject.value + 1);
 
 

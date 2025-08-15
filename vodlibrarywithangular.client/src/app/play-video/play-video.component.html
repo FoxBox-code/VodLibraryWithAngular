@@ -192,10 +192,11 @@
           <p></p>
 
           <section *ngIf="comment.repliesCount > 0">
-            <button type="button" (click)="getRepliesForCommnet(comment.id)">{{expandRepliesComments[comment.id] ? 'Hide' : 'Load replies'}}</button>
+            <button type="button" (click)="getRepliesForCommnet(comment.id, comment, true)">{{expandRepliesComments[comment.id] ? 'Hide' : 'Load replies'}}</button>
 
               <section *ngIf="expandRepliesComments[comment.id]">
-                <ng-container *ngFor="let reply of commentReplies$[comment.id] | async" >
+                <div class="justAnSubscriberReally" *ngIf="(commentReplies$[comment.id] | async) as replies">
+                <ng-container *ngFor="let reply of replies" >
                 <div class="reply-forcycle-wrapper">
                   <a [routerLink]="['/user-profile', reply.userId]">{{reply.userName }}</a>
                   <span style="font-size: 0.8rem;" (mouseenter)="replyRevealDateMouseHover(true, reply.id)" (mouseleave)="replyRevealDateMouseHover(false, reply.id)">
@@ -238,6 +239,10 @@
                   </div>
                 </div>
                 </ng-container>
+                <div>
+                  <button *ngIf="comment.repliesCount > replies.length " type="button" (click)="getRepliesForCommnet(comment.id, comment)">More replies</button>
+                </div>
+                </div>
               </section>
 
 
