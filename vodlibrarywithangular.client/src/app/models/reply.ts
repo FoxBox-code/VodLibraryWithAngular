@@ -3,6 +3,7 @@ export interface Reply
     id : number,
     userName : string,
     userId : string,
+    userProfilePic : string,
     description : string,
     videoRecordId : number,
     commentId : number,

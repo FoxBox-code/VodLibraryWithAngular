@@ -787,6 +787,13 @@ export class PlayVideoComponent
 
     }
 
+     collapseReplyThread(comment : number, individualComment: HTMLElement)
+    {
+        this.expandRepliesComments[comment] = false;
+
+        individualComment.scrollIntoView({ behavior: 'smooth', block : 'center', inline : 'nearest'})
+    }
+
     addReplyReaction(commentId : number, replyId : number , reaction : boolean)
     {
         this.selectedReply = replyId;

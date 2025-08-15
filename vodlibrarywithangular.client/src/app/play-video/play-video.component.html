@@ -142,9 +142,9 @@
       <section *ngIf="autoLoadComments">
           <section *ngFor="let comment of videoComments$$ | async" class="forloop-comments-wrapper" #individualComment>
 
-            <div class="commentNameAndDate">
+            <div class="commentNameAndDate" #commentScrollAnchor>
+                  <img [src]="comment.userIcon" alt="UserProfilePic" >
                   <a [routerLink]="['/user-profile', comment.userId]">{{comment.userName }}</a>
-
                     <span style="font-size: 0.8rem; width: 80px;" (mouseenter)="commentRevealDateMouseHover(true, comment.id)" (mouseleave)="commentRevealDateMouseHover(false, comment.id)">
                         <ng-container *ngIf="commentRevealDate && commentToRevealId === comment.id ; else dontShow">
                                 {{comment.uploaded | date :'dd-MM-yyyy'}}
@@ -198,16 +198,19 @@
                 <div class="justAnSubscriberReally" *ngIf="(commentReplies$[comment.id] | async) as replies">
                 <ng-container *ngFor="let reply of replies" >
                 <div class="reply-forcycle-wrapper">
-                  <a [routerLink]="['/user-profile', reply.userId]">{{reply.userName }}</a>
-                  <span style="font-size: 0.8rem;" (mouseenter)="replyRevealDateMouseHover(true, reply.id)" (mouseleave)="replyRevealDateMouseHover(false, reply.id)">
-                        <ng-container *ngIf="replyRevealDate && replyToRevealId === reply.id ; else dontShow">
-                                {{reply.uploaded | date :'dd-MM-yyyy'}}
+                  <section class="reply-meta-data">
+                      <img [src]="reply.userProfilePic" alt="UserProfileIcon">
+                      <a [routerLink]="['/user-profile', reply.userId]">{{reply.userName }}</a>
+                      <span style="font-size: 0.8rem;" (mouseenter)="replyRevealDateMouseHover(true, reply.id)" (mouseleave)="replyRevealDateMouseHover(false, reply.id)">
+                            <ng-container *ngIf="replyRevealDate && replyToRevealId === reply.id ; else dontShow">
+                                    {{reply.uploaded | date :'dd-MM-yyyy'}}
 
-                        </ng-container>
-                        <ng-template #dontShow>
-                            {{formatDateTimeReWrite(reply.uploaded)}}
-                        </ng-template>
-                      </span>
+                            </ng-container>
+                            <ng-template #dontShow>
+                                {{formatDateTimeReWrite(reply.uploaded)}}
+                            </ng-template>
+                          </span>
+                      </section>
                   <p>{{reply.description}}</p>
                   <div>
                   <section class="buttons-wrapper">
@@ -241,6 +244,7 @@
                 </ng-container>
                 <div>
                   <button *ngIf="comment.repliesCount > replies.length " type="button" (click)="getRepliesForCommnet(comment.id, comment)">More replies</button>
+                  <button type="button" (click)="collapseReplyThread(comment.id , commentScrollAnchor)">Retract replies</button>
                 </div>
                 </div>
               </section>

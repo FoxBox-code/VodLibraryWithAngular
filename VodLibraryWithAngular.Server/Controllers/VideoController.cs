@@ -571,6 +571,7 @@ namespace VodLibraryWithAngular.Server.Controllers
 
                 List<CommentDTO> comments = await _dbContext.Comments
                     .Where(c => c.VideoRecordId == videoId)
+                    .Include(c => c.User)
                     .AsNoTracking()
                     .Skip(skip)
                     .Take(take)
@@ -579,6 +580,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                         Id = c.Id,
                         UserName = c.UserName,
                         UserId = c.UserId,
+                        UserIcon = $"{Request.Scheme}://{Request.Host}/ProfilePics/ProfileIcons/{Path.GetFileName(c.User.profilePic)}",
                         Description = c.Description,
                         VideoRecordId = c.VideoRecordId,
                         Uploaded = c.Uploaded,
@@ -964,6 +966,7 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             List<ReplieDTO> replieDTOs = await _dbContext.Replies
                 .Where(r => r.VideoRecordId == videoId && r.CommentId == commentId)
+                .Include(r => r.User)
                 .Skip(skip)
                 .Take(20)
                 .Select(r => new ReplieDTO()
@@ -971,6 +974,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                     Id = r.Id,
                     UserName = r.UserName,
                     UserId = r.UserId,
+                    UserProfilePic = $"{Request.Scheme}://{Request.Host}/ProfilePics/ProfileIcons/{Path.GetFileName(r.User.profilePic)}",
                     Description = r.Description,
                     VideoRecordId = r.VideoRecordId,
                     CommentId = r.CommentId,

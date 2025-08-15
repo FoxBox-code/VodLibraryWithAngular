@@ -304,6 +304,13 @@
         color: inherit;
 
       }
+      img
+      {
+        width: 32px;
+        height: 32px;
+        border-radius: 36px;
+        object-fit: cover;
+      }
     }
 
   }
@@ -321,6 +328,20 @@
     {
       margin-right: 0.5rem;
     }
+    .reply-meta-data
+    {
+      display: flex;
+      flex-direction: row;
+      gap: 1rem;
+        img
+      {
+        width: 32px;
+        height: 32px;
+        object-fit: cover;
+        border-radius: 36px;
+      }
+    }
+
 
     span
     {
