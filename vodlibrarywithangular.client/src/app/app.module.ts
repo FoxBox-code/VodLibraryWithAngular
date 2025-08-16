@@ -25,6 +25,7 @@ import { PlaylistComponent } from './playlist/playlist.component';
 import { PlaylistminiComponent } from './playlistmini/playlistmini.component';
 import { ClickOutSideDirective } from './directives/click-outside-directive';
 import { GenreVidoesComponent } from './genre-vidoes/genre-vidoes.component';
+import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
 
 @NgModule({
   declarations: [
@@ -47,6 +48,7 @@ import { GenreVidoesComponent } from './genre-vidoes/genre-vidoes.component';
     PlaylistComponent,
     PlaylistminiComponent,
     GenreVidoesComponent,
+    ForgotPasswordComponent,
 
   ],
   imports: [

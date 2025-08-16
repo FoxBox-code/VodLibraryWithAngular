@@ -5,6 +5,7 @@ export class ApiUrls
     //authService
     static readonly LOGIN = `${this.BASE}/auth/login`;
     static readonly REGISTER = `${this.BASE}/auth/register`;
+    static readonly AUTH = `${this.BASE}/auth`;
 
     //videoService
     static readonly VIDEO = `${this.BASE}/video`//use this to stop writing video manually

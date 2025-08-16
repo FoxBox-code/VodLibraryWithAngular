@@ -31,6 +31,7 @@
     </ng-container>
     <ng-template #LoggedIn>
       <button *ngIf="userAuth" type="button" (click)="logOutUser()">Log out </button>
+      <a [routerLink]="['/upload']">Create</a>
       <a *ngIf="userAuth">Hello {{userNameDynamic$ | async}}</a>
     </ng-template>
   </div>

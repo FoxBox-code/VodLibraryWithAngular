@@ -8,6 +8,8 @@ import {jwtDecode} from 'jwt-decode';
 import { ApiUrls } from './api-URLS';
 import { WatchHistoryVideoInfo } from './models/watch-history-video-info';
 import { ProfilesFollowingDTO } from './models/profiles-followingDTO';
+import { ConfirmValidEmailAnswer } from './models/confirmValidEmailAnswerDTO';
+import { ChangePasswordFromBody } from './models/changePasswordFromBody';
 
 
 
@@ -127,7 +129,7 @@ export class AuthService
   login(user : Login) : Observable<{token : string}>
   {
       return this.httpClient.post<{token : string}>(`${ApiUrls.LOGIN}`, user)
-      
+
 
   }
 
@@ -255,6 +257,23 @@ export class AuthService
   Cock()
   {
     return this.httpClient.get(`${ApiUrls.BASE}/auth/cock`);
+  }
+
+  confirmValidEmail(email : string) : Observable<ConfirmValidEmailAnswer>
+  {
+    const params = {email : email};
+    return this.httpClient.get<ConfirmValidEmailAnswer>(`${ApiUrls.AUTH}/confirmEmail`, {params})
+  }
+
+  changePassword(email : string , newPassword : string , confirmedPassword : string)
+  {
+    const body : ChangePasswordFromBody =
+    {
+      email : email,
+      newPassword : newPassword,
+      confirmedPassword : confirmedPassword
+    }
+    return this.httpClient.post(`${ApiUrls.AUTH}/changePassword`, body);
   }
 
 

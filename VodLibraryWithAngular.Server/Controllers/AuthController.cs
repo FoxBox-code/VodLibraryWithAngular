@@ -317,5 +317,53 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             return Ok();
         }
+
+        [HttpGet("confirmEmail")]
+        public async Task<IActionResult> ConfirmValidEmail([FromQuery] string email)
+        {
+            ApplicationUser user = await _userManager.FindByEmailAsync(email);
+
+            if (user == null)
+            {
+                _logger.LogInformation($"The user tried to change his password but have an invalid email address that does not exist in the db , the email in mind is ${email}");
+
+                return NotFound(new
+                { message = "Wrong email , this one does not exist on the records" });
+
+            }
+
+            ConfirmValidEmailAnswer answer = new ConfirmValidEmailAnswer()
+            {
+                Email = user.Email,
+                Confirmed = true
+            };
+
+
+
+            return Ok(answer);
+        }
+
+        [HttpPost("changePassword")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordFromBody body)
+        {
+            ApplicationUser user = await _userManager.FindByEmailAsync(body.Email);
+
+            IdentityResult removed = await _userManager.RemovePasswordAsync(user);
+
+            if (!removed.Succeeded)
+            {
+                return BadRequest(new { message = "failed to change password" });
+            }
+
+            IdentityResult passwordAdded = await _userManager.AddPasswordAsync(user, body.NewPassword);
+
+            if (!passwordAdded.Succeeded)
+            {
+                _logger.LogInformation("ChangePasswords failed at adding the new password which should have checked all the validations");
+                return BadRequest(new { message = "failed to change password" });
+            }
+
+            return Ok();
+        }
     }
 }

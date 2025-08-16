@@ -27,7 +27,10 @@
 
 
   <button type="submit" [disabled]="loginForm.invalid">Login VodLibrary</button>
+  <button type="button" [routerLink]="['forgot-password']">Forgot password</button>
 </form>
+
+
 
 <div class="register-message" *ngIf="registerMessage">
   {{registerMessage}}
