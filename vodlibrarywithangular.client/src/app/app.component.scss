@@ -40,6 +40,11 @@ header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+
+    .Title:hover
+    {
+      cursor: pointer;
+    }
   }
 
   .menuAndTitle {

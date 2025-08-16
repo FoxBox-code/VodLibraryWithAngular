@@ -21,6 +21,10 @@ export class ForgotPasswordComponent
 
   passWordForm : FormGroup | undefined = undefined;
 
+  showPassword : boolean = false;
+  showConfirmedPassword : boolean = false;
+
+
   constructor(private formBuilder : FormBuilder, private authService : AuthService, private router : Router)
   {
     this.emailForm = formBuilder.group(
@@ -29,7 +33,14 @@ export class ForgotPasswordComponent
       }
     )
 
-    console.log(`is email valid state currently this ${this.emailValid}`);
+    // this.passWordForm = this.formBuilder.group(
+    //           {
+    //              password : ['', [Validators.required, Validators.minLength(6)]],
+    //             confirmPassword : ['', [Validators.required, Validators.minLength(6)]]
+    //           }
+    //          )
+
+
   }
 
   requestChange()
