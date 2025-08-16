@@ -33,16 +33,17 @@
   <input #videoFileInput id="videofile" type="file" (change)="onFileSelect($event , 'videoFile')" style="display: none;">
   <button type="button" (click)="videoFileInput.click()">Choose File</button>
   <span>{{ videFileName === null ? 'No file selected' : videFileName }}</span>
+  <video [src]="currentVideoFileUrl" controls width="360" height="360"></video>
   <p></p>
 
   <label id="imagefile">Thumbnail</label>
   <input #imageFileInput id="imagefile" type="file" (change)="onFileSelect($event , 'imageFile')" style="display: none;">
   <button type="button" (click)="imageFileInput.click()">Choose File</button>
   <span>{{ imageFileName === null ? 'No file selected' : imageFileName }}</span>
-  <img *ngIf="currentImageUrl" [src]="currentImageUrl" width="480">
+  <img *ngIf="currentImageUrl" [src]="currentImageUrl" alt="video image" width="480">
 
 
-  <button [disabled]="uploadForm.invalid">Upload Video</button>
+  <button type="submit" [disabled]="uploadForm.invalid">Upload Video</button>
 </form>
 
 

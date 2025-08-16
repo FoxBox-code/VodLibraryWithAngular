@@ -23,6 +23,7 @@ export class UploadComponent implements OnInit
    uploadForm : FormGroup;
    videoFile : File | null = null;
    videFileName : string | null = null;
+   currentVideoFileUrl : string | null = null;
    imageFile : File | null = null;
    imageFileName : string | null = null;
    currentImageUrl : string | null = null;
@@ -65,19 +66,20 @@ export class UploadComponent implements OnInit
 
   ngOnInit(): void
   {
-    this.videoService.getVideoWindow()//This is a HARDCODED API request to see visually how the poping element will look (Delete) if you want
-    .subscribe(
-      {
-        next : (data) =>
-        {
-          this.latestVideoWindow = data;
-        }
-      }
-    )
+    // this.videoService.getVideoWindow()//This is a HARDCODED API request to see visually how the poping element will look (Delete) if you want
+    // .subscribe(
+    //   {
+    //     next : (data) =>
+    //     {
+    //       this.latestVideoWindow = data;
+    //     }
+    //   }
+    // )
   }
   ngOnDestroy()
   {
-    this.clearLocalImageUrl();   //clean up the image from browser's memory manually before leaving the page
+    this.clearLocalUrls(this.currentVideoFileUrl);   //clean up the image from browser's memory manually before leaving the page
+    this.clearLocalUrls(this.currentImageUrl);
   }
 
   onSubmit()
@@ -146,6 +148,8 @@ export class UploadComponent implements OnInit
             this.videFileName = this.videoFile.name;
             this.uploadForm.get('VideoFile')?.setValue(this.videoFile);
 
+            this.currentVideoFileUrl= this.clearLocalUrls(this.currentVideoFileUrl);//clear previous object
+            this.currentVideoFileUrl = URL.createObjectURL(this.videoFile);
           }
           else
           {
@@ -165,8 +169,9 @@ export class UploadComponent implements OnInit
               this.imageFileName = this.imageFile.name;
               this.uploadForm.get('ImageFile')?.setValue(this.imageFile);
 
-              this.clearLocalImageUrl()//clears the previous local Image In Browser if exists
+              this.currentImageUrl = this.clearLocalUrls(this.currentImageUrl)//clears the previous local Image In Browser if exists
               this.currentImageUrl = URL.createObjectURL(this.imageFile);
+
 
           }
           else
@@ -217,14 +222,15 @@ export class UploadComponent implements OnInit
 
   }
 
-  private clearLocalImageUrl()
+  private clearLocalUrls(objectUrlToDelete : string | null) : null
   {
-    if(this.currentImageUrl !== null)
+    if(objectUrlToDelete !== null)
     {
-      URL.revokeObjectURL(this.currentImageUrl as string);
-      this.currentImageUrl = null;
+      URL.revokeObjectURL(objectUrlToDelete as string);
+      return objectUrlToDelete = null;
     }
 
+    return objectUrlToDelete
   }
 
 
