@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using VodLibraryWithAngular.Server.Data;
@@ -11,9 +12,11 @@ using VodLibraryWithAngular.Server.Data;
 namespace VodLibraryWithAngular.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250817162549_VideoRenditionsRename")]
+    partial class VideoRenditionsRename
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -571,7 +574,7 @@ namespace VodLibraryWithAngular.Server.Migrations
                     b.ToTable("VideoRecords");
                 });
 
-            modelBuilder.Entity("VodLibraryWithAngular.Server.Data.Models.VideoRendition", b =>
+            modelBuilder.Entity("VodLibraryWithAngular.Server.Data.Models.VideoRenditions", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -804,7 +807,7 @@ namespace VodLibraryWithAngular.Server.Migrations
                     b.Navigation("VideoOwner");
                 });
 
-            modelBuilder.Entity("VodLibraryWithAngular.Server.Data.Models.VideoRendition", b =>
+            modelBuilder.Entity("VodLibraryWithAngular.Server.Data.Models.VideoRenditions", b =>
                 {
                     b.HasOne("VodLibraryWithAngular.Server.Data.Models.VideoRecord", "VideoRecord")
                         .WithMany("VideoRenditions")

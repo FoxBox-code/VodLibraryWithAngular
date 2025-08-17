@@ -100,18 +100,19 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddScoped<DataMigrationService>(); //This places our migration service in the DI container for a blueprint on how to use it
 builder.Services.AddScoped<IFileNameSanitizer, FileNameSanitizer>();
+builder.Services.AddScoped<VideoFileRenditionsService>();
 
 var app = builder.Build();
 
 var directoriesConfiguration = app.Services.GetRequiredService<WebRootConfiguration>();
 directoriesConfiguration.ConfigureDirectories();
 
-//using (var scope = app.Services.CreateScope())
-//{
-//    var migrationService = scope.ServiceProvider.GetRequiredService<DataMigrationService>();
-//    await migrationService.FillCategoriesWithVideoCount();
-//    await migrationService.SetCategoryWithImage();
-//}
+using (var scope = app.Services.CreateScope())
+{
+    var videoFileRenditionsService = scope.ServiceProvider.GetRequiredService<VideoFileRenditionsService>();
+    await videoFileRenditionsService.RenditionExistingVideos();
+
+}
 //This calls one time our service to populate comment/reply with userIds since we forgot to do it in the beginning of the project, we comment it out because we don t need to run it again but i want it to remain so i can see it
 
 app.UseDefaultFiles();

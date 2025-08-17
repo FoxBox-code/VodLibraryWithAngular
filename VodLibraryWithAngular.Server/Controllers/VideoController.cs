@@ -10,6 +10,7 @@ using VodLibraryWithAngular.Server.Data.Models;
 using VodLibraryWithAngular.Server.Interfaces;
 using VodLibraryWithAngular.Server.Models;
 using VodLibraryWithAngular.Server.QueryHttpParams;
+using VodLibraryWithAngular.Server.Services;
 
 
 namespace VodLibraryWithAngular.Server.Controllers
@@ -23,15 +24,17 @@ namespace VodLibraryWithAngular.Server.Controllers
         private readonly ILogger<VideoController> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IFileNameSanitizer _fileNameSanitizer;
+        private readonly VideoFileRenditionsService _videoFileRenditionsService;
 
 
-        public VideoController(ApplicationDbContext context, IWebHostEnvironment enviroment, ILogger<VideoController> logger, UserManager<ApplicationUser> userManager, IFileNameSanitizer fileNameSanitizer)
+        public VideoController(ApplicationDbContext context, IWebHostEnvironment enviroment, ILogger<VideoController> logger, UserManager<ApplicationUser> userManager, IFileNameSanitizer fileNameSanitizer, VideoFileRenditionsService videoFileService)
         {
             _dbContext = context;
             _environment = enviroment;
             _logger = logger;
             _userManager = userManager;
             _fileNameSanitizer = fileNameSanitizer;
+            _videoFileRenditionsService = videoFileService;
         }
 
         [HttpGet("categories")]
@@ -72,18 +75,20 @@ namespace VodLibraryWithAngular.Server.Controllers
                 string videoPath = Path.Combine(_environment.WebRootPath, "videos", Guid.NewGuid() + _fileNameSanitizer.SanitizeFileName(videoUploadForm.VideoFile.FileName));
                 string thumbnail = Path.Combine(_environment.WebRootPath, "thumbnail", Guid.NewGuid() + _fileNameSanitizer.SanitizeFileName(videoUploadForm.ImageFile.FileName)); // Guid.NewGuid generates unique names in order to prevent colliding
 
-                using (FileStream videoStream = new FileStream(videoPath, FileMode.Create))
-                {
-                    await videoUploadForm.VideoFile.CopyToAsync(videoStream);
-                }
-
-
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
                 if (string.IsNullOrEmpty(userId))
                 {
                     return Unauthorized("You are not authorized to upload videos!");
                 }
+
+                using (FileStream videoStream = new FileStream(videoPath, FileMode.Create))
+                {
+                    await videoUploadForm.VideoFile.CopyToAsync(videoStream);
+                }
+
+                await _videoFileRenditionsService.RenditionUploadedVideo(videoPath, videoUploadForm.Title);
+
                 //using (FileStream imageStream = new FileStream(thumbnail, FileMode.Create))
                 //{
                 //    await videoUploadForm.ImageFile.CopyToAsync(imageStream);

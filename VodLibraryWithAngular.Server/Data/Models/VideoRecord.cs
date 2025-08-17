@@ -48,5 +48,7 @@ namespace VodLibraryWithAngular.Server.Data.Models
 
         public ICollection<UserWatchHistory> WatchHistories { get; set; }
 
+        public IEnumerable<VideoRendition> VideoRenditions { get; set; }
+
     }
 }
