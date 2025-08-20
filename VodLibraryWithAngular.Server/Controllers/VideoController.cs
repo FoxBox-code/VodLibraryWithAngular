@@ -160,7 +160,7 @@ namespace VodLibraryWithAngular.Server.Controllers
 
                 return Ok(new
                 {
-                    Status = video.Status.ToString(),
+                    Status = video.Status,
                     videoId = video.Id
                 }
                 );
@@ -186,14 +186,14 @@ namespace VodLibraryWithAngular.Server.Controllers
             else if (video.Status != VideoStatusEnum.Complete)
             {
                 return Ok(new
-                { status = video.Status.ToString() });
+                { status = video.Status });
 
             }
 
             VideoWindowDTO videoWindowDTO = CreateVideoWindowDTOFromVideoRecord(video);
 
 
-            return Ok(new { status = video.Status.ToString(), videWindowDto = videoWindowDTO });
+            return Ok(new { status = video.Status, videWindowDto = videoWindowDTO });
 
 
 
