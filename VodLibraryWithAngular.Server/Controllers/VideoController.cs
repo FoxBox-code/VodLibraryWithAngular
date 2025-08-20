@@ -7,6 +7,7 @@ using NuGet.Protocol;
 using System.Security.Claims;
 using VodLibraryWithAngular.Server.Data;
 using VodLibraryWithAngular.Server.Data.Models;
+using VodLibraryWithAngular.Server.DataConstants;
 using VodLibraryWithAngular.Server.Interfaces;
 using VodLibraryWithAngular.Server.Models;
 using VodLibraryWithAngular.Server.QueryHttpParams;
@@ -87,7 +88,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                     await videoUploadForm.VideoFile.CopyToAsync(videoStream);
                 }
 
-                await _videoFileRenditionsService.RenditionUploadedVideo(videoPath, videoUploadForm.Title);
+
 
                 //using (FileStream imageStream = new FileStream(thumbnail, FileMode.Create))
                 //{
@@ -115,7 +116,8 @@ namespace VodLibraryWithAngular.Server.Controllers
                     CommentsCount = 0,
                     ReplyCount = 0,
                     Length = videoDuration,
-                    VideoOwnerId = userId
+                    VideoOwnerId = userId,
+
 
 
                 };
@@ -136,21 +138,30 @@ namespace VodLibraryWithAngular.Server.Controllers
                 await _dbContext.VideoRecords.AddAsync(video);
                 await _dbContext.SaveChangesAsync();
 
+
                 VideoRecord? latestVideo = await _dbContext.VideoRecords.Include(v => v.VideoOwner).FirstOrDefaultAsync(v => v.VideoOwnerId == userId && v.Uploaded == video.Uploaded);
 
                 if (latestVideo == null)
                 {
                     _logger.LogError($"The video the user uploaded {video.ToJson()} was created in the db but retrieving it with the user id and the uploaded date was not successful");
-                    return Ok(new { message = "Video Uploaded successfully to VODLibrary" });
+                    return BadRequest("Video failed to add");
                 }
+
+                _ = Task.Run(async () =>
+                {
+
+                    await _videoFileRenditionsService.RenditionUploadedVideo(latestVideo);
+
+                });
+
 
                 VideoWindowDTO videoWindowDTO = CreateVideoWindowDTOFromVideoRecord(latestVideo);
 
 
                 return Ok(new
                 {
-                    message = "Video Uploaded successfully to VODLibrary",
-                    videoWindowDTO
+                    Status = video.Status.ToString(),
+                    videoId = video.Id
                 }
                 );
             }
@@ -158,6 +169,31 @@ namespace VodLibraryWithAngular.Server.Controllers
             {
                 return StatusCode(500, new { message = "Failed to post video to VODLibrary", error = ex.Message });
             }
+
+        }
+
+        [HttpGet("polling/videoStatus")]
+        public async Task<IActionResult> GetStatusForVideo([FromQuery] int videoId)
+        {
+            _logger.LogInformation($"Entering getStatusForvideos with {videoId}");
+            var video = await _dbContext.VideoRecords.Include(x => x.VideoRenditions).FirstOrDefaultAsync(x => x.Id == videoId);
+
+            if (video == null)
+            {
+                _logger.LogInformation($"During GetStatusForVideo the video requested with id {videoId} was not found");
+                return NotFound("Video was not found");
+            }
+            else if (video.Status != VideoStatusEnum.Complete)
+            {
+                return Ok(new
+                { status = video.Status.ToString() });
+
+            }
+
+            VideoWindowDTO videoWindowDTO = CreateVideoWindowDTOFromVideoRecord(video);
+
+
+            return Ok(new { status = video.Status.ToString(), videWindowDto = videoWindowDTO });
 
 
 
@@ -167,8 +203,11 @@ namespace VodLibraryWithAngular.Server.Controllers
 
 
 
+
+
+
         [HttpGet("sections")]
-        public async Task<IActionResult> GetMainMenuVideos()
+        public async Task<IActionResult> GetMainMenuVideos() //getVideosSection
         {
             try
             {
@@ -188,7 +227,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                     {
                         Id = c.Id,
                         Name = c.Name,
-                        Videos = c.Videos.Select(v => CreateVideoWindowDTOFromVideoRecord(v)).ToList()
+                        Videos = c.Videos.Where(v => v.Status == VideoStatusEnum.Complete).Select(v => CreateVideoWindowDTOFromVideoRecord(v)).ToList()
                     })
                     .ToList();
 
@@ -242,7 +281,8 @@ namespace VodLibraryWithAngular.Server.Controllers
                 ImagePath = $"{Request.Scheme}://{Request.Host}/thumbnail/{Path.GetFileName(video.ImagePath)}",
                 CategoryId = video.CategoryId,
                 CategoryName = video.Category.Name,
-                Description = video.Description
+                Description = video.Description,
+
 
             };
 
@@ -1585,7 +1625,7 @@ namespace VodLibraryWithAngular.Server.Controllers
         {
             string? userId = _userManager.GetUserId(User);
 
-            VideoRecord video = await _dbContext.VideoRecords.FirstOrDefaultAsync(x => x.Id == videoId);
+            VideoRecord video = await _dbContext.VideoRecords.Include(v => v.VideoRenditions).FirstOrDefaultAsync(x => x.Id == videoId);
 
             if (video == null)
             {
@@ -1609,7 +1649,21 @@ namespace VodLibraryWithAngular.Server.Controllers
                 _logger.LogInformation($"Unable to delete the video of user with id {userId} somehow the video was made with an category id that is not provided in the data base -error happens at VideoController DeleteVideo");
                 return BadRequest();
             }
-            category.VideosCount++;
+
+            if (System.IO.File.Exists(video.VideoPath))
+            {
+                System.IO.File.Delete(video.VideoPath);
+            }
+
+
+            VideoRendition[] renditions = video.VideoRenditions.ToArray();
+
+            if (renditions.Length > 0)
+            {
+                string renditionFolder = Path.GetDirectoryName(renditions[0].RenditionPath);
+                Directory.Delete(renditionFolder, true);
+            }
+
 
             _dbContext.VideoRecords.Remove(video);
             await _dbContext.SaveChangesAsync();

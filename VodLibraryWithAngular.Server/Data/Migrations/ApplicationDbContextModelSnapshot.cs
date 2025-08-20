@@ -533,6 +533,9 @@ namespace VodLibraryWithAngular.Server.Migrations
                         .HasMaxLength(5000)
                         .HasColumnType("character varying(5000)");
 
+                    b.Property<DateTimeOffset?>("Ended")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("ImagePath")
                         .IsRequired()
                         .HasColumnType("text");
@@ -540,7 +543,16 @@ namespace VodLibraryWithAngular.Server.Migrations
                     b.Property<TimeSpan>("Length")
                         .HasColumnType("interval");
 
+                    b.Property<string>("ProcessingError")
+                        .HasColumnType("text");
+
                     b.Property<int>("ReplyCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("Started")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("Status")
                         .HasColumnType("integer");
 
                     b.Property<string>("Title")
@@ -583,12 +595,16 @@ namespace VodLibraryWithAngular.Server.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("Resolution")
+                        .HasColumnType("integer");
+
                     b.Property<int>("VideoRecordId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("VideoRecordId");
+                    b.HasIndex("VideoRecordId", "Resolution")
+                        .IsUnique();
 
                     b.ToTable("VideoRenditions");
                 });

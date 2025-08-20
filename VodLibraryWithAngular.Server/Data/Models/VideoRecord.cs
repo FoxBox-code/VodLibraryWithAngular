@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using VodLibraryWithAngular.Server.DataConstants;
 using static VodLibraryWithAngular.Server.DataConstants.ConstantsCharacteristics.VideoRecordsConstants;
 
 namespace VodLibraryWithAngular.Server.Data.Models
@@ -49,6 +50,14 @@ namespace VodLibraryWithAngular.Server.Data.Models
         public ICollection<UserWatchHistory> WatchHistories { get; set; }
 
         public IEnumerable<VideoRendition> VideoRenditions { get; set; }
+
+        public VideoStatusEnum? Status { get; set; } = VideoStatusEnum.Pending;
+
+        public DateTimeOffset? Started { get; set; } = DateTimeOffset.UtcNow;
+
+        public DateTimeOffset? Ended { get; set; }
+
+        public string? ProcessingError { get; set; }
 
     }
 }

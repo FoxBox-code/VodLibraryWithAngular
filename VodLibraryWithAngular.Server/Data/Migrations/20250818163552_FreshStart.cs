@@ -1,12 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace VodLibraryWithAngular.Server.Migrations
 {
     /// <inheritdoc />
-    public partial class VideoRenditions : Migration
+    public partial class FreshStart : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -16,26 +15,40 @@ namespace VodLibraryWithAngular.Server.Migrations
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", Npgsql.EntityFrameworkCore.PostgreSQL.Metadata.NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+
+                    Resolution = table.Column<int>(type: "integer", nullable: false),
+
                     RenditionPath = table.Column<string>(type: "text", nullable: false),
-                    VideoRecordId = table.Column<int>(type: "integer", nullable: false)
+
+                    VideoRecordId = table.Column<int>(type: "integer", nullable: false),
+
+
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_VideoRenditions", x => x.Id);
+
                     table.ForeignKey(
                         name: "FK_VideoRenditions_VideoRecords_VideoRecordId",
                         column: x => x.VideoRecordId,
                         principalTable: "VideoRecords",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Cascade); // or NoAction if you're being explicit
                 });
 
             migrationBuilder.CreateIndex(
                 name: "IX_VideoRenditions_VideoRecordId",
                 table: "VideoRenditions",
                 column: "VideoRecordId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VideoRenditions_VideoRecordId_Resolution",
+                table: "VideoRenditions",
+                columns: new[] { "VideoRecordId", "Resolution" },
+                unique: true);
         }
+
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)

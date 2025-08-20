@@ -1,15 +1,17 @@
 ﻿
 
+using VodLibraryWithAngular.Server.DataConstants;
 namespace VodLibraryWithAngular.Server
 {
     public class VideoRenditionEncoder
     {
-        public static async Task<List<string>> EncodeMp4VariantsAsync(string inputPath, string outputDir)
+        public static async Task<Dictionary<VideoResEnum, string>> EncodeMp4VariantsAsync(string inputPath, string outputDir)
         {
             Directory.CreateDirectory(outputDir);
 
             var (width, height) = await FfprobeRunner.ProbeRunAsync(inputPath);
-            List<string> renditionPaths = new List<string>();
+
+            Dictionary<VideoResEnum, string> renditionPaths = new Dictionary<VideoResEnum, string>();
 
             if (height >= 1080)
             {
@@ -22,9 +24,10 @@ namespace VodLibraryWithAngular.Server
                "-b:v 5000k -maxrate 5500k -bufsize 10000k " +
                "-c:a aac -b:a 128k -movflags +faststart " +
                Q(out1080),
-               out1080);
+               out1080, VideoResEnum.p1080);
 
-                renditionPaths.Add(out1080);
+
+
 
             }
             if (height >= 720)
@@ -38,9 +41,10 @@ namespace VodLibraryWithAngular.Server
                 "-b:v 3000k -maxrate 3300k -bufsize 6000k " +
                 "-c:a aac -b:a 128k -movflags +faststart " +
                 Q(out720),
-                out720);
+                out720, VideoResEnum.p720);
 
-                renditionPaths.Add(out720);
+
+
             }
             if (height >= 480)
             {
@@ -52,9 +56,10 @@ namespace VodLibraryWithAngular.Server
                 "-b:v 1500k -maxrate 1600k -bufsize 3000k " +
                 "-c:a aac -b:a 128k -movflags +faststart " +
                 Q(out480),
-                out480);
+                out480, VideoResEnum.p480);
 
-                renditionPaths.Add(out480);
+
+
             }
 
             var out360 = Path.Combine(outputDir, "output_360p.mp4");//were making the 360 absolute minimal even if video is 144p we format it to 360p it wont change the video by upscaling it but its still a video
@@ -64,20 +69,23 @@ namespace VodLibraryWithAngular.Server
             "-b:v 800k -maxrate 900k -bufsize 1600k " +
             "-c:a aac -b:a 96k -movflags +faststart " +
             Q(out360),
-            out360);
+            out360, VideoResEnum.p360);
 
-            renditionPaths.Add(out360);
+
+
 
 
             return renditionPaths;
 
 
             // Skip if already exists (idempotent)
-            async Task EncodeIfMissing(string args, string outPath)
+            async Task EncodeIfMissing(string args, string outPath, VideoResEnum res)
             {
                 if (File.Exists(outPath)) return;
                 var ec = await FfmpegRunner.RunMpegAsync(args);
                 if (ec != 0) throw new Exception($"FFmpeg failed for {outPath} (exit code {ec}).");
+                renditionPaths[res] = outPath;
+
             }
 
             string Q(string p) => $"\"{p}\""; // quote for spaces in paths

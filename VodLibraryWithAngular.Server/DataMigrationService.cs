@@ -187,9 +187,18 @@ namespace VodLibraryWithAngular.Server
 
         }
 
+        public async Task FillVidoesWithStartedDateField()
+        {
+            var videos = await _context.VideoRecords.Where(v => v.Id != 31).ToListAsync();
 
+            foreach (var video in videos)
+            {
+                video.Started = video.Uploaded;
+            }
 
+            await _context.SaveChangesAsync();
 
+        }
 
 
     }

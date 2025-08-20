@@ -33,21 +33,23 @@ namespace VodLibraryWithAngular.Server
             });
 
             _ = Task.Run(async () =>
-            {
-                while (!process.StandardOutput.EndOfStream)
-                {
-                    var line = await process.StandardOutput.ReadLineAsync();
-                    if (!string.IsNullOrWhiteSpace(line))
-                    {
-                        Console.WriteLine($"Standard Output {line}");
-                    }
-                }
-            });
+           {
+               while (!process.StandardOutput.EndOfStream)
+               {
+                   var line = await process.StandardOutput.ReadLineAsync();
+                   if (!string.IsNullOrWhiteSpace(line))
+                   {
+                       Console.WriteLine($"Standard Output {line}");
+                   }
+               }
+           });
 
 
 
             await process.WaitForExitAsync();
-            return process.ExitCode;
+            int exitCode = process.ExitCode;
+            process.Dispose();
+            return exitCode;
         }
 
 

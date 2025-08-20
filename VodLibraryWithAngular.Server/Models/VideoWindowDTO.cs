@@ -27,5 +27,7 @@
         public required string ImagePath { get; set; }
 
         public required string? Description { get; set; }
+
+
     }
 }

@@ -145,6 +145,12 @@ namespace VodLibraryWithAngular.Server.Data
                 .WithMany(v => v.VideoRenditions)
                 .HasForeignKey(f => f.VideoRecordId);
 
+            builder.Entity<VideoRendition>(b =>
+            {
+                b.HasIndex(x => new { x.VideoRecordId, x.Resolution }).IsUnique();
+
+            });
+
 
             SeedCategories();
 
