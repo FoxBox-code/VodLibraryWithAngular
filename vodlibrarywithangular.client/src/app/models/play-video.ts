@@ -5,6 +5,8 @@ export interface PlayVideo
     title : string,
     description : string,
     uploaded : Date,
+    duration : string,
+    totalTimeInSeconds : number
     videoPath : string,
     videoOwnerId : string,
     videoOwnerName : string,
@@ -15,7 +17,8 @@ export interface PlayVideo
     disLikes : number,
     totalCommentReplyCount : number,
     commentCount : number,
-    videoOwnerSubscribersCount : number
+    videoOwnerSubscribersCount : number,
+    videoRenditions : {[resolution : string] : string}
 
 }
 

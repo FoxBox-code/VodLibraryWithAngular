@@ -137,14 +137,13 @@ header {
 
 .sideBar
   {
-    // display: flex;
-    // flex-direction: column;
+
     position: sticky;
-    // top: 100px;
     top: 80px;
     align-self: start;
     justify-content: flex-start;
     height: fit-content;
+
 
 
 
@@ -192,7 +191,9 @@ header {
     .sideBarExpand
     {
       width: 240px;
-
+      height: 800px;
+      overflow-y: auto;
+      position: sticky;
 
       .linkAndIconExpanded
       {

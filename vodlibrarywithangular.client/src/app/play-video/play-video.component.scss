@@ -4,6 +4,13 @@
   display: flex;
   flex-direction: row;
 
+  .VideoInfoCommentsWrapper
+  {
+    display: flex;
+    flex-direction: column;
+    width: 940px;
+  }
+
   .video-wrapper
 {
   max-width: 940px;
@@ -11,6 +18,11 @@
   flex-direction: column;
   align-items: flex-start;
 
+  .videoQualitySettings
+  {
+    // position: absolute;
+  }
+}
   .fuckCSS
   {
     display: flex;
@@ -398,8 +410,20 @@
           background-color: blue;
         }
 
+
+
+.svgIcon
+{
+  width: 32px;
+  height: 32px;
 }
 
+.fullScreenMode
+{
+  // width: 100vw;
+  // height: 100vh;
 
+  height: 100%;
+  width: 100%;
 
-
+}

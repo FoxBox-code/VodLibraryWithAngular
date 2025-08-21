@@ -23,6 +23,7 @@ import { EditVideoFormControls } from './models/EditVideoFormControls';
 import { SubscribingDTO } from './models/subscribingDTO';
 import { VideoLikeDislikeCountDTO } from './models/video-like-dislike-countDTO';
 import { CategoryStatsDTO } from './models/categorystatsDTO';
+import { UploadServerMessageResponse } from './models/uploadServerMessageResponse';
 
 @Injectable({
   providedIn: 'root'
@@ -85,7 +86,7 @@ export class VideoService
 
   }
 
-  uploadVideo(formData : FormData) : Observable<any>
+  uploadVideo(formData : FormData) : Observable<any>  //The original uploadVideo , we must change it to work with the new rendition system
   {
     const token = this.authService.getLocalStorageToken();
     console.log(`Current token : ${token}`);
@@ -99,6 +100,29 @@ export class VideoService
 
       return this.httpClient.post<any>(`${ApiUrls.UPLOAD}`, formData, {headers});
   }
+
+  uploadVideoNew(formData : FormData) : Observable<UploadServerMessageResponse>
+  {
+    const token = this.authService.getLocalStorageToken();
+    console.log(`Current token : ${token}`);
+
+    const headers = new HttpHeaders(
+    {
+      Authorization : `Bearer ${token}`
+    });
+    console.log(`Header loggin ${headers.get('Authorization')}`);
+
+
+    return this.httpClient.post<UploadServerMessageResponse>(`${ApiUrls.UPLOAD}`, formData, {headers});
+  }
+
+  getStatusForVideo(videoId : number) : Observable<any>
+  {
+    const params = {videoId : videoId}
+    return this.httpClient.get<any>(`${ApiUrls.VIDEO}/polling/videoStatus`, {params})
+  }
+
+
 
   getVideosSection() : Observable<CategoryWithVideos[]>
   {
@@ -209,21 +233,7 @@ export class VideoService
         }))
   }
 
-  // getCommentsCount(videoId : number) : void
-  // {
-  //     this.httpClient.get<number>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/commentsCount`)
-  //     .subscribe(
-  //     {
-  //         next : (result) => this.commentsCountSubject.next(result),
-  //         error : (error) => console.error(`Failed to fetch the comments count from the server ${error}`)
 
-  //     })
-  // }
-
-  // refreshCommentsCount(videoId : number)
-  // {
-  //   this.getCommentsCount(videoId);
-  // }
 
  updateViews(selectedVideoId : number)
  {
@@ -323,7 +333,7 @@ export class VideoService
 
   }
 
- 
+
 
   getVideoReactions(videoId: number) : Observable<Reaction>
   {

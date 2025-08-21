@@ -43,7 +43,7 @@ export class AppComponent implements OnInit {
   sportsIcon = DataCosntans.sportsIcon;
 
 
-  genreIconsArray = [this.musicIcon , this.sportsIcon , this.gamingIcon , this.entertainmentIcon , this.educationIcon]
+  genreIconsArray = [this.sportsIcon , this.gamingIcon , this.entertainmentIcon , this.musicIcon, this.educationIcon]
 
 
   userAuth = false; //cheks if user is loged in

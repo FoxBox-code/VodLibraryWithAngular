@@ -1,287 +1,334 @@
 
 <div class="componentContainer">
-  <div class="video-wrapper">
-    <video [src]="selectedVideo?.videoPath" controls width="940" #videoElement></video>
-    <h2>{{selectedVideo?.title}}</h2>
-    <section class="user-likes-dislikes-wrapper">
+  <section class="VideoInfoCommentsWrapper">
+        <div class="video-wrapper" #fullScreenWrapper>
+    <video [src]="selectedVideo?.videoPath" [class.fullScreenMode]="videoFullScreen" width="940" #videoElement
+            (loadedmetadata)="videoLoadMetaData(videoElement)"
+            (timeupdate)="timeUpdate(videoElement)"
+            [volume]="videoVolume"
+            preload="metadata"
+            [playsInline]="false"
+            [disablePictureInPicture]="true"
+            muted
+            autoplay
 
-      <div class="fuckCSS">
-            <div class="linkToUserProfile">
-          <img [src]="selectedVideo?.videoOwnerProfileIcon" alt="" class="profileIcon">
-        <div class="UserNameAndSubscribers">
-            <span>{{selectedVideo?.videoOwnerName}} </span>
+                    ></video>
 
-          <span class="subscribers">{{selectedVideo === null ? 0 : selectedVideo!.videoOwnerSubscribersCount === 0 ? "" : "Subscribers " + formatNum(selectedVideo!.videoOwnerSubscribersCount)}}</span>
+            <div class="controlBar">
+              <button type="button" (click)="playPauseVideo(videoElement)"><img class="svgIcon" [src]="!videoElement.paused ? pauseButtonIcon : playButtonIcon" alt="play/pause button"></button>
+
+              <input type="range" #inputBar
+              min="0"
+              [max]="selectedVideo?.totalTimeInSeconds"
+              step="0.1"
+              [(ngModel)]="videoPlayBackTime"
+              (change)="trackValues(inputBar)"
+              (input)="changeVideoTime(inputBar, videoElement)">
+
+              <input type="range"
+              min="0"
+              max="1.00"
+              step="0.1"
+              [(ngModel)]="videoVolume"><img class="svgIcon" [src]="videoVolume === 0 ? noVolumeIcon : videoVolume <= 0.5 ? smallVolumeIcon : higherVolumeIcon" alt="">
+
+              <button type="button" (click)="changeScreenSize(fullScreenWrapper, videoElement)"><img class="svgIcon" [src]="videoFullScreen ? smallScreenIcon : fullScreenIcon" alt=""></button>
+            </div>
+            <div class="videoQualitySettings">
+          <select (change)="videoResolutionChange($event)">
+              <option *ngFor="let res of selectedVideo?.videoRenditions | keyvalue" [value]="res.key">
+                <img class="svgIcon" [src]="gearIcon" alt="">Video Resolution {{res.key}}
+              </option>
+          </select>
+    </div>
         </div>
 
+          <div >
+                  <h2>{{selectedVideo?.title}}</h2>
+                  <section class="user-likes-dislikes-wrapper">
 
-      </div>
+                  <div class="fuckCSS">
+                        <div class="linkToUserProfile">
+                      <img [src]="selectedVideo?.videoOwnerProfileIcon" alt="" class="profileIcon">
+                    <div class="UserNameAndSubscribers">
+                        <span>{{selectedVideo?.videoOwnerName}} </span>
 
-
-      <div class="sub-like-dislike-Wrapper" *ngIf="currentUserId !== selectedVideo?.videoOwnerId">
-        <ng-container *ngIf="!hasUserSubscribedToVideoOwner ; else Subscribed">
-            <button type="button" class="subscribeButton" (click)="subscribeToUser()">Subscribe</button>
-            <section class="LogInMessage" outSideClick (outSideClick)="unRegisteredUserWantsToSubscribe = false" *ngIf="unRegisteredUserWantsToSubscribe">
-                        <h3>Want to subscribe to this channel?</h3>
-                        <p>Sign in to subscribe to this channel.</p>
-                        <button type="button" (click)="navigateToLogIn()">Sign in</button>
-                    </section>
-          </ng-container>
-
-
-
-        <ng-template #Subscribed>
-                   <div type="button" class="bellButton"  (click)="unfollowUser = true">
-
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><!--!Font Awesome Free v7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M320 64C302.3 64 288 78.3 288 96L288 99.2C215 114 160 178.6 160 256L160 277.7C160 325.8 143.6 372.5 113.6 410.1L103.8 422.3C98.7 428.6 96 436.4 96 444.5C96 464.1 111.9 480 131.5 480L508.4 480C528 480 543.9 464.1 543.9 444.5C543.9 436.4 541.2 428.6 536.1 422.3L526.3 410.1C496.4 372.5 480 325.8 480 277.7L480 256C480 178.6 425 114 352 99.2L352 96C352 78.3 337.7 64 320 64zM258 528C265.1 555.6 290.2 576 320 576C349.8 576 374.9 555.6 382 528L258 528z"/></svg>
-                   </div>
-
-                    <div class="confirmUnfollowing" *ngIf="unfollowUser" outSideClick (outSideClick)="unfollowUser = false">
-                      <span>Are you sure you want to unfollow creator</span>
-                      <button type="button" (click)="unSubscribeFromUser()">Yes</button>
-                      <button type="button" (click)="unfollowUser = false">No</button>
+                      <span class="subscribers">{{selectedVideo === null ? 0 : selectedVideo!.videoOwnerSubscribersCount === 0 ? "" : "Subscribers " + formatNum(selectedVideo!.videoOwnerSubscribersCount)}}</span>
                     </div>
+
+
+                  </div>
+
+
+                  <div class="sub-like-dislike-Wrapper" *ngIf="currentUserId !== selectedVideo?.videoOwnerId">
+                    <ng-container *ngIf="!hasUserSubscribedToVideoOwner ; else Subscribed">
+                        <button type="button" class="subscribeButton" (click)="subscribeToUser()">Subscribe</button>
+                        <section class="LogInMessage" outSideClick (outSideClick)="unRegisteredUserWantsToSubscribe = false" *ngIf="unRegisteredUserWantsToSubscribe">
+                                    <h3>Want to subscribe to this channel?</h3>
+                                    <p>Sign in to subscribe to this channel.</p>
+                                    <button type="button" (click)="navigateToLogIn()">Sign in</button>
+                                </section>
+                      </ng-container>
+
+
+
+                    <ng-template #Subscribed>
+                              <div type="button" class="bellButton"  (click)="unfollowUser = true">
+
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><!--!Font Awesome Free v7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M320 64C302.3 64 288 78.3 288 96L288 99.2C215 114 160 178.6 160 256L160 277.7C160 325.8 143.6 372.5 113.6 410.1L103.8 422.3C98.7 428.6 96 436.4 96 444.5C96 464.1 111.9 480 131.5 480L508.4 480C528 480 543.9 464.1 543.9 444.5C543.9 436.4 541.2 428.6 536.1 422.3L526.3 410.1C496.4 372.5 480 325.8 480 277.7L480 256C480 178.6 425 114 352 99.2L352 96C352 78.3 337.7 64 320 64zM258 528C265.1 555.6 290.2 576 320 576C349.8 576 374.9 555.6 382 528L258 528z"/></svg>
+                              </div>
+
+                                <div class="confirmUnfollowing" *ngIf="unfollowUser" outSideClick (outSideClick)="unfollowUser = false">
+                                  <span>Are you sure you want to unfollow creator</span>
+                                  <button type="button" (click)="unSubscribeFromUser()">Yes</button>
+                                  <button type="button" (click)="unfollowUser = false">No</button>
+                                </div>
+                    </ng-template>
+
+
+
+                                    <div class="reaction" *ngIf="likeDislike">
+                                          <button type="button" [class.choosenOne]="userVideoReaction?.reaction === 'Like'" (click)="addReaction('Like')">Likes  : {{likeDislike.likes}}</button>
+                                          <button type="button" [class.choosenOne]="userVideoReaction?.reaction === 'Dislike'" (click)="addReaction('Dislike')">DisLikes : {{likeDislike.dislikes}}</button>
+                                    </div>
+
+                              </div>
+
+                              </div>
+
+                        </section>
+
+                        <hr style="width: 940px;">
+
+            <section class="views-date-description-wrapper" [class.expanded]="descriptionShowMore" #description [style.maxHeight.px]="maxHeight">
+
+              <div class="span-metadata">
+                    <span>
+                    {{selectedVideo === null ? 0 :formatNum(selectedVideo!.views)}} views
+                    </span>
+
+                    <span>
+                    Uploaded : {{selectedVideo?.uploaded | date : 'MMM dd ,yyyy'}} at {{selectedVideo?.uploaded | date : ' HH:mm'}} o'clock'
+                    </span>
+
+                    <button type="button" (click)="showHideDescription($event, description)">{{!descriptionShowMore ? "Show more" : "Hide"}}</button>
+
+
+                  </div>
+
+
+                  <p>
+                    {{selectedVideo?.description}}
+                  </p>
+
+                  <div class="description-video-category" [routerLink]="['/']">
+                      <img [src]="categoryStats?.imagePath" alt="Category Image">
+                      <div class="description-text-data">
+                        <h4>More from the same category</h4>
+                        <p>{{selectedVideo?.categoryName}}</p>
+                        <span>Total videos : {{categoryStats?.videosCount}}</span>
+                      </div>
+
+                  </div>
+
+            </section>
+
+            <h3 style="font-size: 1.5rem;">{{commentsCountObservable | async }} Comments</h3>
+
+            <!-- The form for the user to comment on -->
+        <section *ngIf="userName ; else userIsNotLogged" >
+          <form [formGroup]="commentForm" (ngSubmit)="addComment()" class="comment-form-wrapper">
+            <label  id="comment">Comment</label>
+            <textarea id="comment" formControlName="Comment" (input)="areaAutoGrowth($event)" (click)="commentFormClicked()" placeholder="Type your comment here"></textarea>
+            <div class="buttons-wrapper" *ngIf="isUserClickingCommentForm">
+              <button type="reset" (click)="cancelUserComment()">Cancel</button>
+              <button type="submit" [disabled]="!commentForm.valid">Comment</button>
+            </div>
+          </form>
+        </section>
+
+
+        <ng-template #userIsNotLogged>
+          <div class="user-not-logged">
+                <p>Register to comment on the video</p>
+                <button type="button" (click)="navigateToLogIn()">Log In</button>
+          </div>
         </ng-template>
 
 
 
-                        <div class="reaction" *ngIf="likeDislike">
-                              <button type="button" [class.choosenOne]="userVideoReaction?.reaction === 'Like'" (click)="addReaction('Like')">Likes  : {{likeDislike.likes}}</button>
-                              <button type="button" [class.choosenOne]="userVideoReaction?.reaction === 'Dislike'" (click)="addReaction('Dislike')">DisLikes : {{likeDislike.dislikes}}</button>
-                        </div>
-
-                  </div>
-
-                  </div>
-
-            </section>
-
-
-
-
-
-
-
-
-
-    <hr style="width: 940px;">
-
-    <section class="views-date-description-wrapper" [class.expanded]="descriptionShowMore" #description [style.maxHeight.px]="maxHeight">
-
-      <div class="span-metadata">
-            <span>
-             {{selectedVideo === null ? 0 :formatNum(selectedVideo!.views)}} views
-            </span>
-
-            <span>
-            Uploaded : {{selectedVideo?.uploaded | date : 'MMM dd ,yyyy'}} at {{selectedVideo?.uploaded | date : ' HH:mm'}} o'clock'
-            </span>
-
-            <button type="button" (click)="showHideDescription($event, description)">{{!descriptionShowMore ? "Show more" : "Hide"}}</button>
-
-
+        <!-- Loaded Comments -->
+        <ng-container *ngIf="commentsCountObservable | async; else NoComments">
+          <div class="buttons-wrapper">
+                <button *ngIf="(videoComments$$ | async)?.length === 0" type="button" (click)="loadComments()">Load comments</button>
+                <button *ngIf="(videoComments$$ | async)!.length > 0" type="button" (click)="toggleCommentsShowHide()">{{autoLoadComments ? "Hide comments" : "Load comments"}}</button>
+                <!-- Type script is for some reason saying this object can be null/undefined even though we make sure it's not , so if anything blows come here -->
+                <div *ngIf="autoLoadComments" class="toggle-sort-wrapper" #sortWrapper>
+                    <button type="button" (click)="toggleSortMenu()" id = "sortByButton">Sort by</button>
+                    <ul *ngIf="sortMenuOpen">
+                        <li><button type="button" (click)="sortComments('newest')">Newest</button></li>
+                        <li><button type="button" (click)="sortComments('popular')">Popular</button></li>
+                    </ul>
+                </div>
           </div>
 
+          <!-- Rendering comments -->
+              <section *ngIf="autoLoadComments">
+                  <section *ngFor="let comment of videoComments$$ | async" class="forloop-comments-wrapper" #individualComment>
 
-          <p>
-            {{selectedVideo?.description}}
-          </p>
+                    <div class="commentNameAndDate" #commentScrollAnchor>
+                          <img [src]="comment.userIcon" alt="UserProfilePic" >
+                          <a [routerLink]="['/user-profile', comment.userId]">{{comment.userName }}</a>
+                            <span style="font-size: 0.8rem; width: 80px;" (mouseenter)="commentRevealDateMouseHover(true, comment.id)" (mouseleave)="commentRevealDateMouseHover(false, comment.id)">
+                                <ng-container *ngIf="commentRevealDate && commentToRevealId === comment.id ; else dontShow">
+                                        {{comment.uploaded | date :'dd-MM-yyyy'}}
 
-          <div class="description-video-category" [routerLink]="['/']">
-              <img [src]="categoryStats?.imagePath" alt="Category Image">
-              <div class="description-text-data">
-                <h4>More from the same category</h4>
-                <p>{{selectedVideo?.categoryName}}</p>
-                <span>Total videos : {{categoryStats?.videosCount}}</span>
-              </div>
-
-          </div>
-
-    </section>
-
-    <h3 style="font-size: 1.5rem;">{{commentsCountObservable | async }} Comments</h3>
-
-    <!-- The form for the user to comment on -->
-<section *ngIf="userName ; else userIsNotLogged" >
-  <form [formGroup]="commentForm" (ngSubmit)="addComment()" class="comment-form-wrapper">
-    <label  id="comment">Comment</label>
-    <textarea id="comment" formControlName="Comment" (input)="areaAutoGrowth($event)" (click)="commentFormClicked()" placeholder="Type your comment here"></textarea>
-    <div class="buttons-wrapper" *ngIf="isUserClickingCommentForm">
-      <button type="reset" (click)="cancelUserComment()">Cancel</button>
-      <button type="submit" [disabled]="!commentForm.valid">Comment</button>
-    </div>
-  </form>
-</section>
-
-
-<ng-template #userIsNotLogged>
-  <div class="user-not-logged">
-        <p>Register to comment on the video</p>
-        <button type="button" (click)="navigateToLogIn()">Log In</button>
-  </div>
-</ng-template>
+                                </ng-container>
+                                <ng-template #dontShow>
+                                    {{formatDateTimeReWrite(comment.uploaded)}}
+                                </ng-template>
+                              </span>
 
 
 
-<!-- Loaded Comments -->
-<ng-container *ngIf="commentsCountObservable | async; else NoComments">
-  <div class="buttons-wrapper">
-        <button *ngIf="(videoComments$$ | async)?.length === 0" type="button" (click)="loadComments()">Load comments</button>
-        <button *ngIf="(videoComments$$ | async)!.length > 0" type="button" (click)="toggleCommentsShowHide()">{{autoLoadComments ? "Hide comments" : "Load comments"}}</button>
-        <!-- Type script is for some reason saying this object can be null/undefined even though we make sure it's not , so if anything blows come here -->
-        <div *ngIf="autoLoadComments" class="toggle-sort-wrapper" #sortWrapper>
-            <button type="button" (click)="toggleSortMenu()" id = "sortByButton">Sort by</button>
-            <ul *ngIf="sortMenuOpen">
-                <li><button type="button" (click)="sortComments('newest')">Newest</button></li>
-                <li><button type="button" (click)="sortComments('popular')">Popular</button></li>
-            </ul>
-        </div>
-  </div>
-
-  <!-- Rendering comments -->
-      <section *ngIf="autoLoadComments">
-          <section *ngFor="let comment of videoComments$$ | async" class="forloop-comments-wrapper" #individualComment>
-
-            <div class="commentNameAndDate" #commentScrollAnchor>
-                  <img [src]="comment.userIcon" alt="UserProfilePic" >
-                  <a [routerLink]="['/user-profile', comment.userId]">{{comment.userName }}</a>
-                    <span style="font-size: 0.8rem; width: 80px;" (mouseenter)="commentRevealDateMouseHover(true, comment.id)" (mouseleave)="commentRevealDateMouseHover(false, comment.id)">
-                        <ng-container *ngIf="commentRevealDate && commentToRevealId === comment.id ; else dontShow">
-                                {{comment.uploaded | date :'dd-MM-yyyy'}}
-
-                        </ng-container>
-                        <ng-template #dontShow>
-                            {{formatDateTimeReWrite(comment.uploaded)}}
-                        </ng-template>
-                      </span>
+                      </div>
 
 
-
-              </div>
-
-
-          <p>{{comment.description}}</p>
-          <div class="comment-likes-dislikes-reply-wrapper">
-            <button type="button" (click)="addCommentReaction(comment.id, true, individualComment)" [class.choosenOne]="userCommentReactions.hasOwnProperty(comment.id) && userCommentReactions[comment.id] === true">Likes : {{comment.likes}} </button>
-            <button type="button" (click)="addCommentReaction(comment.id, false)" [class.choosenOne]="userCommentReactions.hasOwnProperty(comment.id) && userCommentReactions[comment.id] === false">Dislikes : {{comment.disLikes}}</button>
-              <ng-container *ngIf="selectedComment === comment.id && (userNameAsObservable | async) === null">
-                      <section class="LogInMessage" outSideClick (outSideClick)="deSelectCommentAndReply()" >
-                          <h3>Want to join the conversation</h3>
-                            <p>Sign in to continue</p>
-                          <button type="button" (click)="navigateToLogIn()">Sign in</button>
-                      </section>
-              </ng-container>
-
-            <span>Comment replies {{comment.repliesCount}}</span>
-
-            <section *ngIf="userName">
-            <button type="button" (click)="getReplyForm(comment.id, undefined)">Reply</button>
-            </section>
-        </div>
-
-            <form *ngIf="userName && activeCommentReplyThreadDictionary.has(comment.id)" [formGroup]="activeCommentReplyThreadDictionary.get(comment.id)!" (ngSubmit)="addReply(comment.id, undefined)" class="reply-form-wrapper">
-            <label id="reply">Reply</label>
-            <textarea id="reply" formControlName="Reply" (input)="areaAutoGrowth($event)" placeholder="write your reply here"></textarea>
-            <button type="submit" [disabled]="activeCommentReplyThreadDictionary.get(comment.id)?.invalid">Reply to comment</button>
-            <button type="reset" (click)="cancelReplyForm(comment.id, undefined)">Cancel</button>
-            </form>
-
-
-
-
-          <p></p>
-
-          <section *ngIf="comment.repliesCount > 0">
-            <button type="button" (click)="getRepliesForCommnet(comment.id, comment, true)">{{expandRepliesComments[comment.id] ? 'Hide' : 'Load replies'}}</button>
-
-              <section *ngIf="expandRepliesComments[comment.id]">
-                <div class="justAnSubscriberReally" *ngIf="(commentReplies$[comment.id] | async) as replies">
-                <ng-container *ngFor="let reply of replies" >
-                <div class="reply-forcycle-wrapper">
-                  <section class="reply-meta-data">
-                      <img [src]="reply.userProfilePic" alt="UserProfileIcon">
-                      <a [routerLink]="['/user-profile', reply.userId]">{{reply.userName }}</a>
-                      <span style="font-size: 0.8rem;" (mouseenter)="replyRevealDateMouseHover(true, reply.id)" (mouseleave)="replyRevealDateMouseHover(false, reply.id)">
-                            <ng-container *ngIf="replyRevealDate && replyToRevealId === reply.id ; else dontShow">
-                                    {{reply.uploaded | date :'dd-MM-yyyy'}}
-
-                            </ng-container>
-                            <ng-template #dontShow>
-                                {{formatDateTimeReWrite(reply.uploaded)}}
-                            </ng-template>
-                          </span>
-                      </section>
-                  <p>{{reply.description}}</p>
-                  <div>
-                  <section class="buttons-wrapper">
-                    <button type="button" (click)="addReplyReaction(comment.id, reply.id, true)"
-                    [class.choosenOne]="userReplyReactions.hasOwnProperty(reply.id) && userReplyReactions[reply.id] === true">Like : {{reply.likes}}</button>
-
-                    <button type="button" (click)="addReplyReaction(comment.id, reply.id, false)"
-                    [class.choosenOne]="userReplyReactions.hasOwnProperty(reply.id) && userReplyReactions[reply.id] === false">DisLike : {{reply.disLikes}}</button>
-                      <ng-container *ngIf="selectedReply === reply.id && (userNameAsObservable | async) === null">
+                  <p>{{comment.description}}</p>
+                  <div class="comment-likes-dislikes-reply-wrapper">
+                    <button type="button" (click)="addCommentReaction(comment.id, true, individualComment)" [class.choosenOne]="userCommentReactions.hasOwnProperty(comment.id) && userCommentReactions[comment.id] === true">Likes : {{comment.likes}} </button>
+                    <button type="button" (click)="addCommentReaction(comment.id, false)" [class.choosenOne]="userCommentReactions.hasOwnProperty(comment.id) && userCommentReactions[comment.id] === false">Dislikes : {{comment.disLikes}}</button>
+                      <ng-container *ngIf="selectedComment === comment.id && (userNameAsObservable | async) === null">
                               <section class="LogInMessage" outSideClick (outSideClick)="deSelectCommentAndReply()" >
-                              <h3>Want to join the conversation</h3>
-                               <p>Sign in to continue</p>
-                          <button type="button" (click)="navigateToLogIn()">Sign in</button>
-                      </section>
+                                  <h3>Want to join the conversation</h3>
+                                    <p>Sign in to continue</p>
+                                  <button type="button" (click)="navigateToLogIn()">Sign in</button>
+                              </section>
                       </ng-container>
 
+                    <span>Comment replies {{comment.repliesCount}}</span>
+
                     <section *ngIf="userName">
-                      <button type="button" (click)="getReplyForm(undefined,reply.id)">Reply</button>
+                    <button type="button" (click)="getReplyForm(comment.id, undefined)">Reply</button>
                     </section>
+                </div>
+
+                    <form *ngIf="userName && activeCommentReplyThreadDictionary.has(comment.id)" [formGroup]="activeCommentReplyThreadDictionary.get(comment.id)!" (ngSubmit)="addReply(comment.id, undefined)" class="reply-form-wrapper">
+                    <label id="reply">Reply</label>
+                    <textarea id="reply" formControlName="Reply" (input)="areaAutoGrowth($event)" placeholder="write your reply here"></textarea>
+                    <button type="submit" [disabled]="activeCommentReplyThreadDictionary.get(comment.id)?.invalid">Reply to comment</button>
+                    <button type="reset" (click)="cancelReplyForm(comment.id, undefined)">Cancel</button>
+                    </form>
+
+
+
+
+                  <p></p>
+
+                  <section *ngIf="comment.repliesCount > 0">
+                    <button type="button" (click)="getRepliesForCommnet(comment.id, comment, true)">{{expandRepliesComments[comment.id] ? 'Hide' : 'Load replies'}}</button>
+
+                      <section *ngIf="expandRepliesComments[comment.id]">
+                        <div class="justAnSubscriberReally" *ngIf="(commentReplies$[comment.id] | async) as replies">
+                        <ng-container *ngFor="let reply of replies" >
+                        <div class="reply-forcycle-wrapper">
+                          <section class="reply-meta-data">
+                              <img [src]="reply.userProfilePic" alt="UserProfileIcon">
+                              <a [routerLink]="['/user-profile', reply.userId]">{{reply.userName }}</a>
+                              <span style="font-size: 0.8rem;" (mouseenter)="replyRevealDateMouseHover(true, reply.id)" (mouseleave)="replyRevealDateMouseHover(false, reply.id)">
+                                    <ng-container *ngIf="replyRevealDate && replyToRevealId === reply.id ; else dontShow">
+                                            {{reply.uploaded | date :'dd-MM-yyyy'}}
+
+                                    </ng-container>
+                                    <ng-template #dontShow>
+                                        {{formatDateTimeReWrite(reply.uploaded)}}
+                                    </ng-template>
+                                  </span>
+                              </section>
+                          <p>{{reply.description}}</p>
+                          <div>
+                          <section class="buttons-wrapper">
+                            <button type="button" (click)="addReplyReaction(comment.id, reply.id, true)"
+                            [class.choosenOne]="userReplyReactions.hasOwnProperty(reply.id) && userReplyReactions[reply.id] === true">Like : {{reply.likes}}</button>
+
+                            <button type="button" (click)="addReplyReaction(comment.id, reply.id, false)"
+                            [class.choosenOne]="userReplyReactions.hasOwnProperty(reply.id) && userReplyReactions[reply.id] === false">DisLike : {{reply.disLikes}}</button>
+                              <ng-container *ngIf="selectedReply === reply.id && (userNameAsObservable | async) === null">
+                                      <section class="LogInMessage" outSideClick (outSideClick)="deSelectCommentAndReply()" >
+                                      <h3>Want to join the conversation</h3>
+                                      <p>Sign in to continue</p>
+                                  <button type="button" (click)="navigateToLogIn()">Sign in</button>
+                              </section>
+                              </ng-container>
+
+                            <section *ngIf="userName">
+                              <button type="button" (click)="getReplyForm(undefined,reply.id)">Reply</button>
+                            </section>
+                          </section>
+
+                            <form *ngIf="userName  && activeReplyThreadDictionary.has(reply.id)" [formGroup]="activeReplyThreadDictionary.get(reply.id)!" (ngSubmit)="addReply(comment.id, reply.id)" class="reply-form-wrapper">
+                                <label id="reply">Reply</label>
+                                <textarea id="reply" formControlName="Reply" (input)="areaAutoGrowth($event)" placeholder="write here"></textarea>
+                                <button type="submit" [disabled]="activeReplyThreadDictionary.get(reply.id)?.invalid">Reply to comment</button>
+                                <button type="reset" (click)="cancelReplyForm(undefined, reply.id)">Cancel</button>
+                              </form>
+
+                          </div>
+                        </div>
+                        </ng-container>
+                        <div>
+                          <button *ngIf="comment.repliesCount > replies.length " type="button" (click)="getRepliesForCommnet(comment.id, comment)">More replies</button>
+                          <button type="button" (click)="collapseReplyThread(comment.id , commentScrollAnchor)">Retract replies</button>
+                        </div>
+                        </div>
+                      </section>
+
+
                   </section>
 
-                    <form *ngIf="userName  && activeReplyThreadDictionary.has(reply.id)" [formGroup]="activeReplyThreadDictionary.get(reply.id)!" (ngSubmit)="addReply(comment.id, reply.id)" class="reply-form-wrapper">
-                        <label id="reply">Reply</label>
-                        <textarea id="reply" formControlName="Reply" (input)="areaAutoGrowth($event)" placeholder="write here"></textarea>
-                        <button type="submit" [disabled]="activeReplyThreadDictionary.get(reply.id)?.invalid">Reply to comment</button>
-                        <button type="reset" (click)="cancelReplyForm(undefined, reply.id)">Cancel</button>
-                      </form>
+                </section>
 
-                  </div>
-                </div>
-                </ng-container>
-                <div>
-                  <button *ngIf="comment.repliesCount > replies.length " type="button" (click)="getRepliesForCommnet(comment.id, comment)">More replies</button>
-                  <button type="button" (click)="collapseReplyThread(comment.id , commentScrollAnchor)">Retract replies</button>
-                </div>
-                </div>
               </section>
+
+              <div *ngIf="(videoComments$$ | async) as videoComments" #commentLoadThreshold>
+                      <button *ngIf="videoComments.length > 0" (click)="loadComments()">Load next comments</button>
+                </div>
+
+            </ng-container>
+
+
+
+            <ng-template #NoComments>
+                No comments on this video yet!
+            </ng-template>
+
+
+          </div>
+  </section>
+
+
+          <section class="sideBar">
+                <section class="playList" *ngIf="loadPlayList === 'true' && playListMapper">
+
+
+                      <app-playlistmini [userName]="userName" ></app-playlistmini>
+
+                </section>
 
 
           </section>
 
-        </section>
-
-      </section>
-
-      <div *ngIf="(videoComments$$ | async) as videoComments" #commentLoadThreshold>
-              <button *ngIf="videoComments.length > 0" (click)="loadComments()">Load next comments</button>
-        </div>
-
-    </ng-container>
+    </div>
 
 
 
-    <ng-template #NoComments>
-        No comments on this video yet!
-    </ng-template>
 
 
-  </div>
-
-  <section class="sideBar">
-        <section class="playList" *ngIf="loadPlayList === 'true' && playListMapper">
 
 
-              <app-playlistmini [userName]="userName" ></app-playlistmini>
-
-        </section>
 
 
-  </section>
-</div>
+
+
 
 
 

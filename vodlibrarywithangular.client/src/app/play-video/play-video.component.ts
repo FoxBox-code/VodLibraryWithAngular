@@ -22,6 +22,7 @@ import { PlayListMapper } from '../models/playListMaper';
 import { PlaylistService } from '../playlist.service';
 import { VideoLikeDislikeCountDTO } from '../models/video-like-dislike-countDTO';
 import { CategoryStatsDTO } from '../models/categorystatsDTO';
+import { DataCosntans } from '../dataconstants';
 
 
 
@@ -38,6 +39,20 @@ export class PlayVideoComponent
     selectedVideo : PlayVideo | null = null;
     selectedVideoId : number;
     commentForm : FormGroup;
+
+    videoVolume = 0.8;
+    videoPlayBackTime = 0;
+    videoFullScreen = false;
+
+    playButtonIcon = DataCosntans.playButtonIcon;
+    pauseButtonIcon = DataCosntans.pauseButtonIcon;
+    gearIcon = DataCosntans.gearIcon;
+    higherVolumeIcon = DataCosntans.higherVolumeIcon;
+    noVolumeIcon = DataCosntans.noVolumeIcon;
+    smallVolumeIcon = DataCosntans.smallVolumeIcon;
+
+    fullScreenIcon = DataCosntans.fullScreenIcon;
+    smallScreenIcon = DataCosntans.smallScreenIcon;
 
     replyCommentId? : number;
     currentUserId : string | null = null;
@@ -82,7 +97,7 @@ export class PlayVideoComponent
     userWatchedEnoughTimeForViewToCount : boolean = false;
 
     userVideoReaction? : Reaction;
-    likeDislike : VideoLikeDislikeCountDTO | null = null;//THIS SHOULD NEVER BE NULL we ust did it for type safety
+    likeDislike : VideoLikeDislikeCountDTO | null = null;
 
     public videoCommentsSubject = new BehaviorSubject<VideoComment[]>([]);
     public videoComments$$ = this.videoCommentsSubject.asObservable();
@@ -335,6 +350,84 @@ export class PlayVideoComponent
       this.maxHeight = (full * 40)/100;
     }
 
+    videoResolutionChange(event : Event)
+    {
+        const selectElement = event.target as HTMLSelectElement
+
+        const selectedRes = selectElement.value;
+
+        this.applyResolutionChangeToVideo(selectedRes)
+    }
+
+
+
+    private applyResolutionChangeToVideo(selectedRes : string)
+    {
+      const video = this.videoElement.nativeElement as HTMLVideoElement;
+
+      const videoTime = video.currentTime;
+
+      const videoPaused = video.paused;
+
+      video.src = this.selectedVideo!.videoRenditions[selectedRes];
+
+      video.currentTime = videoTime;
+
+      if(!videoPaused)
+      {
+        video.play();
+      }
+
+    }
+
+    videoLoadMetaData(videoElement : HTMLVideoElement)
+    {
+        videoElement.play();//Broswer gives an error warning but the functions works
+    }
+
+    timeUpdate(videoElement : HTMLVideoElement)
+    {
+
+    }
+
+    trackValues(inputBar: HTMLInputElement)
+    {
+      console.log(`Input bar value ${inputBar.value}`)
+    }
+
+    changeVideoTime(inputBar : HTMLInputElement , videoElement : HTMLVideoElement)
+    {
+      videoElement.currentTime = parseFloat(inputBar.value);
+    }
+
+    playPauseVideo(videoElement : HTMLVideoElement)
+    {
+      if(videoElement.paused)
+          videoElement.play();
+      else
+        videoElement.pause();
+    }
+
+    changeScreenSize(fullScreenWrapper : HTMLDivElement, videoElement : HTMLVideoElement)
+    {
+        if(!document.fullscreenElement)
+        {
+            fullScreenWrapper.requestFullscreen();
+            this.videoFullScreen = true;
+        }
+        else
+        {
+          document.exitFullscreen();
+          this.videoFullScreen = false;
+        }
+
+        console.log(`current status of videoFullScreen ${this.videoFullScreen}`);
+
+        
+
+
+    }
+
     showHideDescription(event : Event, descriptionContainer : HTMLElement)
     {
       this.descriptionShowMore = !this.descriptionShowMore;
@@ -366,6 +459,12 @@ export class PlayVideoComponent
             next : (result) =>
             {
                 this.selectedVideo = result;
+                for (const resolution in result.videoRenditions) {
+                  if (result.videoRenditions.hasOwnProperty(resolution)) {
+                    console.log(`Resolution: ${resolution}, URL: ${result.videoRenditions[resolution]}`);
+                  }
+                }
+
                 console.log(JSON.stringify(this.selectedVideo));
                 this.commentsCountSubject.next(this.selectedVideo.totalCommentReplyCount);
 
@@ -988,6 +1087,8 @@ export class PlayVideoComponent
       }
       )
     }
+
+
 
     loadLikeDislikeCount()
     {

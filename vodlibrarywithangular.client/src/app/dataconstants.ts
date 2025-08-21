@@ -1,4 +1,4 @@
-export class DataCosntans
+export  class DataCosntans
 {
 
   public static readonly defaultIconImage = 'https://localhost:7156/ProfilePics/ProfileIcons/icon2ccb3b71-b300-431b-bbd1-1cef1b2a8da60_Nn3K0jqCPuxdyK3B.jpg';
@@ -32,6 +32,7 @@ export class DataCosntans
   public static readonly homeIcon = `${this.svgIconsPath}/homeIcon.svg`;
   public static readonly subscriptionsIcon = `${this.svgIconsPath}/subscriptionsIcon.svg`;
   public static readonly menuIcon = `${this.svgIconsPath}/menuIcon.svg`;
+
   public static readonly musicIcon = `${this.svgIconsPath}/musicIcon.svg`;
   public static readonly sportsIcon = `${this.svgIconsPath}/sportsIcon.svg`;
   public static readonly gamingIcon = `${this.svgIconsPath}/steamIcon.svg`;
@@ -39,6 +40,16 @@ export class DataCosntans
   public static readonly educationIcon = `${this.svgIconsPath}/education-learning-6-svgrepo-com.svg`;
   public static readonly likeIcon = `${this.svgIconsPath}/likeIcon.svg`;
   public static readonly playListIcon = `${this.svgIconsPath}/playListIcon.svg`
+
+
+  public static readonly playButtonIcon = `${this.svgIconsPath}/playIcon.svg`;
+  public static readonly pauseButtonIcon = `${this.svgIconsPath}/puaseIcon.svg`;
+  public static readonly gearIcon = `${this.svgIconsPath}/gearIcon.svg`;
+  public static readonly higherVolumeIcon = `${this.svgIconsPath}/higherVolumeIcon.svg`;
+  public static readonly noVolumeIcon = `${this.svgIconsPath}/noVolumeIcon.svg`;
+  public static readonly smallVolumeIcon = `${this.svgIconsPath}/smallVolumeIcon.svg`;
+  public static readonly fullScreenIcon = `${this.svgIconsPath}/fullScreenIcon.svg`;
+  public static readonly smallScreenIcon = `${this.svgIconsPath}/smallScreenIcon.svg`;
 
 
 }

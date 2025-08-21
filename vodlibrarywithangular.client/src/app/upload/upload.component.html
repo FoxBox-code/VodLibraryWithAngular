@@ -33,7 +33,7 @@
   <input #videoFileInput id="videofile" type="file" (change)="onFileSelect($event , 'videoFile')" style="display: none;">
   <button type="button" (click)="videoFileInput.click()">Choose File</button>
   <span>{{ videFileName === null ? 'No file selected' : videFileName }}</span>
-  <video [src]="currentVideoFileUrl" controls width="360" height="360"></video>
+  <video *ngIf="currentVideoFileUrl" [src]="currentVideoFileUrl" controls width="480" height="360"></video>
   <p></p>
 
   <label id="imagefile">Thumbnail</label>

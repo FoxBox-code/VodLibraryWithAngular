@@ -6,6 +6,8 @@ import { DataCosntans } from '../dataconstants';
 import { Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { VideoWindow } from '../models/video-window';
+import { interval, switchMap } from 'rxjs';
+import { VideoStatusEnum } from '../models/enumVideoStatus';
 
 
 
@@ -30,6 +32,10 @@ export class UploadComponent implements OnInit
    dataConstants = DataCosntans;
    latestVideoAdded : boolean = false;
    latestVideoWindow : VideoWindow | undefined = undefined;
+
+   pollingVideoStatusMessage : string | null = null;
+
+   enumVideoStatus : VideoStatusEnum | null = null;
 
    areaInputLimitHit : boolean = false;
 
@@ -99,23 +105,63 @@ export class UploadComponent implements OnInit
 
       console.log('Form Data ', formData);
 
-      this.videoService.uploadVideo(formData).subscribe(
+      this.videoService.uploadVideoNew(formData).subscribe(
       {
           next : (result) =>
             {
-              console.log(result.message);
-              this.latestVideoWindow = result.videoWindowDTO;
+              console.log(result.status);
+              const uploadingQueue : string[] = JSON.parse(localStorage.getItem('uploadingVideos') || '[]');
+
+              uploadingQueue.push(result.videoId.toString());
+
+              localStorage.setItem('uploadingVideos', JSON.stringify(uploadingQueue));
 
               this.uploadForm.reset();
+              this.currentImageUrl = null;
+              this.currentVideoFileUrl = null;
+              this.videFileName = null;
+              this.imageFileName = null;
+              this.justClearBothUrls()
+
+              console.log(result.videoId)
+
+              const sub = interval(3000).pipe(
+                switchMap(() => this.videoService.getStatusForVideo(result.videoId))
+              ).subscribe(
+                {
+                  next : (response) =>
+                  {
+                    const status = response.status;
+
+                    if(status === VideoStatusEnum.Complete)
+                    {
+                      this.pollingVideoStatusMessage = "Video uploaded successfully"
+                      this.latestVideoAdded = true;
+                      this.latestVideoWindow = response.videWindowDto;
+                      sub.unsubscribe();
+                    }
+                    else if(status === VideoStatusEnum.Failed)
+                    {
+                      this.pollingVideoStatusMessage = "Failed to upload video"
+                      sub.unsubscribe();
+
+                    }
+                    else if(status === VideoStatusEnum.Processing)
+                    {
+                      this.pollingVideoStatusMessage = "Video is still processing"
+                    }
+                  }
+                }
+              )
+
+
+
+
             }
             ,
           error : (error) => console.error("Failed to upload a video", error.message, error.error, error.status) ,
 
-          complete : () =>
-          {
-              this.latestVideoAdded = true;
-              // this.router.navigate(['/']);
-          }
+
 
 
       });
@@ -231,6 +277,11 @@ export class UploadComponent implements OnInit
     }
 
     return objectUrlToDelete
+  }
+  private justClearBothUrls()
+  {
+    this.clearLocalUrls(this.currentVideoFileUrl);
+    this.clearLocalUrls(this.currentImageUrl);
   }
 
 
