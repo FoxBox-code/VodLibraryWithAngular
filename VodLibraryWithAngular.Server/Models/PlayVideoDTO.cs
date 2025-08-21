@@ -10,6 +10,10 @@
 
         public DateTime Uploaded { get; set; }
 
+        public TimeSpan Duration { get; set; }
+
+        public double TotalTimeInSeconds { get; set; }
+
         public string VideoPath { get; set; }
 
         public string VideoOwnerId { get; set; }
@@ -33,6 +37,8 @@
         public int CommentCount { get; set; }
 
         public IEnumerable<CommentDTO> Comments { get; set; } = new List<CommentDTO>();
+
+        public IDictionary<string, string> VideoRenditions { get; set; }
 
     }
 }

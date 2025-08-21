@@ -27,6 +27,7 @@ namespace VodLibraryWithAngular.Server.Services
             var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             List<VideoRecord> videoRecordsPaths = await dbContext.VideoRecords.ToListAsync();
 
+
             foreach (var video in videoRecordsPaths)
             {
 
@@ -34,6 +35,8 @@ namespace VodLibraryWithAngular.Server.Services
                 if (video.Status != VideoStatusEnum.Complete)
                     await RenditionUploadedVideo(video: video);
             }
+
+
 
 
 

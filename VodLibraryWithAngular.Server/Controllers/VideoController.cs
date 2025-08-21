@@ -305,6 +305,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                 VideoRecord? video = await _dbContext.VideoRecords
                 .Include(v => v.VideoOwner)
                 .Include(v => v.Category)
+                .Include(v => v.VideoRenditions)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Id == videoId);
 
@@ -318,7 +319,20 @@ namespace VodLibraryWithAngular.Server.Controllers
                 int subscribersCount = await _dbContext.SubScribers.CountAsync(x => x.SubscribedId == video.VideoOwnerId);
                 int commentCount = await _dbContext.Comments.CountAsync(x => x.VideoRecordId == videoId);
 
+                Dictionary<string, string> renditions = new();
 
+                foreach (var videoRenditions in video.VideoRenditions)
+                {
+                    var folderName = Uri.EscapeDataString(Path.GetDirectoryName(videoRenditions.RenditionPath).Split('\\').Last());
+                    var fileName = Path.GetFileName(videoRenditions.RenditionPath);
+
+                    var enus = videoRenditions.Resolution;
+
+
+
+
+                    renditions[videoRenditions.Resolution.ToString()] = ($"{Request.Scheme}://{Request.Host}/videos/{folderName}/{fileName}");
+                }
 
 
                 PlayVideoDTO selectedVideo = new PlayVideoDTO()
@@ -334,9 +348,13 @@ namespace VodLibraryWithAngular.Server.Controllers
                     VideoOwnerSubscribersCount = subscribersCount,
                     CategoryName = video.Category.Name,
                     Views = video.Views,
+                    Duration = video.Length,
+                    TotalTimeInSeconds = video.Length.TotalSeconds,
 
                     TotalCommentReplyCount = commentCount + video.ReplyCount,
                     CommentCount = commentCount,
+
+                    VideoRenditions = renditions
 
 
                 };
