@@ -35,7 +35,7 @@ export class UploadComponent implements OnInit
 
    pollingVideoStatusMessage : string | null = null;
 
-   enumVideoStatus : VideoStatusEnum | null = null;
+   
 
    areaInputLimitHit : boolean = false;
 

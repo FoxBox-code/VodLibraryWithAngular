@@ -5,7 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { FormGroup, FormBuilder, Validators, RequiredValidator } from '@angular/forms';
 import { AuthService } from '../auth.service';
 import { BehaviorSubject, firstValueFrom, Observable, of, pipe, Subject } from 'rxjs';
-import { take } from 'rxjs/operators';
+import { take, timeout } from 'rxjs/operators';
 
 import { NavigationService } from '../navigation.service';
 import { Router } from '@angular/router';
@@ -43,6 +43,29 @@ export class PlayVideoComponent
     videoVolume = 0.8;
     videoPlayBackTime = 0;
     videoFullScreen = false;
+    videoPlayBackOptios : {[key : string] : number} =
+    {
+      normal : 1,
+      "1.5x" : 1.5,
+      "2.0x" : 2,
+      "0.25x": 0.25,
+      "0.50x": 0.50,
+    }
+    videoPlayBackOptios2 : { label : string , value : number}[] =
+    [
+      {label : '0.25x', value : 0.25},
+      {label : '0.50x', value : 0.50},
+      {label : 'normal', value : 1},
+      {label : '1.5x', value : 1.5},
+      {label : '2.0x', value : 2},
+    ]
+    videoDefaultSpeed = 1;
+
+    holdTimeOut : any // class NodeJS.Timeout
+    showVideoHud = false;
+    hideUITimeOut : any //class NodeJs.Timeout;
+    ClearIconAtCenterTimeOut : any ; //class NodeJs.Timeout;
+    loadVideoMetaDataOnce = true;
 
     playButtonIcon = DataCosntans.playButtonIcon;
     pauseButtonIcon = DataCosntans.pauseButtonIcon;
@@ -50,9 +73,15 @@ export class PlayVideoComponent
     higherVolumeIcon = DataCosntans.higherVolumeIcon;
     noVolumeIcon = DataCosntans.noVolumeIcon;
     smallVolumeIcon = DataCosntans.smallVolumeIcon;
+    fastForwardIcon = DataCosntans.fastForwardIcon;
 
     fullScreenIcon = DataCosntans.fullScreenIcon;
     smallScreenIcon = DataCosntans.smallScreenIcon;
+
+    videoIconAtCenterCurrent : string | null = null;
+    videoSelectedSource : string | null = null;
+    hovoredTime : number | null = null;
+    hovoredPosition : number | null = null
 
     replyCommentId? : number;
     currentUserId : string | null = null;
@@ -126,8 +155,13 @@ export class PlayVideoComponent
     @ViewChild('videoElement') videoElement! : ElementRef<HTMLVideoElement>
     @ViewChild('description') description! : ElementRef<HTMLElement>
     @ViewChild('commentLoadThreshold') commentLoadThreshold! : ElementRef<HTMLElement>
+    @ViewChild('fullScreenWrapper') fullScreenWrapper! : ElementRef<HTMLDivElement>
+    @ViewChild('selectPlayBackSpeed') selectPlayBackSpeed! : ElementRef<HTMLSelectElement>
+    @ViewChild('videoQualitySettings') videoQualitySettings! : ElementRef<HTMLSelectElement>
 
     intersectionObserver! : IntersectionObserver;
+
+    mouseHold = false;
 
 
     constructor(private videoService : VideoService,
@@ -220,7 +254,26 @@ export class PlayVideoComponent
 
     ngAfterViewInit()
     {
-      const video = this.videoElement.nativeElement;
+        this.videoPlayerEventListiners()
+
+       setTimeout(() => {
+              this.measureDescription();
+              this.setUpIntersection();
+          }, 1000);
+    }
+
+    ngOnDestroy()
+    {
+      if(this.intersectionObserver)
+      {
+        this.intersectionObserver.disconnect();
+      }
+    }
+
+    private videoPlayerEventListiners()
+    {
+        const video = this.videoElement.nativeElement;
+        const videoWrapper = this.fullScreenWrapper.nativeElement;
 
 
         //Timeupdate is an event tha hanldes media elements it thicks time only when the video is playing making it useful for trakcing
@@ -299,24 +352,106 @@ export class PlayVideoComponent
             }
           });
 
-          setTimeout(() => {
-              this.measureDescription();
-              this.setUpIntersection();
-          }, 1000);
+
+
+          video.addEventListener('canplay', () =>
+          {
+            video.play();//LoadMetaData now fails to start the video correctly because , degen shit , use canPlay on video to finally check if you can start this garbage
+          })
+           video.addEventListener('mouseup', ()=>
+          {
+            if(!this.mouseHold)
+              this.playPauseVideo(video);
+          })
+
+          video.addEventListener('dblclick', ()=>
+          {
+            const divElement = this.fullScreenWrapper.nativeElement as HTMLDivElement;
+            this.changeScreenSize(divElement);
+          })
+
+          video.addEventListener("mousedown", () =>
+          {
+            // this.mouseHold = true;
+            const lastIndex = this.videoPlayBackOptios2.length;
+
+
+            this.holdTimeOut = setTimeout(() => {
+              console.log(`EVENT HOLD IS HAPPENING!!!`)
+                video.playbackRate = this.videoPlayBackOptios2[lastIndex-1].value;
+                this.mouseHold = true;
+                this.videoIconAtCenterCurrent = this.fastForwardIcon;
+            }, 500);
+
+          })
+          video.addEventListener('click', ()=>
+          {
+
+             const selectSpeedElement = this.selectPlayBackSpeed.nativeElement;
+             video.playbackRate = Number.parseFloat(selectSpeedElement.value);
+
+            clearTimeout(this.holdTimeOut);
+            this.mouseHold = false;
+            this.clearIconAtCenterTimeOutFunc();
+
+          })
+          videoWrapper.addEventListener('mouseover', () =>
+          {
+            this.showVideoHud= true;
+            console.log(`Is mouse entered a legit event !!!!!!!!! VideoHud ${this.showVideoHud}`);
+
+            this.resetVideoUITimer()
+          })
+
+          videoWrapper.addEventListener('mouseleave', () =>
+          {
+            this.showVideoHud= false;
+            console.log(`leaving video bounds videohudStatus ${this.showVideoHud}`);
+          })
+          videoWrapper.addEventListener('mousemove', () =>
+          {
+            this.showVideoHud = true;
+            console.log(`mouuseMouve event started current shovideoHud status ${this.showVideoHud}`);
+
+            this.resetVideoUITimer();
+          })
 
 
 
+
+          // setTimeout(() => {
+          //   const selectSpeedElement = this.selectPlayBackSpeed.nativeElement as HTMLSelectElement;
+          //   console.log(`Is the video loaeded right now!!!!!!!!!!!!! ${video}`)
+          //   console.log("🎥 Video Debug Info:");
+          //   console.log(`video.readyState = ${video.readyState}`); // 0 to 4
+          //   console.log(`video.networkState = ${video.networkState}`); // 0 to 3
+          //   console.log(`video.duration = ${video.duration}`); // should be > 0 when ready
+          //   console.log(`video.currentSrc = ${video.currentSrc}`);
+          //   console.log(`video.paused = ${video.paused}`);
+          //   console.log(`video.ended = ${video.ended}`);
+          //   console.log(video);
+          //   selectSpeedElement.value = "2"
+          //   video.playbackRate = 2;
+          // }, 100);
 
     }
 
-    ngOnDestroy()
+    private resetVideoUITimer()
     {
-      if(this.intersectionObserver)
-      {
-        this.intersectionObserver.disconnect();
-      }
+      clearTimeout(this.hideUITimeOut)
+      this.hideUITimeOut = setTimeout(() => {
+        console.log(`How many times are we calling this setTimout`);
+        this.showVideoHud = false;
+      }, 3000);
     }
-
+    private clearIconAtCenterTimeOutFunc()
+    {
+      clearTimeout(this.ClearIconAtCenterTimeOut);
+      this.ClearIconAtCenterTimeOut = setTimeout(() =>
+      {
+        this.videoIconAtCenterCurrent = null;
+      }, 500);
+    }
     private setUpIntersection()
     {
         this.intersectionObserver = new IntersectionObserver((entry)=>
@@ -350,6 +485,33 @@ export class PlayVideoComponent
       this.maxHeight = (full * 40)/100;
     }
 
+    convertVideoTotalSecondsDurationToTimeFormat(totalSeconds : number)
+    {
+      let hours : number = 0;
+
+      totalSeconds = totalSeconds/60/60;
+
+      hours = Math.floor(totalSeconds);
+
+      totalSeconds = totalSeconds - hours;
+
+      let minutes : number = 0;
+
+      totalSeconds = totalSeconds * 60;
+      minutes = Math.floor(totalSeconds);
+
+      totalSeconds = totalSeconds - minutes;
+
+      let seconds : number = 0 ;
+
+      totalSeconds = totalSeconds * 60;
+
+      seconds = Math.floor(totalSeconds);
+
+      return `${hours === 0 ? '' : `${hours}:`}${minutes === 0 ? '0:' : `${minutes}:`}${seconds < 10 ? `0${seconds}` : seconds}`
+
+    }
+
     videoResolutionChange(event : Event)
     {
         const selectElement = event.target as HTMLSelectElement
@@ -357,8 +519,15 @@ export class PlayVideoComponent
         const selectedRes = selectElement.value;
 
         this.applyResolutionChangeToVideo(selectedRes)
-    }
 
+        return selectedRes;
+    }
+    videoPlayBackSpeed(videoElement : HTMLVideoElement , event : Event)
+    {
+      const selectElement = event.target as HTMLSelectElement;
+
+      videoElement.playbackRate = Number.parseFloat(selectElement.value);
+    }
 
 
     private applyResolutionChangeToVideo(selectedRes : string)
@@ -382,12 +551,65 @@ export class PlayVideoComponent
 
     videoLoadMetaData(videoElement : HTMLVideoElement)
     {
-        videoElement.play();//Broswer gives an error warning but the functions works
+        // if(this.loadVideoMetaDataOnce)
+        // {
+            const selectSpeedElement = this.selectPlayBackSpeed.nativeElement as HTMLSelectElement;
+            const selectQualityVideo = this.videoQualitySettings.nativeElement  as HTMLSelectElement;
+            selectSpeedElement.value = '1';
+            videoElement.playbackRate = 1
+
+        //theres a chance that select quality is still not rendered on the screen to set a default value
+
+            const firstKey = Object.keys(this.selectedVideo!.videoRenditions)[0];
+            selectQualityVideo.value = firstKey;
+
+            this.videoSelectedSource = firstKey
+            console.log(`Whats inside this trash variable videoSelectedSource ${this.videoSelectedSource}`);
+
+
+
+
+            //  const selectSpeedElement = this.selectPlayBackSpeed.nativeElement as HTMLSelectElement;
+            console.log(`Is the video loaeded right now!!!!!!!!!!!!! ${videoElement}`)
+            console.log("🎥 Video Debug Info:");
+            console.log(`video.readyState = ${videoElement.readyState}`); // 0 to 4
+            console.log(`video.networkState = ${videoElement.networkState}`); // 0 to 3
+            console.log(`video.duration = ${videoElement.duration}`); // should be > 0 when ready
+            console.log(`video.currentSrc = ${videoElement.currentSrc}`);
+            console.log(`video.paused = ${videoElement.paused}`);
+            console.log(`video.ended = ${videoElement.ended}`);
+            console.log(videoElement);
+
+          videoElement.play();//Broswer gives an error warning but the functions works
+          this.loadVideoMetaDataOnce = false;
+        // }
+
+
+
+    }
+
+    hoverBarTimeTracker(mouseEvent : MouseEvent , inputBar : HTMLInputElement)
+    {
+      const rect = inputBar.getBoundingClientRect();
+      console.log(`Observe whats inside a getBoundingClinetRect${rect}`);
+
+      console.log(`compare rect width ${rect.width} to rect.right ${rect.right}`);
+
+      const x = mouseEvent.clientX - rect.left;
+      const percentage =   x*100 / rect.width//use rect.width here instead of rect.right
+
+      const hovoredTime = percentage *  Number.parseFloat(inputBar.max) / 100;
+
+      console.log(`Currently at ${hovoredTime} suppose its %${percentage}`);
+
+      this.hovoredPosition = x;
+      this.hovoredTime = hovoredTime;
+
     }
 
     timeUpdate(videoElement : HTMLVideoElement)
     {
-
+        this.videoPlayBackTime = videoElement.currentTime;
     }
 
     trackValues(inputBar: HTMLInputElement)
@@ -402,13 +624,24 @@ export class PlayVideoComponent
 
     playPauseVideo(videoElement : HTMLVideoElement)
     {
+
+      clearTimeout(this.ClearIconAtCenterTimeOut);
       if(videoElement.paused)
-          videoElement.play();
+      {
+        videoElement.play();
+        this.videoIconAtCenterCurrent = this.playButtonIcon;
+
+      }
       else
+      {
         videoElement.pause();
+        this.videoIconAtCenterCurrent = this.pauseButtonIcon;
+      }
+      this.clearIconAtCenterTimeOutFunc()
     }
 
-    changeScreenSize(fullScreenWrapper : HTMLDivElement, videoElement : HTMLVideoElement)
+
+    changeScreenSize(fullScreenWrapper : HTMLDivElement)
     {
         if(!document.fullscreenElement)
         {
@@ -423,7 +656,7 @@ export class PlayVideoComponent
 
         console.log(`current status of videoFullScreen ${this.videoFullScreen}`);
 
-        
+
 
 
     }
@@ -1375,36 +1608,36 @@ export class PlayVideoComponent
             return views
           }
 
-          formatDateTime(date : Date)//This one sucks and it does not work
-          {
-            const newDate = new Date();
+          // formatDateTime(date : Date)//This one sucks and it does not work
+          // {
+          //   const newDate = new Date();
 
 
 
-            if(newDate.getFullYear() === date.getFullYear())
-            {
-              if(newDate.getMonth() === date.getMonth())
-              {
-                if(newDate.getDay() === date.getDay())
-                {
-                  if(newDate.getHours() === date.getHours())
-                  {
-                    const minutesGap = newDate.getMinutes() - date.getMinutes();
-                    return minutesGap === 1 ? minutesGap + ' minute ago' : minutesGap + ' minutes ago'
-                  }
-                  const hourGap = newDate.getHours() - date.getHours();
-                  return hourGap === 1 ? hourGap + ' hour ago' : hourGap + ' hours ago'
-                }
-                const daysGap = newDate.getDay() - date.getDay();
-                return daysGap === 1 ? daysGap + ' day ago' : daysGap + ' days ago'
-              }
-              const monthGap = newDate.getMonth() - date.getMonth();
-              return monthGap > 1 ? monthGap + ' months ago' : monthGap + ' month ago'
-            }
+          //   if(newDate.getFullYear() === date.getFullYear())
+          //   {
+          //     if(newDate.getMonth() === date.getMonth())
+          //     {
+          //       if(newDate.getDay() === date.getDay())
+          //       {
+          //         if(newDate.getHours() === date.getHours())
+          //         {
+          //           const minutesGap = newDate.getMinutes() - date.getMinutes();
+          //           return minutesGap === 1 ? minutesGap + ' minute ago' : minutesGap + ' minutes ago'
+          //         }
+          //         const hourGap = newDate.getHours() - date.getHours();
+          //         return hourGap === 1 ? hourGap + ' hour ago' : hourGap + ' hours ago'
+          //       }
+          //       const daysGap = newDate.getDay() - date.getDay();
+          //       return daysGap === 1 ? daysGap + ' day ago' : daysGap + ' days ago'
+          //     }
+          //     const monthGap = newDate.getMonth() - date.getMonth();
+          //     return monthGap > 1 ? monthGap + ' months ago' : monthGap + ' month ago'
+          //   }
 
-            const yearGap = newDate.getFullYear() - date.getFullYear()
-            return yearGap > 1 ? yearGap + ' years ago' : yearGap + ' year ago'
-          }
+          //   const yearGap = newDate.getFullYear() - date.getFullYear()
+          //   return yearGap > 1 ? yearGap + ' years ago' : yearGap + ' year ago'
+          // }
 
           formatDateTimeReWrite(date : Date) : string
           {

@@ -50,6 +50,7 @@ export  class DataCosntans
   public static readonly smallVolumeIcon = `${this.svgIconsPath}/smallVolumeIcon.svg`;
   public static readonly fullScreenIcon = `${this.svgIconsPath}/fullScreenIcon.svg`;
   public static readonly smallScreenIcon = `${this.svgIconsPath}/smallScreenIcon.svg`;
+  public static readonly fastForwardIcon = `${this.svgIconsPath}/fastForwardIcon.svg`
 
 
 }

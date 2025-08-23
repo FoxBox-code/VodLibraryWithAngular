@@ -2,44 +2,76 @@
 <div class="componentContainer">
   <section class="VideoInfoCommentsWrapper">
         <div class="video-wrapper" #fullScreenWrapper>
-    <video [src]="selectedVideo?.videoPath" [class.fullScreenMode]="videoFullScreen" width="940" #videoElement
-            (loadedmetadata)="videoLoadMetaData(videoElement)"
-            (timeupdate)="timeUpdate(videoElement)"
-            [volume]="videoVolume"
-            preload="metadata"
-            [playsInline]="false"
-            [disablePictureInPicture]="true"
-            muted
-            autoplay
+                  <video [src]="selectedVideo?.videoPath" [class.fullScreenMode]="videoFullScreen" width="940" #videoElement
+                  (loadedmetadata)="videoLoadMetaData(videoElement)"
+                  (timeupdate)="timeUpdate(videoElement)"
+                  [volume]="videoVolume"
+                  preload="metadata"
+                  [playsInline]="false"
+                  [disablePictureInPicture]="true"
+                  muted
+                  autoplay
 
-                    ></video>
+                          ></video>
+                          <div [class.fadeOverlay]="showVideoHud"></div>
+                          <div class="centerIconMessage" *ngIf="videoIconAtCenterCurrent">
+                            <img [src]="videoIconAtCenterCurrent" alt="">
+                          </div>
 
-            <div class="controlBar">
-              <button type="button" (click)="playPauseVideo(videoElement)"><img class="svgIcon" [src]="!videoElement.paused ? pauseButtonIcon : playButtonIcon" alt="play/pause button"></button>
+                          <div [ngClass]="showVideoHud ? 'controlBar' : 'HideVideoUI'">
 
-              <input type="range" #inputBar
-              min="0"
-              [max]="selectedVideo?.totalTimeInSeconds"
-              step="0.1"
-              [(ngModel)]="videoPlayBackTime"
-              (change)="trackValues(inputBar)"
-              (input)="changeVideoTime(inputBar, videoElement)">
+                            <section class="VideLengthBar">
+                              <div class="hovoredTimeContainer" *ngIf="hovoredPosition !== null && hovoredTime !== null" [style.left.px]="hovoredPosition">
+                                  <span>{{convertVideoTotalSecondsDurationToTimeFormat(hovoredTime)}}</span>
+                              </div>
+                                  <input type="range" #inputBar
+                                min="0"
+                                [max]="selectedVideo?.totalTimeInSeconds"
+                                step="0.1"
+                                [(ngModel)]="videoPlayBackTime"
+                                (change)="trackValues(inputBar)"
+                                (input)="changeVideoTime(inputBar, videoElement)"
+                                (mousemove)="hoverBarTimeTracker($event, inputBar)"
+                                (mouseleave)="hovoredPosition = null ; hovoredTime = null">
+                            </section>
+                            <section class="controlBarActions">
+                                  <button type="button" (click)="playPauseVideo(videoElement)"><img class="svgIcon" [src]="!videoElement.paused ? pauseButtonIcon : playButtonIcon" alt="play/pause button"></button>
 
-              <input type="range"
-              min="0"
-              max="1.00"
-              step="0.1"
-              [(ngModel)]="videoVolume"><img class="svgIcon" [src]="videoVolume === 0 ? noVolumeIcon : videoVolume <= 0.5 ? smallVolumeIcon : higherVolumeIcon" alt="">
+                                  <div>
+                                    <span style="color: white;">{{convertVideoTotalSecondsDurationToTimeFormat(videoElement.currentTime)}} / {{convertVideoTotalSecondsDurationToTimeFormat(videoElement.duration)}}</span>
+                                  </div>
 
-              <button type="button" (click)="changeScreenSize(fullScreenWrapper, videoElement)"><img class="svgIcon" [src]="videoFullScreen ? smallScreenIcon : fullScreenIcon" alt=""></button>
-            </div>
-            <div class="videoQualitySettings">
-          <select (change)="videoResolutionChange($event)">
-              <option *ngFor="let res of selectedVideo?.videoRenditions | keyvalue" [value]="res.key">
-                <img class="svgIcon" [src]="gearIcon" alt="">Video Resolution {{res.key}}
-              </option>
-          </select>
-    </div>
+                                  <div class="audioContainer">
+                                        <img class="svgIcon" [src]="videoVolume === 0 ? noVolumeIcon : videoVolume <= 0.5 ? smallVolumeIcon : higherVolumeIcon" alt="">
+                                      <input type="range"
+                                      min="0"
+                                      max="1.00"
+                                      step="0.1"
+                                      [(ngModel)]="videoVolume">
+                                  </div>
+
+
+                                  <div class="playBackSpeed">
+                                    <select (change)="videoPlayBackSpeed(videoElement , $event)" #selectPlayBackSpeed>
+                                      <option *ngFor="let option of videoPlayBackOptios2 " [value]="option.value">{{option.label}}</option>
+                                    </select>
+                                  </div>
+                                  <div class="videoQualitySettings" #videoQualitySettings>
+                                    <select  [(ngModel)]="videoSelectedSource" (change)="videoResolutionChange($event)">
+                                      <option *ngFor="let res of selectedVideo?.videoRenditions | keyvalue" [value]="res.key">
+                                        <img class="svgIcon" [src]="gearIcon" alt="">Video Resolution {{res.key}}
+                                      </option>
+                                    </select>
+                                  </div>
+
+                                  <button type="button" (click)="changeScreenSize(fullScreenWrapper)"><img class="svgIcon" [src]="videoFullScreen ? smallScreenIcon : fullScreenIcon" alt=""></button>
+                            </section>
+
+
+
+
+                  </div>
+
         </div>
 
           <div >
