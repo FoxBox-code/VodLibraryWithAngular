@@ -2,7 +2,7 @@
 <div class="componentContainer">
   <section class="VideoInfoCommentsWrapper">
         <div class="video-wrapper" #fullScreenWrapper>
-                  <video [src]="selectedVideo?.videoPath" [class.fullScreenMode]="videoFullScreen" width="940" #videoElement
+                  <video [src]="selectedVideo?.videoPath" [class.fullScreenMode]="videoFullScreen" #videoElement
                   (loadedmetadata)="videoLoadMetaData(videoElement)"
                   (timeupdate)="timeUpdate(videoElement)"
                   [volume]="videoVolume"
@@ -20,18 +20,23 @@
 
                           <div [ngClass]="showVideoHud ? 'controlBar' : 'HideVideoUI'">
 
-                            <section class="VideLengthBar">
+                            <section class="VideLengthBar" #videLengthBar>
+
+                              <div class="hoverFrameContainer" *ngIf="hovoredPosition !== null && hovoredTime !== null" [style.left.px]="hovoredPositionForFrame">
+                                <img src="https://localhost:7156/videos/VideoId12%20Cristiano%20Ronaldo%20Top%2010%20La%20Liga%20Goals/Thumbnail%20Frames/frame_097.jpg" alt="">
+                              </div>
                               <div class="hovoredTimeContainer" *ngIf="hovoredPosition !== null && hovoredTime !== null" [style.left.px]="hovoredPosition">
+
                                   <span>{{convertVideoTotalSecondsDurationToTimeFormat(hovoredTime)}}</span>
                               </div>
-                                  <input type="range" #inputBar
+                                <input type="range" #inputBar
                                 min="0"
                                 [max]="selectedVideo?.totalTimeInSeconds"
                                 step="0.1"
                                 [(ngModel)]="videoPlayBackTime"
                                 (change)="trackValues(inputBar)"
                                 (input)="changeVideoTime(inputBar, videoElement)"
-                                (mousemove)="hoverBarTimeTracker($event, inputBar)"
+                                (mousemove)="hoverBarTimeTracker($event, inputBar); hoverBarFrameTracker(inputBar, videLengthBar)"
                                 (mouseleave)="hovoredPosition = null ; hovoredTime = null">
                             </section>
                             <section class="controlBarActions">

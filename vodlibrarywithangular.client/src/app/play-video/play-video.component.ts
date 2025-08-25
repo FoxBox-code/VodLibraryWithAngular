@@ -81,7 +81,8 @@ export class PlayVideoComponent
     videoIconAtCenterCurrent : string | null = null;
     videoSelectedSource : string | null = null;
     hovoredTime : number | null = null;
-    hovoredPosition : number | null = null
+    hovoredPosition : number | null = null;
+    hovoredPositionForFrame : number | null = null;
 
     replyCommentId? : number;
     currentUserId : string | null = null;
@@ -588,7 +589,7 @@ export class PlayVideoComponent
 
     }
 
-    hoverBarTimeTracker(mouseEvent : MouseEvent , inputBar : HTMLInputElement)
+    hoverBarTimeTracker(mouseEvent : MouseEvent , inputBar : HTMLInputElement,)
     {
       const rect = inputBar.getBoundingClientRect();
       console.log(`Observe whats inside a getBoundingClinetRect${rect}`);
@@ -605,7 +606,75 @@ export class PlayVideoComponent
       this.hovoredPosition = x;
       this.hovoredTime = hovoredTime;
 
+
     }
+
+    hoverBarFrameTracker(inputBar: HTMLInputElement ,  videLengthBar: HTMLElement)
+    {
+      const rect = inputBar.getBoundingClientRect();
+      const rectVideLengthBar = videLengthBar.getBoundingClientRect();
+
+
+
+
+      const leftBorder = rect.left;
+      const rightBorder = rect.width;
+
+      const widthOfImageFrame = 160;
+      const halfed = widthOfImageFrame/2;
+
+      const gapBetweenLengthBarAndInputBar = leftBorder - rectVideLengthBar.left;
+      const Idontknow = rectVideLengthBar.right - (rectVideLengthBar.right - rect.right);
+
+      if(this.hovoredPosition !== null)
+      {
+        if(this.hovoredPosition <= halfed + gapBetweenLengthBarAndInputBar)
+        {
+          this.hovoredPositionForFrame = halfed + gapBetweenLengthBarAndInputBar;
+        }
+        else if(this.hovoredPosition + halfed >= rightBorder)
+        {
+           this.hovoredPositionForFrame = rectVideLengthBar.right - (rectVideLengthBar.right - rightBorder) - halfed;
+        }
+        else
+        {
+          this.hovoredPositionForFrame = this.hovoredPosition;
+        }
+
+      }
+
+
+    }
+
+
+
+
+
+    hoverBarFrameTracker2(video: HTMLVideoElement, inputBar: HTMLInputElement)
+    {
+      const rect = inputBar.getBoundingClientRect();
+
+      const barLeft = rect.left;
+      const barRight = rect.right;
+      const barWidth = rect.width;
+
+      const thumbWidth = 160;
+      const halfThumb = thumbWidth / 2;
+
+      if (this.hovoredPosition !== null) {
+        let left = this.hovoredPosition;
+
+        // Adjust left to ensure the image stays within bounds
+        if (left - halfThumb < 0) {
+          this.hovoredPositionForFrame = halfThumb;
+        } else if (left + halfThumb > barWidth) {
+          this.hovoredPositionForFrame = barWidth - halfThumb;
+        } else {
+          this.hovoredPositionForFrame = left;
+        }
+      }
+    }
+
 
     timeUpdate(videoElement : HTMLVideoElement)
     {
