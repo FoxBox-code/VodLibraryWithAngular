@@ -59,5 +59,7 @@ namespace VodLibraryWithAngular.Server.Data.Models
 
         public string? ProcessingError { get; set; }
 
+        public VideoSpriteMetaData? VideoSpriteMetaData { get; set; }
+
     }
 }

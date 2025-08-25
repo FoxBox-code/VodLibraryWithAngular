@@ -200,6 +200,143 @@ namespace VodLibraryWithAngular.Server
 
         }
 
+        public async Task CreateVideoFrames()
+        {
+            List<VideoRecord> videos = await _context.VideoRecords.Include(v => v.VideoRenditions).ToListAsync();
+
+            foreach (var video in videos)
+            {
+                double totalSeconds = video.Length.TotalSeconds;
+                string videoRendtion = video.VideoRenditions.ToArray()[0].RenditionPath;
+                string videoRenditionPath = Path.GetDirectoryName(videoRendtion);
+                string outPutDirectory = Path.Combine(videoRenditionPath, "Thumbnail Frames");
+
+
+                if (Directory.Exists(outPutDirectory))
+                {
+                    int folderFramesCount = Directory.GetFiles(outPutDirectory, "frame_*.jpg").Length;
+
+                    if (folderFramesCount >= Math.Floor(totalSeconds))
+                    {
+                        continue;
+                    }
+                    Directory.Delete(outPutDirectory, true);
+                }
+
+
+
+
+
+                Directory.CreateDirectory(outPutDirectory);
+
+                string ffmpegArguments = $"-i \"{videoRendtion}\" -vf fps=1,scale=160:-1 \"{Path.Combine(outPutDirectory, "frame_%05d.jpg")}\"";
+
+
+
+
+
+                int exitCode = await FfmpegRunner.RunMpegAsync(ffmpegArguments);
+
+                if (exitCode != 0)
+                {
+                    throw new Exception($"Failed to create all frames for video {video.Title}");
+                }
+                else if (exitCode == 0)
+                {
+                    _logger.LogInformation($"All frames for video {video.Title} have been done");
+                }
+
+            }
+        }
+
+        public async Task CreateVideoSprites()
+        {
+            List<VideoRecord> videos = await _context.VideoRecords.Include(v => v.VideoRenditions).ToListAsync();
+
+            foreach (VideoRecord video in videos)
+            {
+                var arrRenditions = video.VideoRenditions.ToArray();
+
+                VideoRendition rendition = arrRenditions[0];
+                string outPutDirectory = Path.GetDirectoryName(rendition.RenditionPath);
+
+                string thumbnailsFramesDirectory = Path.Combine(outPutDirectory, "Thumbnail Frames");
+
+                List<string> frames = Directory.GetFiles(thumbnailsFramesDirectory, "frame_*.jpg")
+                    .OrderBy(f =>
+                    int.Parse(
+                        Path.GetFileNameWithoutExtension(f)
+                        .Split("_")[1]))
+                    .ToList();
+
+
+
+                string spritesDirectory = Path.Combine(outPutDirectory, "Sprite Sheets");
+                Directory.CreateDirectory(spritesDirectory);
+                string[] existingSpritesCount = Directory.GetFiles(spritesDirectory, ".jpg");
+                if (Directory.Exists(spritesDirectory) && existingSpritesCount.Length > 0)
+                {
+                    _logger.LogInformation($"skipping spriteCreation for directory {spritesDirectory}");
+                    continue;
+                }
+
+                int spriteSize = 50;
+                int spriteIndex = 0;
+
+                for (int i = 0; i < frames.Count; i += 50)
+                {
+                    List<string> frameBatch = frames.Skip(i).Take(50).ToList();
+
+                    string spriteBatchTextFile = Path.Combine(spritesDirectory, $"sprite_{spriteIndex}.txt");
+                    File.WriteAllLines(spriteBatchTextFile, frameBatch.Select(f => $"file '{f.Replace('\\', '/')}'"));
+
+                    string spriteBatchJpg = Path.Combine(spritesDirectory, $"sprite_{spriteIndex}.jpg");
+                    string spriteArgs = $"-f concat -safe 0 -i \"{spriteBatchTextFile}\" -vf \"tile=10x5\" \"{spriteBatchJpg}\"";
+                    await FfmpegRunner.RunMpegAsync(spriteArgs);
+
+                    spriteIndex++;
+                }
+            }
+
+
+
+
+
+        }
+
+        public async Task FillTableVideoSpriteSheets()
+        {
+            List<VideoRecord> videos = await _context.VideoRecords.Include(v => v.VideoRenditions).ToListAsync();
+
+            foreach (VideoRecord videoRecord in videos)
+            {
+                VideoRendition rendition = videoRecord.VideoRenditions.ToArray()[0];
+                string spritePath = Path.Combine(Path.GetDirectoryName(rendition.RenditionPath), "Sprite Sheets");
+
+                if (Directory.Exists(spritePath))
+                {
+                    int countOfSprites = Directory.GetFiles(spritePath, "sprite_*.jpg").Length;
+
+                    VideoSpriteMetaData data = new VideoSpriteMetaData()
+                    {
+                        Name = videoRecord.Title + " spriteSheet",
+                        VideoRecordId = videoRecord.Id,
+                        NumberOfSprites = countOfSprites,
+                        DirectoryPath = spritePath,
+                    };
+
+                    await _context.AddAsync(data);
+
+                }
+                else
+                {
+                    _logger.LogError($"Failed to add the sprite metaData for videoRecord with id {videoRecord.Id} title {videoRecord.Title} , the directory does not exist");
+                }
+            }
+            await _context.SaveChangesAsync();
+
+
+        }
 
     }
 }

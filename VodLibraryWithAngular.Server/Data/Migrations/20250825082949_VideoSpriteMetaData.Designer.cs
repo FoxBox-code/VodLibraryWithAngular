@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using VodLibraryWithAngular.Server.Data;
@@ -11,9 +12,11 @@ using VodLibraryWithAngular.Server.Data;
 namespace VodLibraryWithAngular.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250825082949_VideoSpriteMetaData")]
+    partial class VideoSpriteMetaData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -245,7 +248,7 @@ namespace VodLibraryWithAngular.Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
 
                     b.HasData(
                         new
@@ -316,7 +319,7 @@ namespace VodLibraryWithAngular.Server.Migrations
 
                     b.HasIndex("VideoRecordId");
 
-                    b.ToTable("Comments", (string)null);
+                    b.ToTable("Comments");
                 });
 
             modelBuilder.Entity("VodLibraryWithAngular.Server.Data.Models.CommentLikesDisLikes", b =>
@@ -343,7 +346,7 @@ namespace VodLibraryWithAngular.Server.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("CommentLikesDisLikes", (string)null);
+                    b.ToTable("CommentLikesDisLikes");
                 });
 
             modelBuilder.Entity("VodLibraryWithAngular.Server.Data.Models.RepliesLikesDisLikes", b =>
@@ -370,7 +373,7 @@ namespace VodLibraryWithAngular.Server.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RepliesLikesDisLikes", (string)null);
+                    b.ToTable("RepliesLikesDisLikes");
                 });
 
             modelBuilder.Entity("VodLibraryWithAngular.Server.Data.Models.Reply", b =>
@@ -411,7 +414,7 @@ namespace VodLibraryWithAngular.Server.Migrations
 
                     b.HasIndex("VideoRecordId");
 
-                    b.ToTable("Replies", (string)null);
+                    b.ToTable("Replies");
                 });
 
             modelBuilder.Entity("VodLibraryWithAngular.Server.Data.Models.Subscriber", b =>
@@ -447,7 +450,7 @@ namespace VodLibraryWithAngular.Server.Migrations
 
                     b.HasIndex("SubscribedId");
 
-                    b.ToTable("SubScribers", (string)null);
+                    b.ToTable("SubScribers");
                 });
 
             modelBuilder.Entity("VodLibraryWithAngular.Server.Data.Models.UserWatchHistory", b =>
@@ -474,7 +477,7 @@ namespace VodLibraryWithAngular.Server.Migrations
 
                     b.HasIndex("VideoId");
 
-                    b.ToTable("UserWatchHistories", (string)null);
+                    b.ToTable("UserWatchHistories");
                 });
 
             modelBuilder.Entity("VodLibraryWithAngular.Server.Data.Models.VideoLikesDislikes", b =>
@@ -512,7 +515,7 @@ namespace VodLibraryWithAngular.Server.Migrations
 
                     b.HasIndex("VideoId");
 
-                    b.ToTable("VideoLikesDislikes", (string)null);
+                    b.ToTable("VideoLikesDislikes");
                 });
 
             modelBuilder.Entity("VodLibraryWithAngular.Server.Data.Models.VideoRecord", b =>
@@ -580,7 +583,7 @@ namespace VodLibraryWithAngular.Server.Migrations
 
                     b.HasIndex("VideoOwnerId");
 
-                    b.ToTable("VideoRecords", (string)null);
+                    b.ToTable("VideoRecords");
                 });
 
             modelBuilder.Entity("VodLibraryWithAngular.Server.Data.Models.VideoRendition", b =>
@@ -606,7 +609,7 @@ namespace VodLibraryWithAngular.Server.Migrations
                     b.HasIndex("VideoRecordId", "Resolution")
                         .IsUnique();
 
-                    b.ToTable("VideoRenditions", (string)null);
+                    b.ToTable("VideoRenditions");
                 });
 
             modelBuilder.Entity("VodLibraryWithAngular.Server.Data.Models.VideoSpriteMetaData", b =>
@@ -642,7 +645,7 @@ namespace VodLibraryWithAngular.Server.Migrations
                     b.HasIndex("VideoRecordId")
                         .IsUnique();
 
-                    b.ToTable("VideoSpritesMetaData", (string)null);
+                    b.ToTable("VideoSpritesMetaData");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

@@ -34,6 +34,8 @@ namespace VodLibraryWithAngular.Server.Data
 
         public DbSet<VideoRendition> VideoRenditions { get; set; }
 
+        public DbSet<VideoSpriteMetaData> VideoSpritesMetaData { get; set; }
+
         private Category[] categoriesToSeed;
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -144,6 +146,18 @@ namespace VodLibraryWithAngular.Server.Data
                 .HasOne<VideoRecord>(x => x.VideoRecord)
                 .WithMany(v => v.VideoRenditions)
                 .HasForeignKey(f => f.VideoRecordId);
+
+            builder.Entity<VideoSpriteMetaData>()
+                .HasOne(s => s.VideoRecord)
+                .WithOne(v => v.VideoSpriteMetaData)
+                .HasForeignKey<VideoSpriteMetaData>(s => s.VideoRecordId);
+
+            builder.Entity<VideoSpriteMetaData>(e =>
+            {
+                e.HasIndex(x => x.VideoRecordId).IsUnique();
+            });//usually EF core on One-One relationship makes the foreign key unique but for some reason i don t see it in the original migration so here were being explicit . 
+            //NVM IT WAS THERE!!!!!!!!
+
 
             builder.Entity<VideoRendition>(b =>
             {
