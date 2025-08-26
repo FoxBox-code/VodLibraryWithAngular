@@ -1,4 +1,3 @@
-
 <div class="componentContainer">
   <section class="VideoInfoCommentsWrapper">
         <div class="video-wrapper" #fullScreenWrapper>
@@ -22,8 +21,12 @@
 
                             <section class="VideLengthBar" #videLengthBar>
 
-                              <div class="hoverFrameContainer" *ngIf="hovoredPosition !== null && hovoredTime !== null" [style.left.px]="hovoredPositionForFrame">
-                                <img src="https://localhost:7156/videos/VideoId12%20Cristiano%20Ronaldo%20Top%2010%20La%20Liga%20Goals/Thumbnail%20Frames/frame_097.jpg" alt="">
+                              <div class="hoverFrameContainer"
+                              [style.background-image]="'url(' + selectedVideo!.spriteSheet + ')'"
+
+                              [style.background-position]="frameXPosition + 'px ' + frameYPosition + 'px'"
+                              *ngIf="hovoredPosition !== null && hovoredTime !== null && selectedVideo?.spriteSheet" [style.left.px]="hovoredPositionForFrame">
+
                               </div>
                               <div class="hovoredTimeContainer" *ngIf="hovoredPosition !== null && hovoredTime !== null" [style.left.px]="hovoredPosition">
 
@@ -140,7 +143,7 @@
 
               <div class="span-metadata">
                     <span>
-                    {{selectedVideo === null ? 0 :formatNum(selectedVideo!.views)}} views
+                    {{ descriptionShowMore ? selectedVideo!.views : formatNum(selectedVideo!.views) }} views
                     </span>
 
                     <span>

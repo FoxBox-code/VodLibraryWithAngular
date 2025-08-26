@@ -18,7 +18,12 @@ export interface PlayVideo
     totalCommentReplyCount : number,
     commentCount : number,
     videoOwnerSubscribersCount : number,
-    videoRenditions : {[resolution : string] : string}
+    videoRenditions : {[resolution : string] : string},
+    spriteSheet : string,
+    spriteSheetBasePath : string,
+    spriteSheetsCount : number,
+    spriteSheetIndex : number
+
 
 }
 

@@ -654,6 +654,16 @@ export class VideoService
     return this.httpClient.get<VideoWindow[]>(`${ApiUrls.VIDEO}/${categoryId}`);
   }
 
+  getVideoSpriteSheet(spriteIndex : number, videoSpriteSheetBasePath : string) : Observable<string>
+  {
+    const params =
+    {
+      spriteIndex : spriteIndex,
+      videoSpriteSheetBasePath : videoSpriteSheetBasePath
+    }
+    return this.httpClient.get<string>(`${ApiUrls.VIDEO}`, {params});
+  }
+
 
 
 

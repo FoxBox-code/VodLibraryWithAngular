@@ -83,6 +83,8 @@ export class PlayVideoComponent
     hovoredTime : number | null = null;
     hovoredPosition : number | null = null;
     hovoredPositionForFrame : number | null = null;
+    frameXPosition = 0;
+    frameYPosition = 0;
 
     replyCommentId? : number;
     currentUserId : string | null = null;
@@ -607,10 +609,35 @@ export class PlayVideoComponent
       this.hovoredTime = hovoredTime;
 
 
+
+        const flooredHovoredTime = Math.floor(hovoredTime);
+        const spriteIndex = Math.floor(flooredHovoredTime / DataCosntans.videoSpriteCapacity);
+
+        if (spriteIndex !== this.selectedVideo?.spriteSheetIndex)
+        {
+          this.selectedVideo!.spriteSheetIndex = spriteIndex;
+          this.selectedVideo!.spriteSheet =
+            `${this.selectedVideo!.spriteSheetBasePath}/sprite_${spriteIndex}.jpg`;
+
+          console.log(this.selectedVideo!.spriteSheet);
+        }
+
+        const frameOffsetInSprite = flooredHovoredTime % DataCosntans.videoSpriteCapacity;
+        const col = frameOffsetInSprite % DataCosntans.videoSpriteCol;
+        const row = Math.floor(frameOffsetInSprite / DataCosntans.videoSpriteCol);
+
+        this.frameXPosition = -col * DataCosntans.frameWidth;
+        this.frameYPosition = -row * DataCosntans.frameHeight;
+
+
+
     }
+
+    
 
     hoverBarFrameTracker(inputBar: HTMLInputElement ,  videLengthBar: HTMLElement)
     {
+
       const rect = inputBar.getBoundingClientRect();
       const rectVideLengthBar = videLengthBar.getBoundingClientRect();
 
@@ -650,30 +677,30 @@ export class PlayVideoComponent
 
 
 
-    hoverBarFrameTracker2(video: HTMLVideoElement, inputBar: HTMLInputElement)
-    {
-      const rect = inputBar.getBoundingClientRect();
+    // hoverBarFrameTracker2(video: HTMLVideoElement, inputBar: HTMLInputElement)
+    // {
+    //   const rect = inputBar.getBoundingClientRect();
 
-      const barLeft = rect.left;
-      const barRight = rect.right;
-      const barWidth = rect.width;
+    //   const barLeft = rect.left;
+    //   const barRight = rect.right;
+    //   const barWidth = rect.width;
 
-      const thumbWidth = 160;
-      const halfThumb = thumbWidth / 2;
+    //   const thumbWidth = 160;
+    //   const halfThumb = thumbWidth / 2;
 
-      if (this.hovoredPosition !== null) {
-        let left = this.hovoredPosition;
+    //   if (this.hovoredPosition !== null) {
+    //     let left = this.hovoredPosition;
 
-        // Adjust left to ensure the image stays within bounds
-        if (left - halfThumb < 0) {
-          this.hovoredPositionForFrame = halfThumb;
-        } else if (left + halfThumb > barWidth) {
-          this.hovoredPositionForFrame = barWidth - halfThumb;
-        } else {
-          this.hovoredPositionForFrame = left;
-        }
-      }
-    }
+    //     // Adjust left to ensure the image stays within bounds
+    //     if (left - halfThumb < 0) {
+    //       this.hovoredPositionForFrame = halfThumb;
+    //     } else if (left + halfThumb > barWidth) {
+    //       this.hovoredPositionForFrame = barWidth - halfThumb;
+    //     } else {
+    //       this.hovoredPositionForFrame = left;
+    //     }
+    //   }
+    // }
 
 
     timeUpdate(videoElement : HTMLVideoElement)
@@ -1677,36 +1704,7 @@ export class PlayVideoComponent
             return views
           }
 
-          // formatDateTime(date : Date)//This one sucks and it does not work
-          // {
-          //   const newDate = new Date();
 
-
-
-          //   if(newDate.getFullYear() === date.getFullYear())
-          //   {
-          //     if(newDate.getMonth() === date.getMonth())
-          //     {
-          //       if(newDate.getDay() === date.getDay())
-          //       {
-          //         if(newDate.getHours() === date.getHours())
-          //         {
-          //           const minutesGap = newDate.getMinutes() - date.getMinutes();
-          //           return minutesGap === 1 ? minutesGap + ' minute ago' : minutesGap + ' minutes ago'
-          //         }
-          //         const hourGap = newDate.getHours() - date.getHours();
-          //         return hourGap === 1 ? hourGap + ' hour ago' : hourGap + ' hours ago'
-          //       }
-          //       const daysGap = newDate.getDay() - date.getDay();
-          //       return daysGap === 1 ? daysGap + ' day ago' : daysGap + ' days ago'
-          //     }
-          //     const monthGap = newDate.getMonth() - date.getMonth();
-          //     return monthGap > 1 ? monthGap + ' months ago' : monthGap + ' month ago'
-          //   }
-
-          //   const yearGap = newDate.getFullYear() - date.getFullYear()
-          //   return yearGap > 1 ? yearGap + ' years ago' : yearGap + ' year ago'
-          // }
 
           formatDateTimeReWrite(date : Date) : string
           {

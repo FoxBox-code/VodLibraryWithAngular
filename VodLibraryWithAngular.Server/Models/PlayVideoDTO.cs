@@ -40,5 +40,14 @@
 
         public IDictionary<string, string> VideoRenditions { get; set; }
 
+        public string SpriteSheet { get; set; } = string.Empty;
+
+        public string? SpriteSheetBasePath { get; set; }
+
+        public int SpriteSheetIndex { get; set; } = 0;
+
+        public int SpriteSheetsCount { get; set; }
+
+
     }
 }

@@ -296,7 +296,7 @@ namespace VodLibraryWithAngular.Server.Controllers
         }
 
         [HttpGet("play/{videoId}")]
-        public async Task<IActionResult> GetCurrentVideo(int videoId)//getCurrentVideo
+        public async Task<IActionResult> GetCurrentVideo(int videoId) //getCurrentVideo
         {
 
 
@@ -306,6 +306,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                 .Include(v => v.VideoOwner)
                 .Include(v => v.Category)
                 .Include(v => v.VideoRenditions)
+                .Include(v => v.VideoSpriteMetaData)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Id == videoId);
 
@@ -320,19 +321,22 @@ namespace VodLibraryWithAngular.Server.Controllers
                 int commentCount = await _dbContext.Comments.CountAsync(x => x.VideoRecordId == videoId);
 
                 Dictionary<string, string> renditions = new();
+                string baseSpriteSheetJpgPath = string.Empty;
 
                 foreach (var videoRenditions in video.VideoRenditions)
                 {
                     var folderName = Uri.EscapeDataString(Path.GetDirectoryName(videoRenditions.RenditionPath).Split('\\').Last());
                     var fileName = Path.GetFileName(videoRenditions.RenditionPath);
 
-                    var enus = videoRenditions.Resolution;
+                    var enums = videoRenditions.Resolution;
 
 
 
 
                     renditions[videoRenditions.Resolution.ToString()] = ($"{Request.Scheme}://{Request.Host}/videos/{folderName}/{fileName}");
+                    baseSpriteSheetJpgPath = $"{Request.Scheme}://{Request.Host}/videos/{folderName}/Sprite%20Sheets";
                 }
+
 
 
                 PlayVideoDTO selectedVideo = new PlayVideoDTO()
@@ -354,7 +358,10 @@ namespace VodLibraryWithAngular.Server.Controllers
                     TotalCommentReplyCount = commentCount + video.ReplyCount,
                     CommentCount = commentCount,
 
-                    VideoRenditions = renditions
+                    VideoRenditions = renditions,
+                    SpriteSheetsCount = video.VideoSpriteMetaData.NumberOfSprites,
+                    SpriteSheetBasePath = baseSpriteSheetJpgPath,
+                    SpriteSheet = Path.Combine(baseSpriteSheetJpgPath, $"sprite_{0}.jpg")
 
 
                 };
@@ -387,6 +394,14 @@ namespace VodLibraryWithAngular.Server.Controllers
             }
 
         }
+
+        //[HttpGet("spriteSheet")]
+        //public async Task<IActionResult> GetSpriteSheetForVideo([FromQuery] VideoSpriteSheetParams spriteSheetParams)
+        //{
+        //    string res = Path.Combine(spriteSheetParams.VideoSpriteSheetBasePath, $"sprite_{spriteSheetParams.SpriteIndex}");
+
+        //    return Ok(res);
+        //}
 
         [Authorize]
         [HttpGet("play/{videoId}/reactions")]//THIS METHOD MIGHT NEED TO BE FIXED , were using user id without an authentication , plus even normal users should be able to get the count of the likes/dislikes 

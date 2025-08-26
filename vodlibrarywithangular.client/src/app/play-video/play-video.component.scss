@@ -60,19 +60,15 @@
 
    .hoverFrameContainer
    {
+      height: 90px;
       width: 160px;
       position: absolute;
-      top: -160px;
+      top: -100px;
 
-      img {
-        width: 160px;
-        border: 2px solid white;
-        border-radius: 15px;
-        object-fit: cover;
+      // background-repeat: no-repeat;
+      image-rendering: auto;
+      transform: translateX(-50%);
 
-        // center the image over the left position
-        transform: translateX(-50%);
-      }
     }
 
 
