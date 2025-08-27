@@ -4,8 +4,8 @@ import { PlayVideo } from '../models/play-video';
 import { ActivatedRoute } from '@angular/router';
 import { FormGroup, FormBuilder, Validators, RequiredValidator } from '@angular/forms';
 import { AuthService } from '../auth.service';
-import { BehaviorSubject, firstValueFrom, Observable, of, pipe, Subject } from 'rxjs';
-import { take, timeout } from 'rxjs/operators';
+import { BehaviorSubject, firstValueFrom, interval, Observable, of, pipe, Subject } from 'rxjs';
+import { take, takeUntil, timeout } from 'rxjs/operators';
 
 import { NavigationService } from '../navigation.service';
 import { Router } from '@angular/router';
@@ -23,6 +23,19 @@ import { PlaylistService } from '../playlist.service';
 import { VideoLikeDislikeCountDTO } from '../models/video-like-dislike-countDTO';
 import { CategoryStatsDTO } from '../models/categorystatsDTO';
 import { DataCosntans } from '../dataconstants';
+import { IsUserTypingService } from '../is-user-typing.service';
+import DOMPurify from 'dompurify';
+
+
+type TooltipKey = 'playPause' | 'volume' | 'fullscreen' | 'volumeBar';
+
+const HOTKEY_LABELS : Record<TooltipKey, (playVideoComponent : PlayVideoComponent) => string > =
+{
+  playPause : (playvideoComponent) => playvideoComponent.videoElement.nativeElement.paused ? 'Play button (k)' : 'Pause button (k)',
+  volume : (playvideoComponent) => playvideoComponent.videoVolume === 0 ? 'Unmute (m)' : 'Mute (m)',
+  fullscreen : (playvideoComponent) => playvideoComponent.videoFullScreen ? 'Exit fullscreen (f)' : 'Fullscreen (f)',
+  volumeBar : (playvideoComponent) => 'Volume'
+}
 
 
 
@@ -34,24 +47,22 @@ import { DataCosntans } from '../dataconstants';
   templateUrl: './play-video.component.html',
   styleUrl: './play-video.component.scss'
 })
+
 export class PlayVideoComponent
 {
+
     selectedVideo : PlayVideo | null = null;
     selectedVideoId : number;
     commentForm : FormGroup;
+    splitedDescription : string[] = [];
 
     videoVolume = 0.8;
+    videoVolumeCounterMute = 0;
     videoPlayBackTime = 0;
     videoFullScreen = false;
-    videoPlayBackOptios : {[key : string] : number} =
-    {
-      normal : 1,
-      "1.5x" : 1.5,
-      "2.0x" : 2,
-      "0.25x": 0.25,
-      "0.50x": 0.50,
-    }
-    videoPlayBackOptios2 : { label : string , value : number}[] =
+
+
+    videoPlayBackOptios : { label : string , value : number}[] =
     [
       {label : '0.25x', value : 0.25},
       {label : '0.50x', value : 0.50},
@@ -63,6 +74,9 @@ export class PlayVideoComponent
 
     holdTimeOut : any // class NodeJS.Timeout
     showVideoHud = false;
+    videoPlayerUIActive = false;
+    hoverButtonText : { text : string , top : number , left : number} | null = null
+
     hideUITimeOut : any //class NodeJs.Timeout;
     ClearIconAtCenterTimeOut : any ; //class NodeJs.Timeout;
     loadVideoMetaDataOnce = true;
@@ -74,6 +88,9 @@ export class PlayVideoComponent
     noVolumeIcon = DataCosntans.noVolumeIcon;
     smallVolumeIcon = DataCosntans.smallVolumeIcon;
     fastForwardIcon = DataCosntans.fastForwardIcon;
+    rewindTimeForwardIcon = DataCosntans.rewindTimeForwardIcon;
+    rewindTimeBackWardsIcon = DataCosntans.rewindTimeBackWardsIcon;
+
 
     fullScreenIcon = DataCosntans.fullScreenIcon;
     smallScreenIcon = DataCosntans.smallScreenIcon;
@@ -154,6 +171,15 @@ export class PlayVideoComponent
     takeCommentCount = 50;
     skipCommentCount = 0;
 
+
+
+    buttonHoverKey : TooltipKey | null = null;
+    buttonHoverMessage : string = '';
+
+    hasUserActivatedInputField : boolean = false;
+
+    private subjectDestroy$ = new Subject<void>();
+
     @ViewChild('sortWrapper', {static : false}) sortWrapper? : ElementRef //this makes a dom element to a variable
     @ViewChild('videoElement') videoElement! : ElementRef<HTMLVideoElement>
     @ViewChild('description') description! : ElementRef<HTMLElement>
@@ -172,6 +198,8 @@ export class PlayVideoComponent
       private formBuilder : FormBuilder,
       private authService : AuthService,
       private playListService : PlaylistService,
+      private isUserTypingService : IsUserTypingService,
+
 
 
       )
@@ -252,6 +280,14 @@ export class PlayVideoComponent
         }
 
 
+        this.isUserTypingService.isUserInTypingFieldSubject
+        .pipe(takeUntil(this.subjectDestroy$))
+        .subscribe(
+          isInput =>
+          {
+            this.hasUserActivatedInputField = isInput;
+          }
+        )
 
     }
 
@@ -271,6 +307,9 @@ export class PlayVideoComponent
       {
         this.intersectionObserver.disconnect();
       }
+
+      this.subjectDestroy$.next();
+      this.subjectDestroy$.complete();
     }
 
     private videoPlayerEventListiners()
@@ -376,12 +415,12 @@ export class PlayVideoComponent
           video.addEventListener("mousedown", () =>
           {
             // this.mouseHold = true;
-            const lastIndex = this.videoPlayBackOptios2.length;
+            const lastIndex = this.videoPlayBackOptios.length;
 
 
             this.holdTimeOut = setTimeout(() => {
               console.log(`EVENT HOLD IS HAPPENING!!!`)
-                video.playbackRate = this.videoPlayBackOptios2[lastIndex-1].value;
+                video.playbackRate = this.videoPlayBackOptios[lastIndex-1].value;
                 this.mouseHold = true;
                 this.videoIconAtCenterCurrent = this.fastForwardIcon;
             }, 500);
@@ -398,10 +437,12 @@ export class PlayVideoComponent
             this.clearIconAtCenterTimeOutFunc();
 
           })
+
+
           videoWrapper.addEventListener('mouseover', () =>
           {
             this.showVideoHud= true;
-            console.log(`Is mouse entered a legit event !!!!!!!!! VideoHud ${this.showVideoHud}`);
+
 
             this.resetVideoUITimer()
           })
@@ -409,7 +450,7 @@ export class PlayVideoComponent
           videoWrapper.addEventListener('mouseleave', () =>
           {
             this.showVideoHud= false;
-            console.log(`leaving video bounds videohudStatus ${this.showVideoHud}`);
+
           })
           videoWrapper.addEventListener('mousemove', () =>
           {
@@ -439,13 +480,104 @@ export class PlayVideoComponent
 
     }
 
+    updateIsUserTypingVariable()
+    {
+
+      this.isUserTypingService.isUserInTypingFieldSubject.next(this.hasUserActivatedInputField);
+    }
+
+    @HostListener('document:keydown',['$event'])
+    keyboardHotKeys(event : KeyboardEvent)
+    {
+
+
+      if(this.hasUserActivatedInputField) return
+
+      const videoElement = this.videoElement.nativeElement;
+      const fullScreenWrapper = this.fullScreenWrapper.nativeElement;
+      if(event.key.toUpperCase() === 'K')
+      {
+        this.playPauseVideo(videoElement);
+      }
+      if(event.key.toUpperCase() === "F")
+      {
+        this.changeScreenSize(fullScreenWrapper);
+      }
+
+      if(event.key === 'ArrowLeft')
+      {
+        videoElement.currentTime -=5;
+        this.videoIconAtCenterCurrent = this.rewindTimeBackWardsIcon;
+        this.clearIconAtCenterTimeOutFunc();
+      }
+      if(event.key === "ArrowRight")
+      {
+        videoElement.currentTime +=5;
+        this.videoIconAtCenterCurrent = this.rewindTimeForwardIcon;
+        this.clearIconAtCenterTimeOutFunc();
+      }
+
+      if(event.key.toLocaleUpperCase() === 'M')
+      {
+        this.muteUnMuteAudio();
+
+
+      }
+
+      // event.preventDefault();
+    }
+
+    muteUnMuteAudio()
+    {
+         if(this.videoVolume !== 0)
+        {
+          this.videoVolumeCounterMute = this.videoVolume;
+          this.videoVolume = 0;
+        }
+        else
+          this.videoVolume = this.videoVolumeCounterMute;
+
+        this.hoverButtonTextUpdate();
+    }
+
+    hovoredButtonTextFunc(toolType : TooltipKey , event : Event , controlBarActions: HTMLElement)
+    {
+      const element = event.target as HTMLElement;
+
+
+      const rect = element.getBoundingClientRect();
+      const parentRect = controlBarActions.getBoundingClientRect();
+
+      // const correctLeft = (parentRect.left + parentRect.width) - rect.right;
+      const correctLeft = parentRect.width - rect.left;
+      const giveMe = HOTKEY_LABELS[toolType];
+      this.buttonHoverKey = toolType;
+      this.hoverButtonText =
+      {
+        top : -20,
+        left : rect.left - parentRect.left,
+        text : giveMe(this)
+      }
+
+
+
+
+
+    }
+    hoverButtonTextUpdate()
+    {
+      if(this.hoverButtonText && this.buttonHoverKey)
+        this.hoverButtonText.text = HOTKEY_LABELS[this.buttonHoverKey](this);
+    }
+
     private resetVideoUITimer()
     {
       clearTimeout(this.hideUITimeOut)
-      this.hideUITimeOut = setTimeout(() => {
-        console.log(`How many times are we calling this setTimout`);
-        this.showVideoHud = false;
-      }, 3000);
+      if(!this.videoPlayerUIActive)
+        this.hideUITimeOut = setTimeout(() => {
+          console.log(`How many times are we calling this setTimout`);
+          this.showVideoHud = false;
+        }, 3000);
     }
     private clearIconAtCenterTimeOutFunc()
     {
@@ -633,7 +765,7 @@ export class PlayVideoComponent
 
     }
 
-    
+
 
     hoverBarFrameTracker(inputBar: HTMLInputElement ,  videLengthBar: HTMLElement)
     {
@@ -733,7 +865,8 @@ export class PlayVideoComponent
         videoElement.pause();
         this.videoIconAtCenterCurrent = this.pauseButtonIcon;
       }
-      this.clearIconAtCenterTimeOutFunc()
+      this.clearIconAtCenterTimeOutFunc();
+      this.hoverButtonTextUpdate();
     }
 
 
@@ -754,7 +887,7 @@ export class PlayVideoComponent
 
 
 
-
+        this.hoverButtonTextUpdate();
     }
 
     showHideDescription(event : Event, descriptionContainer : HTMLElement)
@@ -788,6 +921,8 @@ export class PlayVideoComponent
             next : (result) =>
             {
                 this.selectedVideo = result;
+                this.splitedDescription = this.sanitizeAndFormatDescription(result.description);
+
                 for (const resolution in result.videoRenditions) {
                   if (result.videoRenditions.hasOwnProperty(resolution)) {
                     console.log(`Resolution: ${resolution}, URL: ${result.videoRenditions[resolution]}`);
@@ -806,6 +941,35 @@ export class PlayVideoComponent
         })
    }
 
+   sanitizeAndFormatDescription(raw: string): string[]
+   {
+    const lines = raw.split('\n');
+
+    return lines.map(line => {
+      // Simple URL detection — improve if needed
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+
+      line = line.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+
+      line =  DOMPurify.sanitize(line,
+        {
+          ALLOWED_TAGS : ['a'],
+          ALLOWED_ATTR : ['href', 'target', 'rel']
+        }
+      )
+      console.log(`Sanitizied line ${line}`);
+      return line
+
+
+
+    });
+
+
+
+
+    }
+
+
    private requestCategoryStats(videoId : number)
    {
     this.videoService.getCategoryStatsInViedoDescription(videoId).subscribe(
@@ -816,13 +980,7 @@ export class PlayVideoComponent
     )
    }
 
-  //  loadNewVideo(playListMapper : PlayListMapper)
-  //  {
-  //    this.playListMapper = playListMapper;
-  //     this.getVideo(playListMapper.selectedVideoId);
 
-  //     this.videoService.videoCommentsSubject.next([]);
-  //  }
 
 
    private async getUserFollowersForThisPage()
@@ -875,6 +1033,11 @@ export class PlayVideoComponent
     commentFormClicked()
     {
         this.isUserClickingCommentForm = true;
+
+        setInterval(() =>
+        {
+            console.log(`!!!!!!!!!Has clicked comment form changed ${this.isUserClickingCommentForm}`);
+        },  1000)
     }
 
     cancelUserComment()

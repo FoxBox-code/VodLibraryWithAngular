@@ -9,6 +9,7 @@ import { VideoService } from './video.service';
 import { Category } from './models/category';
 import { ProfilesFollowingDTO } from './models/profiles-followingDTO';
 import { DataCosntans } from './dataconstants';
+import { IsUserTypingService } from './is-user-typing.service';
 
 
 
@@ -19,7 +20,7 @@ import { DataCosntans } from './dataconstants';
   styleUrl: './app.component.scss'
 })
 export class AppComponent implements OnInit {
-  constructor(private http: HttpClient, private authService : AuthService, private router : Router, private videoService : VideoService)
+  constructor(private http: HttpClient, private authService : AuthService, private router : Router, private videoService : VideoService, private isUserTypingService : IsUserTypingService)
   {
     this.userNameDynamic$ = this.authService.getUserNameAsOservable();
     this.userId$ = this.authService.getUserIdAsObservable();
@@ -201,6 +202,12 @@ export class AppComponent implements OnInit {
   ExpandDashBaord()
   {
     this.dashBoardExpanded = !this.dashBoardExpanded;
+  }
+
+  updateIsUserTypingVariable()
+  {
+    this.isUserTypingService.isUserInTypingField = this.searchBarFocused;
+    this.isUserTypingService.isUserInTypingFieldSubject.next(this.searchBarFocused);
   }
 
 

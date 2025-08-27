@@ -51,6 +51,8 @@ export  class DataCosntans
   public static readonly fullScreenIcon = `${this.svgIconsPath}/fullScreenIcon.svg`;
   public static readonly smallScreenIcon = `${this.svgIconsPath}/smallScreenIcon.svg`;
   public static readonly fastForwardIcon = `${this.svgIconsPath}/fastForwardIcon.svg`;
+  public static readonly rewindTimeForwardIcon = `${this.svgIconsPath}/rewindTimeForwardIcon.svg`;
+  public static readonly rewindTimeBackWardsIcon = `${this.svgIconsPath}/rewindTimeBackWards.svg`;
 
   public static readonly videoSpriteCapacity = 50;
   public static readonly videoSpriteCol = 10;

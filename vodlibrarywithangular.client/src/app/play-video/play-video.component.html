@@ -17,15 +17,19 @@
                             <img [src]="videoIconAtCenterCurrent" alt="">
                           </div>
 
-                          <div [ngClass]="showVideoHud ? 'controlBar' : 'HideVideoUI'">
+                          <div [ngClass]="showVideoHud ? 'controlBar' : 'HideVideoUI'" (mouseover)="videoPlayerUIActive = true" (mouseleave)="videoPlayerUIActive = false">
+
+
 
                             <section class="VideLengthBar" #videLengthBar>
 
                               <div class="hoverFrameContainer"
                               [style.background-image]="'url(' + selectedVideo!.spriteSheet + ')'"
-
                               [style.background-position]="frameXPosition + 'px ' + frameYPosition + 'px'"
                               *ngIf="hovoredPosition !== null && hovoredTime !== null && selectedVideo?.spriteSheet" [style.left.px]="hovoredPositionForFrame">
+
+
+
 
                               </div>
                               <div class="hovoredTimeContainer" *ngIf="hovoredPosition !== null && hovoredTime !== null" [style.left.px]="hovoredPosition">
@@ -42,26 +46,38 @@
                                 (mousemove)="hoverBarTimeTracker($event, inputBar); hoverBarFrameTracker(inputBar, videLengthBar)"
                                 (mouseleave)="hovoredPosition = null ; hovoredTime = null">
                             </section>
-                            <section class="controlBarActions">
-                                  <button type="button" (click)="playPauseVideo(videoElement)"><img class="svgIcon" [src]="!videoElement.paused ? pauseButtonIcon : playButtonIcon" alt="play/pause button"></button>
+                            <section class="controlBarActions" #controlBarActions>
+
+                              <div class="hoverButtonText" *ngIf="hoverButtonText"
+                                  [style.left.px]="hoverButtonText.left" [style.top.px]="hoverButtonText.top">
+                                  {{hoverButtonText.text}}
+                              </div>
+                                  <button type="button" name="pauseButton" (click)="playPauseVideo(videoElement)"
+                                  (mouseenter)="hovoredButtonTextFunc('playPause' , $event, controlBarActions)" (mouseleave)="hoverButtonText = null">
+                                    <img class="svgIcon" [src]="!videoElement.paused ? pauseButtonIcon : playButtonIcon" alt="play/pause button"></button>
 
                                   <div>
                                     <span style="color: white;">{{convertVideoTotalSecondsDurationToTimeFormat(videoElement.currentTime)}} / {{convertVideoTotalSecondsDurationToTimeFormat(videoElement.duration)}}</span>
                                   </div>
 
-                                  <div class="audioContainer">
-                                        <img class="svgIcon" [src]="videoVolume === 0 ? noVolumeIcon : videoVolume <= 0.5 ? smallVolumeIcon : higherVolumeIcon" alt="">
+                                  <div class="audioContainer" name="audioContainer" >
+                                        <img class="svgIcon" [src]="videoVolume === 0 ? noVolumeIcon : videoVolume <= 0.5 ? smallVolumeIcon : higherVolumeIcon" alt=""
+                                        (click)="muteUnMuteAudio()"
+                                        (mouseenter)="hovoredButtonTextFunc('volume', $event, controlBarActions)" (mouseleave)="hoverButtonText = null">
                                       <input type="range"
                                       min="0"
                                       max="1.00"
                                       step="0.1"
-                                      [(ngModel)]="videoVolume">
+                                      [(ngModel)]="videoVolume"
+                                      (mouseenter)="hovoredButtonTextFunc('volumeBar', $event, controlBarActions)" (mouseleave)="hoverButtonText = null"
+                                      >
+
                                   </div>
 
 
                                   <div class="playBackSpeed">
                                     <select (change)="videoPlayBackSpeed(videoElement , $event)" #selectPlayBackSpeed>
-                                      <option *ngFor="let option of videoPlayBackOptios2 " [value]="option.value">{{option.label}}</option>
+                                      <option *ngFor="let option of videoPlayBackOptios " [value]="option.value">{{option.label}}</option>
                                     </select>
                                   </div>
                                   <div class="videoQualitySettings" #videoQualitySettings>
@@ -72,7 +88,8 @@
                                     </select>
                                   </div>
 
-                                  <button type="button" (click)="changeScreenSize(fullScreenWrapper)"><img class="svgIcon" [src]="videoFullScreen ? smallScreenIcon : fullScreenIcon" alt=""></button>
+                                  <button type="button" name="fullScreen" (click)="changeScreenSize(fullScreenWrapper)" (mouseenter)="hovoredButtonTextFunc('fullscreen', $event, controlBarActions)" (mouseleave)="hoverButtonText = null">
+                                    <img class="svgIcon" [src]="videoFullScreen ? smallScreenIcon : fullScreenIcon" alt=""></button>
                             </section>
 
 
@@ -156,9 +173,17 @@
                   </div>
 
 
-                  <p>
-                    {{selectedVideo?.description}}
-                  </p>
+                    <!-- <pre><p>{{selectedVideo?.description}}</p></pre> -->
+
+                    <div *ngFor="let line of splitedDescription">
+                      <p [innerHTML]="line" style="margin: 0;"></p>
+                    </div>
+
+
+
+
+
+
 
                   <div class="description-video-category" [routerLink]="['/']">
                       <img [src]="categoryStats?.imagePath" alt="Category Image">
@@ -178,7 +203,9 @@
         <section *ngIf="userName ; else userIsNotLogged" >
           <form [formGroup]="commentForm" (ngSubmit)="addComment()" class="comment-form-wrapper">
             <label  id="comment">Comment</label>
-            <textarea id="comment" formControlName="Comment" (input)="areaAutoGrowth($event)" (click)="commentFormClicked()" placeholder="Type your comment here"></textarea>
+            <textarea id="comment" formControlName="Comment" (input)="areaAutoGrowth($event)"
+            (focus)="hasUserActivatedInputField = true ; updateIsUserTypingVariable()" (blur)="hasUserActivatedInputField = false; updateIsUserTypingVariable()"
+            (click)="commentFormClicked()" placeholder="Type your comment here"></textarea>
             <div class="buttons-wrapper" *ngIf="isUserClickingCommentForm">
               <button type="reset" (click)="cancelUserComment()">Cancel</button>
               <button type="submit" [disabled]="!commentForm.valid">Comment</button>
@@ -254,7 +281,8 @@
 
                     <form *ngIf="userName && activeCommentReplyThreadDictionary.has(comment.id)" [formGroup]="activeCommentReplyThreadDictionary.get(comment.id)!" (ngSubmit)="addReply(comment.id, undefined)" class="reply-form-wrapper">
                     <label id="reply">Reply</label>
-                    <textarea id="reply" formControlName="Reply" (input)="areaAutoGrowth($event)" placeholder="write your reply here"></textarea>
+                    <textarea id="reply" formControlName="Reply" (input)="areaAutoGrowth($event)" placeholder="write your reply here"
+                    (focus)="hasUserActivatedInputField = true ; updateIsUserTypingVariable()" (blur)="hasUserActivatedInputField = false; updateIsUserTypingVariable()"></textarea>
                     <button type="submit" [disabled]="activeCommentReplyThreadDictionary.get(comment.id)?.invalid">Reply to comment</button>
                     <button type="reset" (click)="cancelReplyForm(comment.id, undefined)">Cancel</button>
                     </form>
@@ -307,7 +335,8 @@
 
                             <form *ngIf="userName  && activeReplyThreadDictionary.has(reply.id)" [formGroup]="activeReplyThreadDictionary.get(reply.id)!" (ngSubmit)="addReply(comment.id, reply.id)" class="reply-form-wrapper">
                                 <label id="reply">Reply</label>
-                                <textarea id="reply" formControlName="Reply" (input)="areaAutoGrowth($event)" placeholder="write here"></textarea>
+                                <textarea id="reply" formControlName="Reply" (input)="areaAutoGrowth($event)" placeholder="write here"
+                                  (focus)="hasUserActivatedInputField = true ; updateIsUserTypingVariable()" (blur)="hasUserActivatedInputField = false; updateIsUserTypingVariable()"></textarea>
                                 <button type="submit" [disabled]="activeReplyThreadDictionary.get(reply.id)?.invalid">Reply to comment</button>
                                 <button type="reset" (click)="cancelReplyForm(undefined, reply.id)">Cancel</button>
                               </form>

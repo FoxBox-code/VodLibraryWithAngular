@@ -60,7 +60,7 @@
                   </button>
 
               <ng-template #standardDescription>
-                      <p (click)="fieldToEdit('description')">{{editVideoMetaDataForm.get('Description')?.value}}</p>
+                      <pre><p (click)="fieldToEdit('description')">{{editVideoMetaDataForm.get('Description')?.value}}</p></pre>
               </ng-template>
 
           </section>
@@ -76,7 +76,7 @@
           <section class="fileSectionWrapper">
                 <input #imageFileUpload type="file" (change)="upLoadImageFile($event)" style="display: none;">
                 <button type="button" (click)="imageFileUpload.click()">Change thumbnail</button>
-                <button [disabled]="imageFileUpload === undefined" (click)="cancelImageChanges()" [class.hidden]="newImageFile == undefined">Cancel </button>
+                <button type="button" [disabled]="imageFileUpload === undefined" (click)="cancelImageChanges()" [class.hidden]="newImageFile == undefined">Cancel </button>
                 <span *ngIf="imageFileFormatIncorrect">The image file format you've provided is not supported by us , please use formats {{imageFormatAllowed}}</span>
           </section>
 

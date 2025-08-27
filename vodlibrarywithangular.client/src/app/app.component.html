@@ -14,8 +14,8 @@
       <form>
         <input id="search" type="text" placeholder="Search"
                [formControl]="searchBar"
-               (focus)="searchBarFocused = true"
-               (blur)="searchBarFocused = false">
+               (focus)="searchBarFocused = true ; updateIsUserTypingVariable()"
+               (blur)="searchBarFocused = false ; updateIsUserTypingVariable()">
         <div *ngIf="typeof searchBar.value === 'string' && searchBar.value.length > 0 && searchBarFocused">
           <button type="submit" (click)="performASearch()">Find</button>
         </div>
