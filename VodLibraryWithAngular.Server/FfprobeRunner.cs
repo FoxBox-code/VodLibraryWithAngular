@@ -4,7 +4,7 @@ namespace VodLibraryWithAngular.Server
 {
     public class FfprobeRunner
     {
-        public static readonly string Ffprobe = "C:\\stuff\\ffmpeg-2025-01-22-git-e20ee9f9ae-full_build\\bin\\ffprobe.exe";
+        private static readonly string Ffprobe = "C:\\stuff\\ffmpeg-2025-01-22-git-e20ee9f9ae-full_build\\bin\\ffprobe.exe";
         public static async Task<(int width, int hight)> ProbeRunAsync(string inputPath)
         {
             ProcessStartInfo processStartInfo = new ProcessStartInfo()

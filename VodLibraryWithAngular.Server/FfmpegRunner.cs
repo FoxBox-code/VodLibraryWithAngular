@@ -4,7 +4,7 @@ namespace VodLibraryWithAngular.Server
 {
     public static class FfmpegRunner
     {
-        public static readonly string Ffmpeg = "C:\\stuff\\ffmpeg-2025-01-22-git-e20ee9f9ae-full_build\\bin\\ffmpeg.exe";
+        private static readonly string Ffmpeg = "C:\\stuff\\ffmpeg-2025-01-22-git-e20ee9f9ae-full_build\\bin\\ffmpeg.exe";
 
         public static async Task<int> RunMpegAsync(string arg)
         {

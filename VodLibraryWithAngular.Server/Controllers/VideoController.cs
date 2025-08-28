@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using NuGet.Protocol;
 using System.Security.Claims;
+using System.Text;
 using VodLibraryWithAngular.Server.Data;
 using VodLibraryWithAngular.Server.Data.Models;
 using VodLibraryWithAngular.Server.DataConstants;
@@ -73,8 +74,8 @@ namespace VodLibraryWithAngular.Server.Controllers
             try
             {
 
-                string videoPath = Path.Combine(_environment.WebRootPath, "videos", Guid.NewGuid() + _fileNameSanitizer.SanitizeFileName(videoUploadForm.VideoFile.FileName));
-                string thumbnail = Path.Combine(_environment.WebRootPath, "thumbnail", Guid.NewGuid() + _fileNameSanitizer.SanitizeFileName(videoUploadForm.ImageFile.FileName)); // Guid.NewGuid generates unique names in order to prevent colliding
+                string videoPath = Path.Combine(_environment.WebRootPath, "videos", Guid.NewGuid() + _fileNameSanitizer.SanitizeFileNameFromUrl(videoUploadForm.VideoFile.FileName));
+                string thumbnail = Path.Combine(_environment.WebRootPath, "thumbnail", Guid.NewGuid() + _fileNameSanitizer.SanitizeFileNameFromUrl(videoUploadForm.ImageFile.FileName)); // Guid.NewGuid generates unique names in order to prevent colliding
 
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -1580,7 +1581,7 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             Console.WriteLine(body);
             string imageBase64 = body.NewImageString;
-            VideoRecord video = await _dbContext.VideoRecords.FirstOrDefaultAsync(v => v.Id == videoId);
+            VideoRecord video = await _dbContext.VideoRecords.Include(v => v.VideoRenditions).Include(v => v.VideoSpriteMetaData).FirstOrDefaultAsync(v => v.Id == videoId);
 
 
             if (video == null)
@@ -1631,6 +1632,13 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             }
 
+            if (body.Title != video.Title)
+            {
+
+                EditVideoTitleDirectory(video, body.Title);
+
+            }
+
             video.Title = body.Title;
             video.Description = body.Description;
             video.CategoryId = (int)body.CategoryId;
@@ -1641,6 +1649,37 @@ namespace VodLibraryWithAngular.Server.Controllers
             VideoWindowDTO res = CreateVideoWindowDTOFromVideoRecord(video);
 
             return Ok(res);
+        }
+
+        private void EditVideoTitleDirectory(VideoRecord video, string newTitle)
+        {
+            var renditions = video.VideoRenditions.ToArray();
+            VideoRendition rendition = renditions[0];
+            VideoSpriteMetaData spriteSheet = video.VideoSpriteMetaData;
+
+            string renditionDirectory = Path.GetDirectoryName(rendition.RenditionPath);
+            string[] newDirectoryArr = renditionDirectory.Split("\\").SkipLast(1).ToArray();
+
+            StringBuilder sb = new StringBuilder();
+            foreach (string splitPath in newDirectoryArr)
+            {
+                sb.Append(splitPath + "\\");
+            }
+
+            string newDirectory = sb.ToString().TrimEnd('\\');
+
+            newDirectory = Path.Combine(newDirectory, $"Video{video.Id} {IFileNameSanitizer.CleanFolderOrFileName(newTitle)}");//Name path done correctly
+
+            foreach (var ren in renditions)
+            {
+                ren.RenditionPath = Path.Combine(newDirectory, Path.GetFileName(ren.RenditionPath));
+
+            }
+            Directory.Move(renditionDirectory, newDirectory);
+
+            string spriteSheetPathLast = spriteSheet.DirectoryPath.Split('\\').Last();
+
+            spriteSheet.DirectoryPath = Path.Combine(newDirectory, spriteSheetPathLast);
         }
 
         private string SanitizeBase64(string base64)//for context this is how a base 64 string looks like(/9j/4AAQSkZJRgABAQAAAQABAAD...) ,

@@ -212,7 +212,7 @@ namespace VodLibraryWithAngular.Server
                 string outPutDirectory = Path.Combine(videoRenditionPath, "Thumbnail Frames");
 
 
-                if (Directory.Exists(outPutDirectory))
+                if (Directory.Exists(outPutDirectory))//Deletes folder if the processFailed
                 {
                     int folderFramesCount = Directory.GetFiles(outPutDirectory, "frame_*.jpg").Length;
 

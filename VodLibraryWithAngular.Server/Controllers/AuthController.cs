@@ -104,7 +104,7 @@ namespace VodLibraryWithAngular.Server.Controllers
         private async Task<bool> CustomUserProfilePictureAsync(RegisterDTO model, ApplicationUser user)
         {
             bool imageProccessDone = false;
-            string guidAndName = Guid.NewGuid() + _fileNameSanitizer.SanitizeFileName(model.ProfilePic.FileName);
+            string guidAndName = Guid.NewGuid() + _fileNameSanitizer.SanitizeFileNameFromUrl(model.ProfilePic.FileName);
             string path = Path.Combine(_webHostEnvironment.WebRootPath, "ProfilePics");
             string iconsPath = Path.Combine([_webHostEnvironment.WebRootPath, path, "ProfileIcons"]);
 

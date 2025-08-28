@@ -4,9 +4,9 @@ namespace VodLibraryWithAngular.Server.Interfaces
 {
     public interface IFileNameSanitizer
     {
-        string SanitizeFileName(string originalName);
+        string SanitizeFileNameFromUrl(string originalName);
 
-        public static string CleanFolderName(string name)
+        public static string CleanFolderOrFileName(string name)
         {
 
             string invalid = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
