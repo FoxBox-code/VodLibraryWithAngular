@@ -2,7 +2,7 @@ import { Component, inject , AfterViewInit, ChangeDetectorRef} from '@angular/co
 import { AuthService } from '../auth.service';
 import { Login } from '../models/login';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
-import { Params, Router } from '@angular/router';
+import { NavigationExtras, Params, Router } from '@angular/router';
 import { NavigationService } from '../navigation.service';
 
 @Component({
@@ -32,7 +32,7 @@ export class LoginComponent
     emailOrPasswordWrongError : string | null = null;
     failedLogInAttempt : boolean = false;
 
-    constructor(private authService : AuthService, formBuilder : FormBuilder, private navigationService : NavigationService, private cdr : ChangeDetectorRef)
+    constructor(private authService : AuthService, formBuilder : FormBuilder, navigationService : NavigationService)
     {
       this.loginForm = formBuilder.group(
         {
@@ -41,7 +41,10 @@ export class LoginComponent
           RememberMe : [false]
         })
 
-        navigationService.getAdress().subscribe(result => this.navigationAdress = result)
+        navigationService.getAdress()
+        .subscribe(
+          result =>
+            this.navigationAdress = result)
     }
 
     get showPasswordButton() : boolean
@@ -141,8 +144,15 @@ export class LoginComponent
 
           complete : () =>
             {
-              console.log("Login completed welcome")
-              this.router.navigate(this.navigationAdress.path , this.navigationAdress.querryParams);
+              console.log("Login completed welcome");
+
+
+              const queryParams = this.navigationAdress.querryParams;
+
+              // const navigationExtra : NavigationExtras = {};
+
+              this.router.navigate(this.navigationAdress.path , {queryParams, replaceUrl : true});
+              this.router.navigate(this.navigationAdress.path , {'queryParams' : {'something' : 5}, replaceUrl : true});
             }
 
 

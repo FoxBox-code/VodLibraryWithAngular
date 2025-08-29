@@ -35,7 +35,7 @@ export class UploadComponent implements OnInit
 
    pollingVideoStatusMessage : string | null = null;
 
-   
+
 
    areaInputLimitHit : boolean = false;
 
@@ -148,8 +148,10 @@ export class UploadComponent implements OnInit
                     }
                     else if(status === VideoStatusEnum.Processing)
                     {
+
                       this.pollingVideoStatusMessage = "Video is still processing"
                     }
+                    console.log(this.pollingVideoStatusMessage);
                   }
                 }
               )

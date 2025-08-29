@@ -15,6 +15,8 @@ import { YouPageComponent } from './you-page/you-page.component';
 import { SubscriptionsComponent } from './subscriptions/subscriptions.component';
 import { GenreVidoesComponent } from './genre-vidoes/genre-vidoes.component';
 import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
+import { LogInRegisterGuard } from './logInRegisterGuard';
+
 const routes: Routes = [
   // {
   //   path : '',
@@ -30,12 +32,14 @@ const routes: Routes = [
   {
     path : 'register',
     component : RegisterComponent,
-    title : "Registration"
+    title : "Registration",
+    canActivate : [LogInRegisterGuard]
   },
   {
     path : 'login',
     component : LoginComponent,
-    title : "Login"
+    title : "Login",
+    canActivate : [LogInRegisterGuard]
   },
   {
     path : 'playing/:id',

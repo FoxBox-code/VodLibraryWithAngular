@@ -25,6 +25,7 @@ import { CategoryStatsDTO } from '../models/categorystatsDTO';
 import { DataCosntans } from '../dataconstants';
 import { IsUserTypingService } from '../is-user-typing.service';
 import DOMPurify from 'dompurify';
+import { Title } from '@angular/platform-browser';
 
 
 type TooltipKey = 'playPause' | 'volume' | 'fullscreen' | 'volumeBar';
@@ -199,6 +200,7 @@ export class PlayVideoComponent
       private authService : AuthService,
       private playListService : PlaylistService,
       private isUserTypingService : IsUserTypingService,
+      private titleService : Title
 
 
 
@@ -774,16 +776,11 @@ export class PlayVideoComponent
       const rectVideLengthBar = videLengthBar.getBoundingClientRect();
 
 
-
-
-      const leftBorder = rect.left;
-      const rightBorder = rect.width;
-
       const widthOfImageFrame = 160;
       const halfed = widthOfImageFrame/2;
 
-      const gapBetweenLengthBarAndInputBar = leftBorder - rectVideLengthBar.left;
-      const Idontknow = rectVideLengthBar.right - (rectVideLengthBar.right - rect.right);
+      const gapBetweenLengthBarAndInputBar = rect.left - rectVideLengthBar.left;
+
 
       if(this.hovoredPosition !== null)
       {
@@ -791,9 +788,9 @@ export class PlayVideoComponent
         {
           this.hovoredPositionForFrame = halfed + gapBetweenLengthBarAndInputBar;
         }
-        else if(this.hovoredPosition + halfed >= rightBorder)
+        else if(this.hovoredPosition + halfed >= rect.width)
         {
-           this.hovoredPositionForFrame = rectVideLengthBar.right - (rectVideLengthBar.right - rightBorder) - halfed;
+           this.hovoredPositionForFrame = rectVideLengthBar.right - (rectVideLengthBar.right - rect.width) - halfed;
         }
         else
         {
@@ -809,30 +806,12 @@ export class PlayVideoComponent
 
 
 
-    // hoverBarFrameTracker2(video: HTMLVideoElement, inputBar: HTMLInputElement)
-    // {
-    //   const rect = inputBar.getBoundingClientRect();
 
-    //   const barLeft = rect.left;
-    //   const barRight = rect.right;
-    //   const barWidth = rect.width;
 
-    //   const thumbWidth = 160;
-    //   const halfThumb = thumbWidth / 2;
 
-    //   if (this.hovoredPosition !== null) {
-    //     let left = this.hovoredPosition;
 
-    //     // Adjust left to ensure the image stays within bounds
-    //     if (left - halfThumb < 0) {
-    //       this.hovoredPositionForFrame = halfThumb;
-    //     } else if (left + halfThumb > barWidth) {
-    //       this.hovoredPositionForFrame = barWidth - halfThumb;
-    //     } else {
-    //       this.hovoredPositionForFrame = left;
-    //     }
-    //   }
-    // }
+
+
 
 
     timeUpdate(videoElement : HTMLVideoElement)
@@ -920,6 +899,7 @@ export class PlayVideoComponent
         {
             next : (result) =>
             {
+                this.titleService.setTitle(result.title);
                 this.selectedVideo = result;
                 this.splitedDescription = this.sanitizeAndFormatDescription(result.description);
 
