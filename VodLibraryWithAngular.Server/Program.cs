@@ -107,13 +107,18 @@ var app = builder.Build();
 var directoriesConfiguration = app.Services.GetRequiredService<WebRootConfiguration>();
 directoriesConfiguration.ConfigureDirectories();
 
-//using (IServiceScope scope = app.Services.CreateScope())
-//{
-//    var dataMigrationService = scope.ServiceProvider.GetRequiredService<DataMigrationService>();
-//    await Task.Run(() => dataMigrationService.FillTableVideoSpriteSheets()); 
-//}
 
-//using (var scope = app.Services.CreateScope())
+_ = Task.Run(async () =>
+{
+    IServiceScopeFactory scopeFactory = app.Services.GetRequiredService<IServiceScopeFactory>();
+    IServiceScope scope = scopeFactory.CreateScope();
+
+    var dataMigrationService = scope.ServiceProvider.GetRequiredService<DataMigrationService>();
+    await dataMigrationService.UpdateVideosCommentCountVariable();
+});
+
+
+//using (IServiceScope scope = app.Services.CreateScope())
 //{
 //    var videoFileRenditionsService = scope.ServiceProvider.GetRequiredService<VideoFileRenditionsService>();
 //    await Task.Run(() => videoFileRenditionsService.RenditionExistingVideos()); 

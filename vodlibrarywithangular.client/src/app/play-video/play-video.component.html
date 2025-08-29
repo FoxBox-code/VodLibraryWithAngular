@@ -359,7 +359,7 @@
               </section>
 
               <div *ngIf="(videoComments$$ | async) as videoComments" #commentLoadThreshold>
-                      <button *ngIf="videoComments.length > 0" (click)="loadComments()">Load next comments</button>
+                      <button *ngIf="videoComments.length > 0 && selectedVideo?.commentCount !== videoComments.length" (click)="loadComments()">Load next comments</button>
                 </div>
 
             </ng-container>

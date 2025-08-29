@@ -338,5 +338,21 @@ namespace VodLibraryWithAngular.Server
 
         }
 
+        public async Task UpdateVideosCommentCountVariable()
+        {
+            List<VideoRecord> videos = await _context.VideoRecords.Include(v => v.Comments).ToListAsync();
+
+            foreach (var video in videos)
+            {
+                int commentCount = video.Comments.Count();
+
+                video.CommentsCount = commentCount;
+            }
+
+
+            await _context.SaveChangesAsync();
+
+        }
+
     }
 }

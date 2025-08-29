@@ -319,7 +319,8 @@ namespace VodLibraryWithAngular.Server.Controllers
                 }
 
                 int subscribersCount = await _dbContext.SubScribers.CountAsync(x => x.SubscribedId == video.VideoOwnerId);
-                int commentCount = await _dbContext.Comments.CountAsync(x => x.VideoRecordId == videoId);
+                //int commentCount = await _dbContext.Comments.CountAsync(x => x.VideoRecordId == videoId);
+                //Not sure how quick this would be for millions of comments 
 
                 Dictionary<string, string> renditions = new();
                 string baseSpriteSheetJpgPath = string.Empty;
@@ -356,8 +357,8 @@ namespace VodLibraryWithAngular.Server.Controllers
                     Duration = video.Length,
                     TotalTimeInSeconds = video.Length.TotalSeconds,
 
-                    TotalCommentReplyCount = commentCount + video.ReplyCount,
-                    CommentCount = commentCount,
+                    TotalCommentReplyCount = video.CommentsCount + video.ReplyCount,
+                    CommentCount = video.CommentsCount,
 
                     VideoRenditions = renditions,
                     SpriteSheetsCount = video.VideoSpriteMetaData.NumberOfSprites,
