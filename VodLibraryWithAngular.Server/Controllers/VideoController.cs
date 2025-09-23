@@ -754,7 +754,7 @@ namespace VodLibraryWithAngular.Server.Controllers
             await _dbContext.SaveChangesAsync();
 
             return Ok(model);
-            //TODO add validations for videoId and userName from the given model
+
 
         }
 
@@ -816,7 +816,7 @@ namespace VodLibraryWithAngular.Server.Controllers
             await _dbContext.SaveChangesAsync();
 
             return Ok(model);
-            //TODO add validations for videoId and userName from the given model
+
 
         }
 

@@ -86,20 +86,20 @@ export class VideoService
 
   }
 
-  uploadVideo(formData : FormData) : Observable<any>  //The original uploadVideo , we must change it to work with the new rendition system
-  {
-    const token = this.authService.getLocalStorageToken();
-    console.log(`Current token : ${token}`);
+  // uploadVideo(formData : FormData) : Observable<any>  //The original uploadVideo , we must change it to work with the new rendition system
+  // {
+  //   const token = this.authService.getLocalStorageToken();
+  //   console.log(`Current token : ${token}`);
 
-    const headers = new HttpHeaders(
-    {
-      Authorization : `Bearer ${token}`
-    });
-    console.log(`Header loggin ${headers.get('Authorization')}`);
+  //   const headers = new HttpHeaders(
+  //   {
+  //     Authorization : `Bearer ${token}`
+  //   });
+  //   console.log(`Header loggin ${headers.get('Authorization')}`);
 
 
-      return this.httpClient.post<any>(`${ApiUrls.UPLOAD}`, formData, {headers});
-  }
+  //     return this.httpClient.post<any>(`${ApiUrls.UPLOAD}`, formData, {headers});
+  // }
 
   uploadVideoNew(formData : FormData) : Observable<UploadServerMessageResponse>
   {

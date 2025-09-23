@@ -239,7 +239,7 @@
           </div>
 
           <!-- Rendering comments -->
-              <section *ngIf="autoLoadComments">
+              <section *ngIf="autoLoadComments" #commentContainer>
                   <section *ngFor="let comment of videoComments$$ | async" class="forloop-comments-wrapper" #individualComment>
 
                     <div class="commentNameAndDate" #commentScrollAnchor>
@@ -259,8 +259,49 @@
 
                       </div>
 
+                      <!-- <div *ngFor="let sentence of splitMore(comment.description)">
+                          <div *ngFor="let segment of sanitizeAndFormatDescription(sentence)">
+                                <ng-container [ngSwitch]="segment.type">
 
-                  <p>{{comment.description}}</p>
+                                  <a *ngSwitchCase="'link'" [href]="segment.value" target="_blank">
+                                    {{ segment.value }}
+                                  </a>
+
+                                  <span *ngSwitchCase="'timestamp'" class="timestamp" [attr.data-time]="segment.value">
+                                    {{ segment.value }}
+                                  </span>
+
+                                  <span *ngSwitchDefault>
+                                    {{ segment.value }}
+                                  </span>
+
+                                </ng-container>
+                              </div>
+                      </div> -->
+                     <div *ngFor="let line of sanitizeAndFormatDescription(comment.description)">
+                      <p>
+                        <ng-container *ngFor="let segment of line">
+                          <ng-container [ngSwitch]="segment.type">
+
+                            <a *ngSwitchCase="'link'" [href]="segment.value" target="_blank">
+                              {{ segment.value }}
+                            </a>
+
+                            <span *ngSwitchCase="'timestamp'" class="timestamp" [attr.data-time]="segment.value">
+                              {{ segment.value }}
+                            </span>
+
+                            <span *ngSwitchDefault>
+                              {{ segment.value + ' ' }}
+                            </span>
+
+                          </ng-container>
+                        </ng-container>
+                      </p>
+                    </div>
+
+
+
                   <div class="comment-likes-dislikes-reply-wrapper">
                     <button type="button" (click)="addCommentReaction(comment.id, true, individualComment)" [class.choosenOne]="userCommentReactions.hasOwnProperty(comment.id) && userCommentReactions[comment.id] === true">Likes : {{comment.likes}} </button>
                     <button type="button" (click)="addCommentReaction(comment.id, false)" [class.choosenOne]="userCommentReactions.hasOwnProperty(comment.id) && userCommentReactions[comment.id] === false">Dislikes : {{comment.disLikes}}</button>
@@ -272,7 +313,7 @@
                               </section>
                       </ng-container>
 
-                    <span>Comment replies {{comment.repliesCount}}</span>
+                    <span >Comment replies {{comment.repliesCount}}</span>
 
                     <section *ngIf="userName">
                     <button type="button" (click)="getReplyForm(comment.id, undefined)">Reply</button>

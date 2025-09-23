@@ -354,5 +354,19 @@ namespace VodLibraryWithAngular.Server
 
         }
 
+        public async Task UpdateVideoReplyCountVariable()
+        {
+            List<VideoRecord> videos = await _context.VideoRecords.Include(v => v.Replies).ToListAsync();
+
+            foreach (var video in videos)
+            {
+                int repliesCount = video.Replies.Count();
+
+                video.ReplyCount = repliesCount;
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
     }
 }

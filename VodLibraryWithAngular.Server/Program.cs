@@ -108,14 +108,14 @@ var directoriesConfiguration = app.Services.GetRequiredService<WebRootConfigurat
 directoriesConfiguration.ConfigureDirectories();
 
 
-_ = Task.Run(async () =>
-{
-    IServiceScopeFactory scopeFactory = app.Services.GetRequiredService<IServiceScopeFactory>();
-    IServiceScope scope = scopeFactory.CreateScope();
+//_ = Task.Run(async () =>
+//{
+//    IServiceScopeFactory scopeFactory = app.Services.GetRequiredService<IServiceScopeFactory>();
+//    IServiceScope scope = scopeFactory.CreateScope();
 
-    var dataMigrationService = scope.ServiceProvider.GetRequiredService<DataMigrationService>();
-    await dataMigrationService.UpdateVideosCommentCountVariable();
-});
+//    var dataMigrationService = scope.ServiceProvider.GetRequiredService<DataMigrationService>();
+//    await dataMigrationService.UpdateVideoReplyCountVariable();
+//});
 
 
 //using (IServiceScope scope = app.Services.CreateScope())

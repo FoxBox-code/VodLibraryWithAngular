@@ -30,6 +30,12 @@ import { Title } from '@angular/platform-browser';
 
 type TooltipKey = 'playPause' | 'volume' | 'fullscreen' | 'volumeBar';
 
+type CommentSegment = {
+  type: 'text' | 'link' | 'timestamp';
+  value: string;
+};
+
+
 const HOTKEY_LABELS : Record<TooltipKey, (playVideoComponent : PlayVideoComponent) => string > =
 {
   playPause : (playvideoComponent) => playvideoComponent.videoElement.nativeElement.paused ? 'Play button (k)' : 'Pause button (k)',
@@ -169,7 +175,7 @@ export class PlayVideoComponent
 
     public categoryStats : CategoryStatsDTO | null = null;
 
-    takeCommentCount = 50;
+    takeCommentCount = 10;
     skipCommentCount = 0;
 
 
@@ -188,10 +194,14 @@ export class PlayVideoComponent
     @ViewChild('fullScreenWrapper') fullScreenWrapper! : ElementRef<HTMLDivElement>
     @ViewChild('selectPlayBackSpeed') selectPlayBackSpeed! : ElementRef<HTMLSelectElement>
     @ViewChild('videoQualitySettings') videoQualitySettings! : ElementRef<HTMLSelectElement>
+    @ViewChild('individualComment') individualComment! : ElementRef<HTMLElement>
+    @ViewChild('commentContainer') commentContainer! : ElementRef<HTMLElement>
 
     intersectionObserver! : IntersectionObserver;
 
     mouseHold = false;
+
+
 
 
     constructor(private videoService : VideoService,
@@ -596,7 +606,9 @@ export class PlayVideoComponent
           if(entry[0].isIntersecting)
           {
             console.log("WE MADE CONTACT")
-            this.loadComments();
+            const sometehign = this.videoCommentsSubject.getValue();
+            if(sometehign.length !== this.selectedVideo?.commentCount)
+              this.loadComments();
           }
         },
         {
@@ -901,7 +913,7 @@ export class PlayVideoComponent
             {
                 this.titleService.setTitle(result.title);
                 this.selectedVideo = result;
-                this.splitedDescription = this.sanitizeAndFormatDescription(result.description);
+                this.splitedDescription = this.sanitizeAndFormatDescriptiongone(result.description);
 
                 for (const resolution in result.videoRenditions) {
                   if (result.videoRenditions.hasOwnProperty(resolution)) {
@@ -921,33 +933,134 @@ export class PlayVideoComponent
         })
    }
 
-   sanitizeAndFormatDescription(raw: string): string[]
+
+   sanitizeAndFormatDescriptiongone(raw: string): string[]
    {
     const lines = raw.split('\n');
 
-    return lines.map(line => {
-      // Simple URL detection — improve if needed
-      const urlRegex = /(https?:\/\/[^\s]+)/g;
+    // return lines.map(line =>
+    // {
 
-      line = line.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+    //   const regex = /(https?:\/\/[^\s]+)|(?<!\d)(\d{1,2}:\d{2}(?::\d{2})?)(?!\d)/g;
 
-      line =  DOMPurify.sanitize(line,
+    //   // line = line.replace(regex, (match , link , timestamp) =>
+    //   // {
+    //   //   if(link)
+    //   //   {
+    //   //     match = `<a href="${link}" target="_blank" rel="noopener noreferrer">${link}</a>`
+    //   //   }
+    //   //   else if(timestamp)
+    //   //   {
+    //   //     // match = `<span style="color: white;" class="timeStamp">${timestamp}</span>`
+    //   //     match = `<span data-class="timeStamp" style="color: white;">${timestamp}</span>`;
+
+    //   //   }
+    //   //   return match
+    //   // });
+
+
+
+    //   line =  DOMPurify.sanitize(line,
+    //     {
+    //       ALLOWED_TAGS : ['a'],
+    //       ALLOWED_ATTR : ['href', 'target', 'rel']
+    //     }
+    //   )
+
+    //   return line
+
+
+
+    // });
+
+    return lines;
+
+  }
+
+  sanitizeAndFormatDescription(text: string): CommentSegment[][] //THIS SHIT IS COMPLETELY BROKEN it loops 1000000times
+  {
+  const regex = /(https?:\/\/[^\s]+)|(?<!\d)(\d{1,2}:\d{2}(?::\d{2})?)(?!\d)/;
+
+  // Split by lines first
+  const lines = text.split('\n');
+
+  return lines.map(line =>
+    {
+    const words = line.split(/\s+/); // word-based for this line
+
+    return words.map(word => {
+      if (regex.test(word))
+      {
+        if (word.startsWith('http'))
         {
-          ALLOWED_TAGS : ['a'],
-          ALLOWED_ATTR : ['href', 'target', 'rel']
+          return { type: 'link', value: word };
         }
-      )
-      console.log(`Sanitizied line ${line}`);
-      return line
-
-
-
+        else
+        {
+          return { type: 'timestamp', value: word };
+        }
+      }
+      else
+      {
+        return { type: 'text', value: word };
+      }
     });
+  });
+}
 
 
 
+  splitMore(line : string)
+  {
+    return line.split(' ');
+  }
 
+
+
+  formatTimeStampToTotalSeconds(timeSpanText : string) : number | undefined
+  {
+    const timeStamp = timeSpanText;
+    console.log('is FormatTimeStampToTotalSeocnds wokring')
+    const numbers : string[] = timeStamp.split(':');
+
+    let timeStampTimeInSeconds = 0 ;
+
+    if(numbers.length === 3)//01:20:57 || 1:20:57
+    {
+      const hoursToSeconds = Number.parseInt(numbers[0]) * 3600;
+      const minutesToHours = Number.parseInt(numbers[1]) * 60;
+      const seconds =  Number.parseInt(numbers[2]);
+      timeStampTimeInSeconds += (hoursToSeconds + minutesToHours + seconds);
     }
+
+    if(numbers.length == 2)//20:57 || 0:52
+    {
+      const minutesToHours = Number.parseInt(numbers[0]) * 60
+      const seconds =  Number.parseInt(numbers[1]);
+       timeStampTimeInSeconds += (minutesToHours + seconds);
+    }
+
+    const res = this.isTheTimeStampTimeValidForVideo(timeStampTimeInSeconds)
+
+    if(res)
+      return timeStampTimeInSeconds;
+    else
+      return undefined;
+
+  }
+
+  private isTheTimeStampTimeValidForVideo(timeStampTimeInSeconds : number)
+  {
+    const videoElement = this.videoElement.nativeElement;
+
+    if(videoElement.duration >= timeStampTimeInSeconds)
+      return true;
+
+
+    else
+      return false;
+  }
+
 
 
    private requestCategoryStats(videoId : number)
@@ -1070,6 +1183,14 @@ export class PlayVideoComponent
                   error : (error) => console.error(`User ${addCommentDTO.userName} failed to upload comment ${error}`)
                 });
 
+                // this.videoService.addComment5000(addCommentDTO)
+                // .subscribe(
+                //   {
+                //     next : () => console.log("Commented 5000 times "),
+                //     error : (err) => console.log(`5000messages returned an error ${err.message}`)
+                //   }
+                // )
+
 
 
               this.commentForm.reset();
@@ -1179,7 +1300,7 @@ export class PlayVideoComponent
 
                     const upDatedComments : VideoComment[] = [...currentComments , ...result];
                     this.videoCommentsSubject.next(upDatedComments);
-                    this.skipCommentCount +=50;
+                    this.skipCommentCount +=this.takeCommentCount;
 
                 },
                 error : (error) =>
@@ -1225,6 +1346,43 @@ export class PlayVideoComponent
                 })
          }
 
+         setTimeout(() =>
+          {
+              const commentContainer = this.commentContainer.nativeElement;
+
+              console.log(`DID THIS MORON LOAD`)
+
+          if(commentContainer)
+          {
+            console.log(`Check if the comment element is actually rendered ${commentContainer}`)
+
+            commentContainer.addEventListener('click', (event) =>
+            {
+                const target = event.target
+                if(target instanceof HTMLElement)
+                {
+                    console.log(`target instance of ${target}`);
+                    console.log(target.getAttribute('data-class'));
+                    console.log(`call this once`)
+                    if(target.classList.contains('timestamp'))
+                    {
+                      if(target.textContent)
+                      {
+
+                        const forwardVideoToTime = this.formatTimeStampToTotalSeconds(target.textContent);
+
+                        if(forwardVideoToTime)
+                        {
+                          this.videoElement.nativeElement.scrollIntoView({behavior : 'instant', block : 'start'});
+                          this.videoElement.nativeElement.currentTime = forwardVideoToTime;
+                        }
+
+                      }
+                    }
+                }
+            })
+          }
+         }, 50);//slight delay giving the dom time to render the comment container
 
 
     }

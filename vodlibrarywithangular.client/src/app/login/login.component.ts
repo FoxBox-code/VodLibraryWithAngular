@@ -152,7 +152,7 @@ export class LoginComponent
               // const navigationExtra : NavigationExtras = {};
 
               this.router.navigate(this.navigationAdress.path , {queryParams, replaceUrl : true});
-              this.router.navigate(this.navigationAdress.path , {'queryParams' : {'something' : 5}, replaceUrl : true});
+              
             }
 
 
