@@ -27,6 +27,7 @@ import { IsUserTypingService } from '../is-user-typing.service';
 import DOMPurify from 'dompurify';
 import { Title } from '@angular/platform-browser';
 import { CommentService } from '../comment.service';
+import { ReactionsService } from '../reactions.service';
 
 
 type TooltipKey = 'playPause' | 'volume' | 'fullscreen' | 'volumeBar';
@@ -212,7 +213,8 @@ export class PlayVideoComponent
       private playListService : PlaylistService,
       private isUserTypingService : IsUserTypingService,
       private titleService : Title,
-      private commentService : CommentService
+      private commentService : CommentService,
+      private reactionService : ReactionsService
 
 
 
@@ -1211,7 +1213,7 @@ export class PlayVideoComponent
           return;
         }
 
-      this.userCommentReactions = this.videoService.userCommentReactions;
+      this.userCommentReactions = this.reactionService.userCommentReactions;
       console.log(`Current reaction of user for this comment is ${this.userCommentReactions[commentId]}`)
       const exists = this.userCommentReactions[commentId];
 
@@ -1237,28 +1239,28 @@ export class PlayVideoComponent
 
     private createCommentReaction(commentId : number , reaction : boolean)
     {
-        this.videoService.addUpdateUserCommentReaction(commentId, reaction)
+        this.reactionService.addUpdateUserCommentReaction(commentId, reaction)
         .subscribe(result => {
-        this.videoService.userCommentReactions[commentId] = result.like;
-        this.userCommentReactions = this.videoService.userCommentReactions;
+        this.reactionService.userCommentReactions[commentId] = result.like;
+        this.userCommentReactions = this.reactionService.userCommentReactions;
         this.updateCommentCounts(commentId, result.likeCount, result.dislikeCount);
     });
     }
     private deleteCommentReaction(commentId : number)
     {
-        this.videoService.deleteUserCommentReaction(commentId)
+        this.reactionService.deleteUserCommentReaction(commentId)
         .subscribe(result => {
-        delete this.videoService.userCommentReactions[commentId];
-        this.userCommentReactions = this.videoService.userCommentReactions;
+        delete this.reactionService.userCommentReactions[commentId];
+        this.userCommentReactions = this.reactionService.userCommentReactions;
         this.updateCommentCounts(commentId, result.likeCount, result.dislikeCount);
     });
     }
     private updateCommentReaction(commentId: number, reaction: boolean)
     {
-        this.videoService.addUpdateUserCommentReaction(commentId, reaction)
+        this.reactionService.addUpdateUserCommentReaction(commentId, reaction)
       .subscribe(result => {
-      this.videoService.userCommentReactions[commentId] = result.like;
-      this.userCommentReactions = this.videoService.userCommentReactions;
+      this.reactionService.userCommentReactions[commentId] = result.like;
+      this.userCommentReactions = this.reactionService.userCommentReactions;
 
       this.updateCommentCounts(commentId, result.likeCount, result.dislikeCount);
       });
@@ -1322,7 +1324,7 @@ export class PlayVideoComponent
 
                   if(userId !== null)
               {
-                  this.videoService.getUserCommentLikesDislikes(this.selectedVideoId)
+                  this.reactionService.getUserCommentLikesDislikes(this.selectedVideoId)
                   .subscribe
                   (
                     {
@@ -1331,8 +1333,8 @@ export class PlayVideoComponent
                           for(var commentReaction of data)
                           {
 
-                            this.videoService.userCommentReactions[commentReaction.commentId] = commentReaction.like;
-                            this.userCommentReactions = this.videoService.userCommentReactions;
+                            this.reactionService.userCommentReactions[commentReaction.commentId] = commentReaction.like;
+                            this.userCommentReactions = this.reactionService.userCommentReactions;
                           }
 
                       }
@@ -1486,15 +1488,15 @@ export class PlayVideoComponent
 
       if(this.userName !== null)
       {
-        this.videoService.getUserRepliesReactions(commentId)
+        this.reactionService.getUserRepliesReactions(commentId)
         .subscribe(
         {
           next : (data) =>
           {
             for(var replyReaction of data)
             {
-                this.videoService.userReplyReactions[replyReaction.replyId] = replyReaction.like;
-                this.userReplyReactions = this.videoService.userReplyReactions;
+                this.reactionService.userReplyReactions[replyReaction.replyId] = replyReaction.like;
+                this.userReplyReactions = this.reactionService.userReplyReactions;
             }
 
           }
@@ -1508,12 +1510,14 @@ export class PlayVideoComponent
     async paginateReplyUnderComments(commentId : number)
     {
         const skip = this.skipTrackerForReplies[commentId] ?? 0;
-              await this.commentService.getCommentReplies(this.selectedVideoId, commentId , skip);
-              this.commentReplies$[commentId] = this.commentService.commentRepliesSubject[commentId].asObservable();
-              if(this.commentService.didWeTookRepliesCorrecty)//this check here is a big if didWeTookRepliesCorrecty gets updated only in subscibe next or error
-              {
-                this.skipTrackerForReplies[commentId] = (this.skipTrackerForReplies[commentId] ?? 0) + 20;
-              }
+
+        await this.commentService.getCommentReplies(this.selectedVideoId, commentId , skip);
+
+        this.commentReplies$[commentId] = this.commentService.commentRepliesSubject[commentId].asObservable();
+        if(this.commentService.didWeTookRepliesCorrecty)//this check here is a big if didWeTookRepliesCorrecty gets updated only in subscibe next or error
+        {
+          this.skipTrackerForReplies[commentId] = (this.skipTrackerForReplies[commentId] ?? 0) + 20;
+        }
 
 
     }
@@ -1530,11 +1534,11 @@ export class PlayVideoComponent
         this.selectedReply = replyId;
         if(this.userName === null) return;
 
-        if(!this.videoService.userReplyReactions.hasOwnProperty(replyId))//Make a reaction
+        if(!this.reactionService.userReplyReactions.hasOwnProperty(replyId))//Make a reaction
         {
             this.createReplyReaction(commentId, replyId , reaction);
         }
-        else if(this.videoService.userReplyReactions[replyId] === reaction)//delete/neutral reaction
+        else if(this.reactionService.userReplyReactions[replyId] === reaction)//delete/neutral reaction
         {
             this.deleteReplyReaction(commentId, replyId);
         }
@@ -1552,13 +1556,13 @@ export class PlayVideoComponent
 
     private createReplyReaction(commentId : number, replyId : number , reaction : boolean)
     {
-        this.videoService.addUpdateReplyReaction(replyId, reaction)
+        this.reactionService.addUpdateReplyReaction(replyId, reaction)
         .subscribe(
           {
             next : (data) =>
             {
-              this.videoService.userReplyReactions[replyId] = reaction
-              this.userReplyReactions = this.videoService.userReplyReactions
+              this.reactionService.userReplyReactions[replyId] = reaction
+              this.userReplyReactions = this.reactionService.userReplyReactions
 
               this.updateReplyLikeDislikeCounts(commentId ,replyId ,data)
             }
@@ -1567,13 +1571,13 @@ export class PlayVideoComponent
 
     private deleteReplyReaction(commentId : number, replyId : number )
     {
-        this.videoService.deleteUserReplyReaction(replyId)
+        this.reactionService.deleteUserReplyReaction(replyId)
         .subscribe(
           {
             next : (data) =>
             {
-              delete this.videoService.userReplyReactions[replyId];
-              this.userReplyReactions = this.videoService.userReplyReactions
+              delete this.reactionService.userReplyReactions[replyId];
+              this.userReplyReactions = this.reactionService.userReplyReactions
 
               this.updateReplyLikeDislikeCounts(commentId ,replyId ,data)
             }
@@ -1583,13 +1587,13 @@ export class PlayVideoComponent
 
     private updateReplyReaction(commentId : number, replyId : number , reaction : boolean)
     {
-        this.videoService.addUpdateReplyReaction(replyId, reaction)
+        this.reactionService.addUpdateReplyReaction(replyId, reaction)
         .subscribe(
           {
             next : (replyLikeDislikeCountUpdateDTO) =>
             {
-              this.videoService.userReplyReactions[replyId] = reaction
-              this.userReplyReactions = this.videoService.userReplyReactions
+              this.reactionService.userReplyReactions[replyId] = reaction
+              this.userReplyReactions = this.reactionService.userReplyReactions
 
               this.updateReplyLikeDislikeCounts(commentId ,replyId ,replyLikeDislikeCountUpdateDTO)
             }
@@ -1711,7 +1715,7 @@ export class PlayVideoComponent
     {
 
 
-      this.videoService.getVideoReactions(this.selectedVideoId)
+      this.reactionService.getVideoReactions(this.selectedVideoId)
       .subscribe(data =>
       {
           this.userVideoReaction = data;
@@ -1847,7 +1851,7 @@ export class PlayVideoComponent
         if(this.userVideoReaction?.reaction === reactionClicked)
           {
 
-            this.videoService.deleteVideoReaction(this.selectedVideoId)
+            this.reactionService.deleteVideoReaction(this.selectedVideoId)
             .subscribe(
               {
                 next : (data) =>
@@ -1868,7 +1872,7 @@ export class PlayVideoComponent
           }
           else
           {
-            this.videoService.addOrUpdateVideoReaction(this.selectedVideoId, reactionClicked)
+            this.reactionService.addOrUpdateVideoReaction(this.selectedVideoId, reactionClicked)
             .subscribe(
               {
                 next : (data) =>
