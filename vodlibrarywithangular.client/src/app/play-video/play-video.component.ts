@@ -26,6 +26,7 @@ import { DataCosntans } from '../dataconstants';
 import { IsUserTypingService } from '../is-user-typing.service';
 import DOMPurify from 'dompurify';
 import { Title } from '@angular/platform-browser';
+import { CommentService } from '../comment.service';
 
 
 type TooltipKey = 'playPause' | 'volume' | 'fullscreen' | 'volumeBar';
@@ -210,7 +211,8 @@ export class PlayVideoComponent
       private authService : AuthService,
       private playListService : PlaylistService,
       private isUserTypingService : IsUserTypingService,
-      private titleService : Title
+      private titleService : Title,
+      private commentService : CommentService
 
 
 
@@ -1167,7 +1169,7 @@ export class PlayVideoComponent
               addCommentDTO.videoRecordId = this.selectedVideoId;
 
 
-                this.videoService.addComment(addCommentDTO).subscribe(
+                this.commentService.addComment(addCommentDTO).subscribe(
                 {
                   next : (result) =>
                   {
@@ -1286,7 +1288,7 @@ export class PlayVideoComponent
         if(this.selectedVideo && !this.checkIfAllCommentsWereLoadedAlread(this.videoCommentsSubject.getValue().length, this.selectedVideo!.commentCount))
         {
                   this.autoLoadComments = true;
-              this.videoService.getVideoComments(this.selectedVideoId, this.takeCommentCount, this.skipCommentCount).subscribe(
+              this.commentService.getVideoComments(this.selectedVideoId, this.takeCommentCount, this.skipCommentCount).subscribe(
             {
                 next : (result) =>
                 {
@@ -1467,7 +1469,7 @@ export class PlayVideoComponent
         return;
       }
 
-          const repliesUnderComment = this.videoService.commentRepliesSubject[commentId]?.getValue() ?? undefined;
+          const repliesUnderComment = this.commentService.commentRepliesSubject[commentId]?.getValue() ?? undefined;
           if(initial && repliesUnderComment === undefined)
           {
               this.paginateReplyUnderComments(commentId);
@@ -1478,7 +1480,7 @@ export class PlayVideoComponent
               this.paginateReplyUnderComments(commentId);
           }
 
-          console.log(`Comment reply max cap ${comment.repliesCount} vs how much we got now replies loaded count ${this.videoService.commentRepliesSubject[commentId]?.getValue()}`)
+          console.log(`Comment reply max cap ${comment.repliesCount} vs how much we got now replies loaded count ${this.commentService.commentRepliesSubject[commentId]?.getValue()}`)
 
       this.expandRepliesComments[commentId] = true;
 
@@ -1506,9 +1508,9 @@ export class PlayVideoComponent
     async paginateReplyUnderComments(commentId : number)
     {
         const skip = this.skipTrackerForReplies[commentId] ?? 0;
-              await this.videoService.getCommentReplies(this.selectedVideoId, commentId , skip);
-              this.commentReplies$[commentId] = this.videoService.commentRepliesSubject[commentId].asObservable();
-              if(this.videoService.didWeTookRepliesCorrecty)//this check here is a big if didWeTookRepliesCorrecty gets updated only in subscibe next or error
+              await this.commentService.getCommentReplies(this.selectedVideoId, commentId , skip);
+              this.commentReplies$[commentId] = this.commentService.commentRepliesSubject[commentId].asObservable();
+              if(this.commentService.didWeTookRepliesCorrecty)//this check here is a big if didWeTookRepliesCorrecty gets updated only in subscibe next or error
               {
                 this.skipTrackerForReplies[commentId] = (this.skipTrackerForReplies[commentId] ?? 0) + 20;
               }
@@ -1652,7 +1654,7 @@ export class PlayVideoComponent
 
 
 
-            this.videoService.addReplyToComment(reply).subscribe(
+            this.commentService.addReplyToComment(reply).subscribe(
             {
                 next : (newReply) =>
                 {
@@ -1660,7 +1662,7 @@ export class PlayVideoComponent
 
                   newReply.uploaded = new Date(newReply.uploaded);
 
-                  this.videoService.updateCommentRepliesSubject(commentId, newReply);
+                  this.commentService.updateCommentRepliesSubject(commentId, newReply);
                   this.increaseClientSideCommentReplyCount(commentId);
                   this.videoService.locallyUpdateCommentCountAfterUserReply();//probably delete
 
@@ -1773,7 +1775,7 @@ export class PlayVideoComponent
                 data = data.sort((a,b)=> b.likes - a.likes);
               }
 
-              this.videoService.sortCommentsForBehaviorSubject(data);
+              this.commentService.sortCommentsForBehaviorSubject(data);
 
             }
           }
