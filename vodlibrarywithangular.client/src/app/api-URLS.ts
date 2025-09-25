@@ -6,6 +6,7 @@ export class ApiUrls
     static readonly VIDEO_CONTROLLER = `${this.BASE}/video`;
     static readonly COMMENT_CONTROLLLER = `${this.BASE}/comment`;
     static readonly REACTION_CONTROLLER = `${this.BASE}/reaction`;
+    static readonly HISTORY_CONTROLLER = `${this.BASE}/history`;
 
     //authService
     static readonly LOGIN = `${this.BASE}/auth/login`;
@@ -17,7 +18,6 @@ export class ApiUrls
     static readonly CATEGORIES = `${this.VIDEO_CONTROLLER}/categories`;
     static readonly UPLOAD = `${this.VIDEO_CONTROLLER}/upload`;
     static readonly VIDEOSSECTIONS = `${this.VIDEO_CONTROLLER}/sections`;
-    static readonly LIKEDVIDEOS = `${this.VIDEO_CONTROLLER}/liked`;
     static readonly PLAY = `${this.VIDEO_CONTROLLER}/play`;
 
 
@@ -28,12 +28,14 @@ export class ApiUrls
     static readonly ADDREPLY5000 = `${this.COMMENT_CONTROLLLER}/addReply5000`;
 
 
-    //WatchHistory API calls located at authService
-    static readonly HISTORY = `${this.VIDEO_CONTROLLER}/history` //This should replace all the other garbage history API calls
-    static readonly ADDVODTOHISTORY = `${this.VIDEO_CONTROLLER}/history`
-    static readonly GETUSERHISTORYFORTODAY = `${this.VIDEO_CONTROLLER}/history`//Same as ADDVIDTOHISTORY but i did not want to cause confusion
-    static readonly GETUSERHISTORYPASTTODAY = `${this.VIDEO_CONTROLLER}/past/history`
-    static readonly DELETEUSERWATCHHISTORYALL = `${this.VIDEO_CONTROLLER}/past/history`
+    //historyService
+
+    static readonly LIKEDVIDEOS = `${this.HISTORY_CONTROLLER}/liked`;
+
+    static readonly GETUSERHISTORYFORTODAY = `${this.HISTORY_CONTROLLER}/today`//Same as ADDVIDTOHISTORY but i did not want to cause confusion
+    static readonly GETUSERHISTORYPASTTODAY = `${this.HISTORY_CONTROLLER}/past`
+    static readonly DELETEUSERWATCHHISTORYALL = `${this.HISTORY_CONTROLLER}/past`
+    static readonly DELETEINDIVIDUALVIDEORECORD = `${this.HISTORY_CONTROLLER}/invdividual`
 
   }
 

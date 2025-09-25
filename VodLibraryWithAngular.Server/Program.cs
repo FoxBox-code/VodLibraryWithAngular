@@ -20,6 +20,7 @@ string connectionString = builder.Configuration.GetConnectionString("DefaultConn
 builder.Services.AddSingleton<WebRootConfiguration>();
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
 builder.Services.AddLogging();
+builder.Services.AddHttpContextAccessor();
 
 builder.WebHost.ConfigureKestrel(options =>
 {

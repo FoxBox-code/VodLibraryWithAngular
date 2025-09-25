@@ -25,9 +25,14 @@ namespace VodLibraryWithAngular.Server.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IFileNameSanitizer _fileNameSanitizer;
         private readonly VideoFileRenditionsService _videoFileRenditionsService;
+        private readonly DTOTransformer _dtoTransformer;
 
 
-        public VideoController(ApplicationDbContext context, IWebHostEnvironment enviroment, ILogger<VideoController> logger, UserManager<ApplicationUser> userManager, IFileNameSanitizer fileNameSanitizer, VideoFileRenditionsService videoFileService)
+
+        public VideoController(ApplicationDbContext context,
+            IWebHostEnvironment enviroment, ILogger<VideoController> logger,
+            UserManager<ApplicationUser> userManager, IFileNameSanitizer fileNameSanitizer,
+            VideoFileRenditionsService videoFileService, DTOTransformer dTOTransformer)
         {
             _dbContext = context;
             _environment = enviroment;
@@ -35,6 +40,7 @@ namespace VodLibraryWithAngular.Server.Controllers
             _userManager = userManager;
             _fileNameSanitizer = fileNameSanitizer;
             _videoFileRenditionsService = videoFileService;
+            _dtoTransformer = dTOTransformer;
         }
 
         [HttpGet("categories")]
@@ -154,7 +160,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                 });
 
 
-                VideoWindowDTO videoWindowDTO = CreateVideoWindowDTOFromVideoRecord(latestVideo);
+                VideoWindowDTO videoWindowDTO = _dtoTransformer.CreateVideoWindowDTOFromVideoRecord(latestVideo);
 
 
                 return Ok(new
@@ -189,7 +195,7 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             }
 
-            VideoWindowDTO videoWindowDTO = CreateVideoWindowDTOFromVideoRecord(video);
+            VideoWindowDTO videoWindowDTO = _dtoTransformer.CreateVideoWindowDTOFromVideoRecord(video);
 
 
             return Ok(new { status = video.Status, videWindowDto = videoWindowDTO });
@@ -226,7 +232,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                     {
                         Id = c.Id,
                         Name = c.Name,
-                        Videos = c.Videos.Where(v => v.Status == VideoStatusEnum.Complete).Select(v => CreateVideoWindowDTOFromVideoRecord(v)).ToList()
+                        Videos = c.Videos.Where(v => v.Status == VideoStatusEnum.Complete).Select(v => _dtoTransformer.CreateVideoWindowDTOFromVideoRecord(v)).ToList()
                     })
                     .ToList();
 
@@ -255,44 +261,8 @@ namespace VodLibraryWithAngular.Server.Controllers
 
 
 
-        private (int hours, int minutes, int seconds) VideoLengthConvertedToHoursMinutesSeconds(TimeSpan length)
-        {
-            return (((int)length.TotalHours, length.Minutes, length.Seconds));
-        }
-        private VideoWindowDTO CreateVideoWindowDTOFromVideoRecord(VideoRecord video)//if you feel brave place this function on every videoWindowDTO creation
-        {
-            if (video.Category?.Name == null || video.VideoOwner?.UserName == null)
-            {
-                video = _dbContext.VideoRecords.Include(v => v.Category).Include(v => v.VideoOwner).First(v => v.Id == video.Id);
-            }
-
-            VideoWindowDTO res = new VideoWindowDTO()
-            {
-                Id = video.Id,
-                Title = video.Title,
-                Uploaded = video.Uploaded,
-                Length = video.Length,
-                Views = video.Views,
-                VideoOwnerId = video.VideoOwnerId,
-                VideoOwnerName = video.VideoOwner.UserName,
-                VideoOwnerProfileIcon = $"{Request.Scheme}://{Request.Host}/ProfilePics/ProfileIcons/{Path.GetFileName(video.VideoOwner.profilePic)}",
-
-                ImagePath = $"{Request.Scheme}://{Request.Host}/thumbnail/{Path.GetFileName(video.ImagePath)}",
-                CategoryId = video.CategoryId,
-                CategoryName = video.Category.Name,
-                Description = video.Description,
 
 
-            };
-
-            var (hours, minutes, seconds) = VideoLengthConvertedToHoursMinutesSeconds(video.Length);
-
-            res.Hours = hours;
-            res.Minutes = minutes;
-            res.Seconds = seconds;
-
-            return res;
-        }
 
         [HttpGet("play/{videoId}")]
         public async Task<IActionResult> GetCurrentVideo(int videoId) //getCurrentVideo
@@ -395,13 +365,7 @@ namespace VodLibraryWithAngular.Server.Controllers
 
         }
 
-        //[HttpGet("spriteSheet")]
-        //public async Task<IActionResult> GetSpriteSheetForVideo([FromQuery] VideoSpriteSheetParams spriteSheetParams)
-        //{
-        //    string res = Path.Combine(spriteSheetParams.VideoSpriteSheetBasePath, $"sprite_{spriteSheetParams.SpriteIndex}");
 
-        //    return Ok(res);
-        //}
 
 
 
@@ -436,264 +400,7 @@ namespace VodLibraryWithAngular.Server.Controllers
 
 
 
-        [Authorize]
-        [HttpGet("liked")]
-        public async Task<IActionResult> GetUserLikedHistory([FromQuery] int take) //  getUsersLikedVideosHistory
-        {
-            string userId = _userManager.GetUserId(User);
 
-
-            var videoLikesDislikes = _dbContext.VideoLikesDislikes
-                .Where(x => x.UserId == userId && x.Liked)
-                .OrderByDescending(x => x.TimeOfLike);
-
-            if (take > 0)
-                videoLikesDislikes = (IOrderedQueryable<VideoLikesDislikes>)videoLikesDislikes.Take(take);
-
-            var videoIds = await videoLikesDislikes.Select(x => new
-            {
-                videoId = x.VideoId
-            })
-            .ToListAsync();
-
-            List<VideoWindowDTO> collection = new List<VideoWindowDTO>();
-
-            foreach (var videoId in videoIds)
-            {
-                VideoRecord current = await _dbContext.VideoRecords
-                    .Include(v => v.VideoOwner)
-                    .FirstOrDefaultAsync(x => x.Id == videoId.videoId);
-
-                if (current == null)
-                {
-                    Console.WriteLine($"During the search of the users liked videos , one of the pointed ids {videoId.videoId} was not present in the videoCollection");
-                    continue; // not sure how to handle this 
-                }
-
-                VideoWindowDTO video = CreateVideoWindowDTOFromVideoRecord(current);
-
-
-
-                collection.Add(video);
-            }
-
-            return Ok(collection);
-        }
-
-
-
-
-
-
-
-        [Authorize]
-        [HttpDelete("liked/{videoId}")]
-        public async Task<IActionResult> RemoveVideoLikeFromHistory(int videoId)//deleteLikedVideoFromHistory
-        {
-            string userId = _userManager.GetUserId(User);
-
-            var selectedForRemoval = await _dbContext.VideoLikesDislikes
-                .FirstOrDefaultAsync(x => x.UserId == userId && x.VideoId == videoId);
-
-            if (selectedForRemoval == null)
-            {
-                return BadRequest(new
-                {
-                    message = $"An error occurred  while deleting this like for video with id {videoId}, the video was not found present in the users collection"
-                });
-            }
-
-            _dbContext.VideoLikesDislikes.Remove(selectedForRemoval);
-            await _dbContext.SaveChangesAsync();
-
-            return Ok(new
-            {
-                message = "successfully removed video from liked"
-            });
-        }
-
-
-        [Authorize]
-        [HttpPost("history/{videoId}")]
-        public async Task<IActionResult> AddVideoToUsersWatchHistory(int videoId)
-        {
-            string userId = _userManager.GetUserId(User);
-
-            UserWatchHistory newAddition = await _dbContext.UserWatchHistories.FirstOrDefaultAsync(h => h.VideoId == videoId && userId == h.UserId);//check for duplicates
-
-            if (newAddition == null)
-            {
-                newAddition = new UserWatchHistory()
-                {
-                    UserId = userId,
-                    VideoId = videoId,
-                    WatchedOn = DateTime.UtcNow,
-
-                };
-
-                await _dbContext.UserWatchHistories.AddAsync(newAddition);
-            }
-            else
-            {
-                newAddition.WatchedOn = DateTime.UtcNow;
-
-                _dbContext.UserWatchHistories.Update(newAddition);
-            }
-
-
-
-            await _dbContext.SaveChangesAsync();
-
-            VideoRecord video = _dbContext.VideoRecords.Include(v => v.VideoOwner).First(v => v.Id == videoId);
-
-            WatchHistoryVideoInfoDTO res = new WatchHistoryVideoInfoDTO()
-            {
-                VideoId = newAddition.VideoId,
-                WatchedOn = newAddition.WatchedOn,
-                Video = CreateVideoWindowDTOFromVideoRecord(video),
-                PrimaryKeyId = newAddition.Id
-            };
-
-            return Ok(res);
-
-        }
-
-
-        [Authorize]
-        [HttpGet("history")]
-        public async Task<IActionResult> GetUserWatchHistoryForToday()
-        {
-            string userId = _userManager.GetUserId(User);
-
-            DateTime today = DateTime.UtcNow.Date;
-            DateTime tomorrow = today.AddDays(1);
-
-
-            List<UserWatchHistory> videos = await _dbContext.UserWatchHistories
-                .Include(x => x.Video)
-                .ThenInclude(v => v.VideoOwner)
-                .Where(x => x.UserId == userId && x.WatchedOn >= today && x.WatchedOn < tomorrow)
-                .OrderByDescending(x => x.WatchedOn)
-                .ToListAsync();
-
-            List<WatchHistoryVideoInfoDTO> watchHistoryVideoDto = videos
-                .Select(x => new WatchHistoryVideoInfoDTO
-                {
-                    VideoId = x.VideoId,
-                    WatchedOn = x.WatchedOn,
-                    Video = CreateVideoWindowDTOFromVideoRecord(x.Video),
-                    PrimaryKeyId = x.VideoId
-                })
-                .ToList();
-
-
-
-
-
-
-
-            return Ok(watchHistoryVideoDto);
-        }
-
-        [Authorize]
-        [HttpGet("past/history")]
-        public async Task<IActionResult> GetUserWatchHistoryPastToday()//THIS MIGHT NEED A LOGIC rEWRITE
-        {
-            string userId = _userManager.GetUserId(User);
-
-            DateTime today = DateTime.UtcNow.Date;
-
-
-
-            List<List<WatchHistoryVideoInfoDTO>> pastRecords = new List<List<WatchHistoryVideoInfoDTO>>();
-
-            List<WatchHistoryVideoInfoDTO> currentDay = new List<WatchHistoryVideoInfoDTO>();
-
-            var userWatchHistory = await _dbContext.UserWatchHistories
-                .Include(x => x.Video)
-                    .ThenInclude(v => v.VideoOwner)
-                .Where(x => x.UserId == userId && x.WatchedOn < today)
-                .OrderByDescending(x => x.WatchedOn)
-                .ToListAsync();
-
-            DateTime previousDay = today.AddDays(-1);
-            DateTime currentDateDay = previousDay;
-
-            foreach (var video in userWatchHistory)
-            {
-
-
-                WatchHistoryVideoInfoDTO videoToAdd = new WatchHistoryVideoInfoDTO()
-                {
-                    VideoId = video.VideoId,
-                    WatchedOn = video.WatchedOn,
-                    Video = CreateVideoWindowDTOFromVideoRecord(video.Video),
-                    PrimaryKeyId = video.Id
-                };
-
-                if (currentDay.Count > 0 && currentDateDay != video.WatchedOn.Date)
-                {
-                    pastRecords.Add(currentDay);
-                    currentDay = new List<WatchHistoryVideoInfoDTO>();
-                    currentDateDay = video.WatchedOn.Date;
-                }
-                else
-                {
-                    currentDateDay = video.WatchedOn.Date;
-                }
-
-                currentDay.Add(videoToAdd);
-
-            }
-
-            if (currentDay.Count > 0)
-            {
-                pastRecords.Add(currentDay);
-            }
-
-
-            return Ok(pastRecords);
-        }
-
-        [Authorize]
-        [HttpDelete("past/history")]
-        public async Task<IActionResult> DeleteUserWatchHistoryAll()
-        {
-            string userId = _userManager.GetUserId(User);
-
-            var recordHistory = await _dbContext.UserWatchHistories.Where(x => x.UserId == userId).ToListAsync();
-
-            _dbContext.UserWatchHistories.RemoveRange(recordHistory);
-            await _dbContext.SaveChangesAsync();
-
-            return Ok(new
-            {
-                message = "History for user was cleared"
-            });
-        }
-
-        [Authorize]
-        [HttpDelete("history/{primaryKeyId}")]
-        public async Task<IActionResult> DeleteIndividualVideoRecord(int primaryKeyId)
-        {
-            var historyRecord = await _dbContext.UserWatchHistories.FirstOrDefaultAsync(x => x.Id == primaryKeyId);
-
-            if (historyRecord == null)
-            {
-                return BadRequest(new
-                {
-                    message = $"History record with this primary key id {primaryKeyId} was not found !"
-                });
-            }
-
-            _dbContext.Remove(historyRecord);
-            await _dbContext.SaveChangesAsync();
-
-            return Ok(new
-            {
-                message = "Video was successfully removed from user's history record"
-            });
-        }
 
         [HttpGet("user-profile/{userId}")]
         public async Task<IActionResult> GetUserCatalog(string userId)
@@ -715,7 +422,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                 .OrderByDescending(x => x.Uploaded)
                 .ToListAsync();
 
-            List<VideoWindowDTO> userCatalogDTO = userCatalog.Select(v => CreateVideoWindowDTOFromVideoRecord(v)).ToList();
+            List<VideoWindowDTO> userCatalogDTO = userCatalog.Select(v => _dtoTransformer.CreateVideoWindowDTOFromVideoRecord(v)).ToList();
 
             return Ok(userCatalogDTO);
 
@@ -726,7 +433,7 @@ namespace VodLibraryWithAngular.Server.Controllers
         {
             VideoRecord video = await _dbContext.VideoRecords.Include(v => v.VideoOwner).FirstAsync(v => v.Id == 14);
 
-            VideoWindowDTO res = CreateVideoWindowDTOFromVideoRecord(video);
+            VideoWindowDTO res = _dtoTransformer.CreateVideoWindowDTOFromVideoRecord(video);
 
             return Ok(res);
         }
@@ -743,7 +450,7 @@ namespace VodLibraryWithAngular.Server.Controllers
             foreach (var video in allVideos)
             {
                 if (4 >= Levenshtein(query.ToLower(), video.Title.ToLower()))
-                    result.Add(CreateVideoWindowDTOFromVideoRecord(video));
+                    result.Add(_dtoTransformer.CreateVideoWindowDTOFromVideoRecord(video));
 
                 else
                 {
@@ -753,7 +460,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                     {
                         if (queryHashSet.Contains(prefix))
                         {
-                            result.Add(CreateVideoWindowDTOFromVideoRecord(video));
+                            result.Add(_dtoTransformer.CreateVideoWindowDTOFromVideoRecord(video));
                         }
                     }
                 }
@@ -767,7 +474,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                 {
 
                     if (2 >= Levenshtein(video.Title.Split(" ").First(), querySplitted[0]))
-                        result.Add(CreateVideoWindowDTOFromVideoRecord(video));
+                        result.Add(_dtoTransformer.CreateVideoWindowDTOFromVideoRecord(video));
 
                 }
             }
@@ -842,7 +549,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                 });
             }
 
-            VideoWindowDTO res = CreateVideoWindowDTOFromVideoRecord(video);
+            VideoWindowDTO res = _dtoTransformer.CreateVideoWindowDTOFromVideoRecord(video);
 
             return Ok(res);
 
@@ -921,7 +628,7 @@ namespace VodLibraryWithAngular.Server.Controllers
             await _dbContext.SaveChangesAsync();
 
 
-            VideoWindowDTO res = CreateVideoWindowDTOFromVideoRecord(video);
+            VideoWindowDTO res = _dtoTransformer.CreateVideoWindowDTOFromVideoRecord(video);
 
             return Ok(res);
         }
@@ -1018,30 +725,7 @@ namespace VodLibraryWithAngular.Server.Controllers
             return Ok();
         }
 
-        [Authorize]
-        [HttpGet("history/you")]
-        public async Task<IActionResult> GetUserHistoryForYouPage()
-        {
-            string userId = _userManager.GetUserId(User);
 
-            List<UserWatchHistory> history = await _dbContext.UserWatchHistories.Where(h => h.UserId == userId)
-                .Include(h => h.Video)
-                .OrderByDescending(h => h.WatchedOn)
-                .Take(10)
-                .ToListAsync();
-
-            if (history.Count == 0)
-            {
-                return NotFound(new
-                {
-                    message = "No history"
-                });
-            }
-
-            List<VideoWindowDTO> videoWindowDTOs = history.Select(h => CreateVideoWindowDTOFromVideoRecord(h.Video)).ToList();
-
-            return Ok(videoWindowDTOs);
-        }
 
         [Authorize]
         [HttpGet("subscribers")]
@@ -1137,7 +821,7 @@ namespace VodLibraryWithAngular.Server.Controllers
             {
                 List<VideoRecord> vods = await _dbContext.VideoRecords.Where(x => x.VideoOwnerId == sub.SubscribedId).ToListAsync();
 
-                List<VideoWindowDTO> dtos = vods.Select(x => CreateVideoWindowDTOFromVideoRecord(x)).ToList();
+                List<VideoWindowDTO> dtos = vods.Select(x => _dtoTransformer.CreateVideoWindowDTOFromVideoRecord(x)).ToList();
 
                 videos.AddRange(dtos);
 
@@ -1175,7 +859,7 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             List<VideoRecord> vods = await _dbContext.VideoLikesDislikes.Include(x => x.Video).Where(x => x.UserId == userId && x.Liked == true).OrderByDescending(x => x.TimeOfLike).Select(x => x.Video).ToListAsync();
 
-            List<VideoWindowDTO> videoWindowDTOs = vods.Select(x => CreateVideoWindowDTOFromVideoRecord(x)).ToList();
+            List<VideoWindowDTO> videoWindowDTOs = vods.Select(x => _dtoTransformer.CreateVideoWindowDTOFromVideoRecord(x)).ToList();
 
             return Ok(videoWindowDTOs);
         }
@@ -1245,7 +929,7 @@ namespace VodLibraryWithAngular.Server.Controllers
             var res = await _dbContext.VideoRecords.Where(x => x.CategoryId == categoryId).ToListAsync();
 
 
-            List<VideoWindowDTO> videos = res.Select(x => CreateVideoWindowDTOFromVideoRecord(x)).ToList();
+            List<VideoWindowDTO> videos = res.Select(x => _dtoTransformer.CreateVideoWindowDTOFromVideoRecord(x)).ToList();
 
             return Ok(videos);
 

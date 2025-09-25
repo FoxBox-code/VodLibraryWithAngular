@@ -52,7 +52,7 @@ export class VideoService
   private selectedVideoSubcjet = new BehaviorSubject<VideoWindow | null>(null);
   public  selectedVideo$ = this.selectedVideoSubcjet.asObservable();
 
-  
+
 
 
 
@@ -188,49 +188,7 @@ export class VideoService
 
 
 
-  getUsersLikedVideosHistory(take? : number) : Observable<VideoWindow[]>
-  {
-    const token = this.authService.getLocalStorageToken();
-    const headers = new HttpHeaders
-    (
-      {
-        Authorization : `Bearer ${token}`
-      }
-    )
 
-    const params = new HttpParams();
-    if(take)
-      params.set('take', take);
-
-    return this.httpClient.get<VideoWindow[]>(`${ApiUrls.LIKEDVIDEOS}`, {headers, params});
-  }
-
-  deleteLikedVideoFromHistory(videoId : number) : Observable<{message : string}>
-  {
-    const token = this.authService.getLocalStorageToken();
-    const headers = new HttpHeaders
-    (
-      {
-        Authorization : `Bearer ${token}`
-      }
-    )
-      return this.httpClient.delete<{message : string}>(`${ApiUrls.LIKEDVIDEOS}/${videoId}`,{headers})
-  }
-
-  addUpdateUserWatchHistory(videoId : number) : Observable<WatchHistoryVideoInfo>
-  {
-    const token = this.authService.getLocalStorageToken();
-    const headers = new HttpHeaders
-    (
-      {
-        Authorization : `Bearer ${token}`
-      }
-    )
-
-
-
-    return this.httpClient.post<WatchHistoryVideoInfo>(`${ApiUrls.ADDVODTOHISTORY}/${videoId}`,null,{headers});
-  }
 
   getUserVideosCatalog(userId : string | null) : Observable<VideoWindow[]>
   {
@@ -316,12 +274,7 @@ export class VideoService
     return this.httpClient.delete(`${ApiUrls.VIDEO_CONTROLLER}/delete/${videoId}`,{headers})
   }
 
-  getUserHistoryForYouPage() : Observable<VideoWindow[]>
-  {
-      const headers = this.getHttpHeaders();
-
-      return this.httpClient.get<VideoWindow[]>(`${ApiUrls.VIDEO_CONTROLLER}/history/you`, {headers})
-  }
+  
 
   subscribeUserToVideoOwner(userId : string, followerUserNameProp : string , videoOwnerId : string , subscribedToUserNameProp : string)
   {

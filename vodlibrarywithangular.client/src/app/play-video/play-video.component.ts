@@ -28,6 +28,7 @@ import DOMPurify from 'dompurify';
 import { Title } from '@angular/platform-browser';
 import { CommentService } from '../comment.service';
 import { ReactionsService } from '../reactions.service';
+import { HistoryService } from '../history.service';
 
 
 type TooltipKey = 'playPause' | 'volume' | 'fullscreen' | 'volumeBar';
@@ -214,7 +215,8 @@ export class PlayVideoComponent
       private isUserTypingService : IsUserTypingService,
       private titleService : Title,
       private commentService : CommentService,
-      private reactionService : ReactionsService
+      private reactionService : ReactionsService,
+      private historyService : HistoryService
 
 
 
@@ -280,7 +282,7 @@ export class PlayVideoComponent
         if(this.loadPlayList === "true")
         {
           this.playListService.getLikedListMini().subscribe(data => this.playListMapper = data)
-          this.videoService.getUsersLikedVideosHistory()
+          this.historyService.getUsersLikedVideosHistory()
           .subscribe(
             {
               next : (list) =>
@@ -358,7 +360,7 @@ export class PlayVideoComponent
                               const exists = history.find(h => h.videoId == this.selectedVideoId)
 
 
-                              this.videoService.addUpdateUserWatchHistory(this.selectedVideoId)
+                              this.historyService.addUpdateUserWatchHistory(this.selectedVideoId)
                                 .subscribe(
                                 {
                                     next : (data) =>
