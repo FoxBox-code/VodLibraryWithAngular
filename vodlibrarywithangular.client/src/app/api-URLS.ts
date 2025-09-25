@@ -2,8 +2,10 @@ export class ApiUrls
 {
     static readonly BASE = 'https://localhost:7156/api';
 
-    //commentController
+    //Controllers
+    static readonly VIDEO_CONTROLLER = `${this.BASE}/video`;
     static readonly COMMENT_CONTROLLLER = `${this.BASE}/comment`;
+    static readonly REACTION_CONTROLLER = `${this.BASE}/reaction`;
 
     //authService
     static readonly LOGIN = `${this.BASE}/auth/login`;
@@ -11,12 +13,12 @@ export class ApiUrls
     static readonly AUTH = `${this.BASE}/auth`;
 
     //videoService
-    static readonly VIDEO = `${this.BASE}/video`
-    static readonly CATEGORIES = `${this.BASE}/video/categories`;
-    static readonly UPLOAD = `${this.BASE}/video/upload`;
-    static readonly VIDEOSSECTIONS = `${this.BASE}/video/sections`;
-    static readonly SELECTEDVIDEO = `${this.BASE}/video/play`;
-    static readonly LIKEDVIDEOS = `${this.BASE}/video/liked`
+
+    static readonly CATEGORIES = `${this.VIDEO_CONTROLLER}/categories`;
+    static readonly UPLOAD = `${this.VIDEO_CONTROLLER}/upload`;
+    static readonly VIDEOSSECTIONS = `${this.VIDEO_CONTROLLER}/sections`;
+    static readonly LIKEDVIDEOS = `${this.VIDEO_CONTROLLER}/liked`;
+    static readonly PLAY = `${this.VIDEO_CONTROLLER}/play`;
 
 
     //commentService
@@ -27,11 +29,11 @@ export class ApiUrls
 
 
     //WatchHistory API calls located at authService
-    static readonly HISTORY = `${this.VIDEO}/history` //This should replace all the other garbage history API calls
-    static readonly ADDVODTOHISTORY = `${this.VIDEO}/history`
-    static readonly GETUSERHISTORYFORTODAY = `${this.VIDEO}/history`//Same as ADDVIDTOHISTORY but i did not want to cause confusion
-    static readonly GETUSERHISTORYPASTTODAY = `${this.VIDEO}/past/history`
-    static readonly DELETEUSERWATCHHISTORYALL = `${this.VIDEO}/past/history`
+    static readonly HISTORY = `${this.VIDEO_CONTROLLER}/history` //This should replace all the other garbage history API calls
+    static readonly ADDVODTOHISTORY = `${this.VIDEO_CONTROLLER}/history`
+    static readonly GETUSERHISTORYFORTODAY = `${this.VIDEO_CONTROLLER}/history`//Same as ADDVIDTOHISTORY but i did not want to cause confusion
+    static readonly GETUSERHISTORYPASTTODAY = `${this.VIDEO_CONTROLLER}/past/history`
+    static readonly DELETEUSERWATCHHISTORYALL = `${this.VIDEO_CONTROLLER}/past/history`
 
   }
 

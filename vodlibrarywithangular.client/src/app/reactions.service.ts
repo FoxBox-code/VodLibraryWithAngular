@@ -29,7 +29,7 @@ export class ReactionsService
   {
     const headers = this.authService.getHttpHeaders();
 
-    return this.httpClient.get<Reaction>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/reactions`, {headers})
+    return this.httpClient.get<Reaction>(`${ApiUrls.REACTION_CONTROLLER}/${videoId}/reactions`, {headers})
   }
 
   deleteVideoReaction(videoId: number) : Observable<Reaction>
@@ -39,7 +39,7 @@ export class ReactionsService
 
 
 
-    return this.httpClient.delete<Reaction>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/reactions`, {headers})
+    return this.httpClient.delete<Reaction>(`${ApiUrls.REACTION_CONTROLLER}/${videoId}/reactions`, {headers})
   }
 
   addOrUpdateVideoReaction(videoId : number, reaction : string) : Observable<Reaction>
@@ -47,7 +47,7 @@ export class ReactionsService
 
     const headers = this.authService.getHttpHeaders();
 
-    return this.httpClient.post<Reaction>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/reactions`, { reactionType : reaction }, {headers})
+    return this.httpClient.post<Reaction>(`${ApiUrls.REACTION_CONTROLLER}/${videoId}/reactions`, { reactionType : reaction }, {headers})
   }
 
   getUserCommentLikesDislikes(videoId : number): Observable<userCommentReactions[]>
@@ -55,7 +55,7 @@ export class ReactionsService
 
     const headers = this.authService.getHttpHeaders();
 
-    return this.httpClient.get<userCommentReactions[]>(`${ApiUrls.SELECTEDVIDEO}/${videoId}/comment-reactions`, {headers})
+    return this.httpClient.get<userCommentReactions[]>(`${ApiUrls.REACTION_CONTROLLER}/${videoId}/comment-reactions`, {headers})
 
   }
 
@@ -64,7 +64,7 @@ export class ReactionsService
 
     const headers = this.authService.getHttpHeaders();
 
-    return this.httpClient.post<CommentReactionResponse>(`${ApiUrls.SELECTEDVIDEO}/${commentId}/comment-reactions`, {like : reaction},{headers})
+    return this.httpClient.post<CommentReactionResponse>(`${ApiUrls.REACTION_CONTROLLER}/${commentId}/comment-reactions`, {like : reaction},{headers})
   }
 
 
@@ -74,7 +74,7 @@ export class ReactionsService
     const headers = this.authService.getHttpHeaders();
 
 
-    return this.httpClient.delete<CommentReactionResponse>(`${ApiUrls.SELECTEDVIDEO}/${commentId}/comment-reactions`,{headers})
+    return this.httpClient.delete<CommentReactionResponse>(`${ApiUrls.REACTION_CONTROLLER}/${commentId}/comment-reactions`,{headers})
   }
 
   getUserRepliesReactions(commentId : number) : Observable<UserReplyReactions[]>
@@ -82,7 +82,7 @@ export class ReactionsService
 
     const headers = this.authService.getHttpHeaders();
 
-    return this.httpClient.get<UserReplyReactions[]>(`${ApiUrls.SELECTEDVIDEO}/${commentId}/replies-user-reactions`, {headers})
+    return this.httpClient.get<UserReplyReactions[]>(`${ApiUrls.REACTION_CONTROLLER}/${commentId}/replies-user-reactions`, {headers})
   }
 
   addUpdateReplyReaction(replyId : number, reaction : boolean) : Observable<ReplyLikeDislikeCountUpdateDTO>
@@ -90,7 +90,7 @@ export class ReactionsService
 
     const headers = this.authService.getHttpHeaders();
 
-    return this.httpClient.post<ReplyLikeDislikeCountUpdateDTO>(`${ApiUrls.SELECTEDVIDEO}/${replyId}/replies-user-reactions`, {reactionType : reaction}, {headers})
+    return this.httpClient.post<ReplyLikeDislikeCountUpdateDTO>(`${ApiUrls.REACTION_CONTROLLER}/${replyId}/replies-user-reactions`, {reactionType : reaction}, {headers})
   }
 
   deleteUserReplyReaction(replyId : number) : Observable<ReplyLikeDislikeCountUpdateDTO>
@@ -98,7 +98,7 @@ export class ReactionsService
 
     const headers = this.authService.getHttpHeaders();
 
-    return this.httpClient.delete<ReplyLikeDislikeCountUpdateDTO>(`${ApiUrls.SELECTEDVIDEO}/${replyId}/replies-user-reactions`, {headers})
+    return this.httpClient.delete<ReplyLikeDislikeCountUpdateDTO>(`${ApiUrls.REACTION_CONTROLLER}/${replyId}/replies-user-reactions`, {headers})
 
   }
 

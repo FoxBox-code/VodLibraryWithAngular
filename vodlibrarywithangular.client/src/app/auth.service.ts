@@ -231,7 +231,7 @@ export class AuthService
   {
     const headers = this.getHttpHeaders();
 
-    return this.httpClient.get<ProfilesFollowingDTO[]>(`${ApiUrls.VIDEO}/subscribers`, {headers})
+    return this.httpClient.get<ProfilesFollowingDTO[]>(`${ApiUrls.VIDEO_CONTROLLER}/subscribers`, {headers})
 
 
   }

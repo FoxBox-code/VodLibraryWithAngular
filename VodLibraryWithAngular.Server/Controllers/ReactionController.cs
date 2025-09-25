@@ -15,9 +15,10 @@ namespace VodLibraryWithAngular.Server.Controllers
         private readonly ApplicationDbContext _dbContext;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public ReactionController(ApplicationDbContext dbContext)
+        public ReactionController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager)
         {
             _dbContext = dbContext;
+            _userManager = userManager;
         }
 
         [Authorize]

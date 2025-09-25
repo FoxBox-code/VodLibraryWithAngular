@@ -38,7 +38,7 @@ export class PlaylistService
   {
     const headers = this.authService.getHttpHeaders();
 
-    return this.httpClient.get<VideoWindow[]>(`${ApiUrls.VIDEO}/likedVideosPlayList`, {headers})
+    return this.httpClient.get<VideoWindow[]>(`${ApiUrls.VIDEO_CONTROLLER}/likedVideosPlayList`, {headers})
 
   }
 
@@ -81,7 +81,7 @@ export class PlaylistService
   {
     const headers = this.authService.getHttpHeaders();
 
-    return this.httpClient.get<VideoWindow[]>(`${ApiUrls.VIDEO}/likedVideosPlayList`, {headers})
+    return this.httpClient.get<VideoWindow[]>(`${ApiUrls.VIDEO_CONTROLLER}/likedVideosPlayList`, {headers})
 
 
   }

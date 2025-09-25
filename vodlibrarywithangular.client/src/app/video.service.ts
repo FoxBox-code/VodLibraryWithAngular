@@ -52,8 +52,7 @@ export class VideoService
   private selectedVideoSubcjet = new BehaviorSubject<VideoWindow | null>(null);
   public  selectedVideo$ = this.selectedVideoSubcjet.asObservable();
 
-  private userVideoReactionSubect = new BehaviorSubject<Reaction | null>(null);
-  public userVideoReaction$ = this.userVideoReactionSubect.asObservable();
+  
 
 
 
@@ -112,7 +111,7 @@ export class VideoService
   getStatusForVideo(videoId : number) : Observable<any>
   {
     const params = {videoId : videoId}
-    return this.httpClient.get<any>(`${ApiUrls.VIDEO}/polling/videoStatus`, {params})
+    return this.httpClient.get<any>(`${ApiUrls.VIDEO_CONTROLLER}/polling/videoStatus`, {params})
   }
 
 
@@ -135,7 +134,7 @@ export class VideoService
   }
   getCurrentVideo(videoId : number) : Observable<PlayVideo>
   {
-    return this.httpClient.get<PlayVideo>(`${ApiUrls.SELECTEDVIDEO}/${videoId}`)
+    return this.httpClient.get<PlayVideo>(`${ApiUrls.PLAY}/${videoId}`)
     .pipe(catchError((error) =>
     {
         console.error('Failed to get a video from the server',
@@ -164,7 +163,7 @@ export class VideoService
 
  updateViews(selectedVideoId : number)
  {
-    return this.httpClient.patch(`${ApiUrls.SELECTEDVIDEO}/${selectedVideoId}/updateViews`, null);
+    return this.httpClient.patch(`${ApiUrls.VIDEO_CONTROLLER}/${selectedVideoId}/updateViews`, null);
  }
 
 
@@ -235,17 +234,17 @@ export class VideoService
 
   getUserVideosCatalog(userId : string | null) : Observable<VideoWindow[]>
   {
-      return this.httpClient.get<VideoWindow[]>(`${ApiUrls.VIDEO}/user-profile/${userId}`);
+      return this.httpClient.get<VideoWindow[]>(`${ApiUrls.VIDEO_CONTROLLER}/user-profile/${userId}`);
   }
 
   getVideoWindow() : Observable<VideoWindow>
   {
-    return this.httpClient.get<VideoWindow>(`${ApiUrls.VIDEO}/get-video-window`);
+    return this.httpClient.get<VideoWindow>(`${ApiUrls.VIDEO_CONTROLLER}/get-video-window`);
   }
 
   getVideoSearched(searchTerm : string) : Observable<VideoWindow[]>
   {
-      return this.httpClient.get<VideoWindow[]>(`${ApiUrls.VIDEO}/search`, {params : {query : searchTerm}} );
+      return this.httpClient.get<VideoWindow[]>(`${ApiUrls.VIDEO_CONTROLLER}/search`, {params : {query : searchTerm}} );
   }
 
   saveCategoriesInMemory(categories : CategoryWithVideos[] | Category[])
@@ -278,7 +277,7 @@ export class VideoService
   getEditVideoInfo(videoId : number) : Observable<VideoWindow>
   {
       const headers = this.getHttpHeaders();
-      return this.httpClient.get<VideoWindow>(`${ApiUrls.VIDEO}/edit/${videoId}`, {headers});
+      return this.httpClient.get<VideoWindow>(`${ApiUrls.VIDEO_CONTROLLER}/edit/${videoId}`, {headers});
   }
 
   private getHttpHeaders() : HttpHeaders
@@ -307,21 +306,21 @@ export class VideoService
     }
       console.log("Sending PATCH payload:", JSON.stringify(payload, null, 2));
 
-    return this.httpClient.patch<VideoWindow>(`${ApiUrls.VIDEO}/edit/${videoId}`, payload ,{headers})
+    return this.httpClient.patch<VideoWindow>(`${ApiUrls.VIDEO_CONTROLLER}/edit/${videoId}`, payload ,{headers})
   }
 
   deleteVideo(videoId : number)
   {
     const headers = this.getHttpHeaders();
 
-    return this.httpClient.delete(`${ApiUrls.VIDEO}/delete/${videoId}`,{headers})
+    return this.httpClient.delete(`${ApiUrls.VIDEO_CONTROLLER}/delete/${videoId}`,{headers})
   }
 
   getUserHistoryForYouPage() : Observable<VideoWindow[]>
   {
       const headers = this.getHttpHeaders();
 
-      return this.httpClient.get<VideoWindow[]>(`${ApiUrls.VIDEO}/history/you`, {headers})
+      return this.httpClient.get<VideoWindow[]>(`${ApiUrls.VIDEO_CONTROLLER}/history/you`, {headers})
   }
 
   subscribeUserToVideoOwner(userId : string, followerUserNameProp : string , videoOwnerId : string , subscribedToUserNameProp : string)
@@ -337,7 +336,7 @@ export class VideoService
 
     }
 
-    return this.httpClient.post(`${ApiUrls.VIDEO}/subscribe`, subscribingDTO , {headers})
+    return this.httpClient.post(`${ApiUrls.VIDEO_CONTROLLER}/subscribe`, subscribingDTO , {headers})
   }
 
   unSubscribeUserToVideoOwner(userId : string, followerUserNameProp : string , videoOwnerId : string , subscribedToUserNameProp : string)
@@ -361,36 +360,36 @@ export class VideoService
 
 
     console.log(params);
-    return this.httpClient.delete(`${ApiUrls.VIDEO}/subscribe`, {headers,params});
+    return this.httpClient.delete(`${ApiUrls.VIDEO_CONTROLLER}/subscribe`, {headers,params});
   }
 
   getUserVideosFromSubscribers() : Observable<VideoWindow[]>
   {
     const headers = this.getHttpHeaders();
 
-    return this.httpClient.get<VideoWindow[]>(`${ApiUrls.VIDEO}/subscriptions`, {headers});
+    return this.httpClient.get<VideoWindow[]>(`${ApiUrls.VIDEO_CONTROLLER}/subscriptions`, {headers});
   }
 
   getLikedVideosCount() : Observable<number>
   {
     const headers = this.getHttpHeaders();
 
-    return this.httpClient.get<number>(`${ApiUrls.VIDEO}/collection`, {headers});
+    return this.httpClient.get<number>(`${ApiUrls.VIDEO_CONTROLLER}/collection`, {headers});
   }
 
   getVideoLikesDislikeCount(videoId : number) : Observable<VideoLikeDislikeCountDTO>
   {
-    return this.httpClient.get<VideoLikeDislikeCountDTO>(`${ApiUrls.VIDEO}/${videoId}/likeDislikeCount`);
+    return this.httpClient.get<VideoLikeDislikeCountDTO>(`${ApiUrls.VIDEO_CONTROLLER}/${videoId}/likeDislikeCount`);
   }
 
   getCategoryStatsInViedoDescription(video : number) : Observable<CategoryStatsDTO>
   {
-    return this.httpClient.get<CategoryStatsDTO>(`${ApiUrls.VIDEO}/${video}/descriptionCategory`);
+    return this.httpClient.get<CategoryStatsDTO>(`${ApiUrls.VIDEO_CONTROLLER}/${video}/descriptionCategory`);
   }
 
   getCategoryVideos(categoryId : number) : Observable<VideoWindow[]>
   {
-    return this.httpClient.get<VideoWindow[]>(`${ApiUrls.VIDEO}/${categoryId}`);
+    return this.httpClient.get<VideoWindow[]>(`${ApiUrls.VIDEO_CONTROLLER}/${categoryId}`);
   }
 
   getVideoSpriteSheet(spriteIndex : number, videoSpriteSheetBasePath : string) : Observable<string>
@@ -400,7 +399,7 @@ export class VideoService
       spriteIndex : spriteIndex,
       videoSpriteSheetBasePath : videoSpriteSheetBasePath
     }
-    return this.httpClient.get<string>(`${ApiUrls.VIDEO}`, {params});
+    return this.httpClient.get<string>(`${ApiUrls.VIDEO_CONTROLLER}`, {params});
   }
 
 
