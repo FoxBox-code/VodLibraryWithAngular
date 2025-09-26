@@ -1,12 +1,12 @@
 import { Component} from '@angular/core';
-import { AuthService } from '../auth.service';
+import { AuthService } from '../services/auth.service';
 import { filter, forkJoin, Observable, switchMap, of, Subject, takeUntil } from 'rxjs';
-import { VideoService } from '../video.service';
+import { VideoService } from '../services/video.service';
 import { VideoWindow } from '../models/video-window';
-import { NavigationService } from '../navigation.service';
+import { NavigationService } from '../services/navigation.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DataCosntans } from '../dataconstants';
-import { HistoryService } from '../history.service';
+import { HistoryService } from '../services/history.service';
 
 @Component({
   selector: 'app-you-page',

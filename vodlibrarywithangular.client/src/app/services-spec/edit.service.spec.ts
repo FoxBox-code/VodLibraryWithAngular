@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { HistoryService } from './history.service';
+import { EditService } from '../services/edit.service';
 
-describe('HistoryService', () => {
-  let service: HistoryService;
+describe('EditService', () => {
+  let service: EditService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(HistoryService);
+    service = TestBed.inject(EditService);
   });
 
   it('should be created', () => {

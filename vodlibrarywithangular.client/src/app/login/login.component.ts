@@ -1,10 +1,11 @@
 import { Component, inject , AfterViewInit, ChangeDetectorRef} from '@angular/core';
-import { AuthService } from '../auth.service';
+import { AuthService } from '../services/auth.service';
 import { Login } from '../models/login';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { NavigationExtras, Params, Router } from '@angular/router';
-import { NavigationService } from '../navigation.service';
-import { HistoryService } from '../history.service';
+import { NavigationService } from '../services/navigation.service';
+import { HistoryService } from '../services/history.service';
+import { SubscriptionService } from '../services/subscription.service';
 
 @Component({
   selector: 'app-login',
@@ -33,7 +34,9 @@ export class LoginComponent
     emailOrPasswordWrongError : string | null = null;
     failedLogInAttempt : boolean = false;
 
-    constructor(private authService : AuthService, formBuilder : FormBuilder, navigationService : NavigationService, private historyService : HistoryService)
+    constructor(private authService : AuthService, formBuilder : FormBuilder, navigationService : NavigationService,
+      private historyService : HistoryService,
+      private subscriptionService : SubscriptionService)
     {
       this.loginForm = formBuilder.group(
         {
@@ -124,7 +127,7 @@ export class LoginComponent
                 }
               )
 
-              this.authService.getUserFollowing().subscribe({
+              this.subscriptionService.getUserFollowing().subscribe({
                 next : (following) =>
                   {
                     sessionStorage.setItem('userFollowing', JSON.stringify(following))

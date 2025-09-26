@@ -1,13 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { AuthService } from './auth.service';
-import { ApiUrls } from './api-URLS';
+import { ApiUrls } from '../api-URLS';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { VideoWindow } from './models/video-window';
-import { PlayListMapper } from './models/playListMaper';
+import { VideoWindow } from '../models/video-window';
+import { PlayListMapper } from '../models/playListMaper';
 import { Router } from '@angular/router';
-import { VideoWindowMini } from './models/videoWindowMini';
-import { LinkedListNode, LinkList } from './utility/linkedListImplementation';
+import { VideoWindowMini } from '../models/videoWindowMini';
+import { LinkedListNode, LinkList } from '../utility/linkedListImplementation';
 
 @Injectable({
   providedIn: 'root'

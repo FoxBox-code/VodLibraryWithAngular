@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
 import { AuthService } from './auth.service';
-import { VideoWindow } from './models/video-window';
-import { ApiUrls } from './api-URLS';
+import { VideoWindow } from '../models/video-window';
+import { ApiUrls } from '../api-URLS';
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { FormGroup } from '@angular/forms';
-import { EditVideoFormControls } from './models/EditVideoFormControls';
+import { EditVideoFormControls } from '../models/EditVideoFormControls';
 
 @Injectable({
   providedIn: 'root'

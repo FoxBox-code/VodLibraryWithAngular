@@ -1,13 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { Category } from '../models/category';
-import { VideoService } from '../video.service';
+import { VideoService } from '../services/video.service';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { DataCosntans } from '../dataconstants';
 import { Router } from '@angular/router';
-import { AuthService } from '../auth.service';
+import { AuthService } from '../services/auth.service';
 import { VideoWindow } from '../models/video-window';
 import { interval, switchMap } from 'rxjs';
 import { VideoStatusEnum } from '../models/enumVideoStatus';
+import { UploadVideoService } from '../services/upload-video.service';
 
 
 
@@ -39,7 +40,7 @@ export class UploadComponent implements OnInit
 
    areaInputLimitHit : boolean = false;
 
-      constructor(private videoService : VideoService, formBuilder : FormBuilder, private router: Router, private authService: AuthService)
+      constructor(private videoService : VideoService, formBuilder : FormBuilder, private router: Router, private authService: AuthService, private uploadVideoService : UploadVideoService)
       {
         authService.getAuthStatus().subscribe((result)=>
         {
@@ -105,7 +106,7 @@ export class UploadComponent implements OnInit
 
       console.log('Form Data ', formData);
 
-      this.videoService.uploadVideoNew(formData).subscribe(
+      this.uploadVideoService.uploadVideoNew(formData).subscribe(
       {
           next : (result) =>
             {
@@ -126,7 +127,7 @@ export class UploadComponent implements OnInit
               console.log(result.videoId)
 
               const sub = interval(3000).pipe(
-                switchMap(() => this.videoService.getStatusForVideo(result.videoId))
+                switchMap(() => this.uploadVideoService.getStatusForVideo(result.videoId))
               ).subscribe(
                 {
                   next : (response) =>

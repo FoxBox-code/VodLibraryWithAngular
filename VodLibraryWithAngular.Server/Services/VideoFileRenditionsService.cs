@@ -7,13 +7,13 @@ using VodLibraryWithAngular.Server.Interfaces;
 
 namespace VodLibraryWithAngular.Server.Services
 {
-    public class VideoFileRenditionsService
+    public class VideoFileRenditionsService : IVideoFileRenditionsService
     {
 
         private readonly IWebHostEnvironment _environment;
-        private ILogger<VideoFileRenditionsService> _logger;
+        private ILogger<IVideoFileRenditionsService> _logger;
         private IServiceScopeFactory _scopeFactory;
-        public VideoFileRenditionsService(IWebHostEnvironment environment, ILogger<VideoFileRenditionsService> logger, IServiceScopeFactory scopeFactory)
+        public VideoFileRenditionsService(IWebHostEnvironment environment, ILogger<IVideoFileRenditionsService> logger, IServiceScopeFactory scopeFactory)
         {
 
             _environment = environment;

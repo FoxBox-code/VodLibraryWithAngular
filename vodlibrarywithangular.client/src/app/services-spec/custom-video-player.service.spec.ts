@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { CustomVideoPlayerService } from './custom-video-player.service';
+import { CustomVideoPlayerService } from '../services/custom-video-player.service';
 
 describe('CustomVideoPlayerService', () => {
   let service: CustomVideoPlayerService;

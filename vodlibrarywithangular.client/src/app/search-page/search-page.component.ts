@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { VideoService } from '../video.service';
+import { VideoService } from '../services/video.service';
 import { VideoWindow } from '../models/video-window';
 import { Observable } from 'rxjs';
 import { ActivatedRoute, Router, } from '@angular/router';
@@ -32,7 +32,7 @@ export class SearchPageComponent
             }
           }
         )
-        
+
 
 
     }

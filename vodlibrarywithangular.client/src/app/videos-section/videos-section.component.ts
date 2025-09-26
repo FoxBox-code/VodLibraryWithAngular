@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CategoryWithVideos } from '../models/category-with-videos';
-import { VideoService } from '../video.service';
+import { VideoService } from '../services/video.service';
 
 @Component({
   selector: 'app-videos-section',

@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
-import { AddCommentDTO } from './models/add-CommentDTO';
+import { AddCommentDTO } from '../models/add-CommentDTO';
 import { BehaviorSubject, catchError, Observable, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { ApiUrls } from './api-URLS';
-import { Reply } from './models/reply';
-import { ReplyForm } from './models/reply-form';
-import { VideoComment } from './models/videoComment';
+import { ApiUrls } from '../api-URLS';
+import { Reply } from '../models/reply';
+import { ReplyForm } from '../models/reply-form';
+import { VideoComment } from '../models/videoComment';
 
 @Injectable({
   providedIn: 'root'

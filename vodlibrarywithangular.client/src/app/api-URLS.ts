@@ -7,6 +7,8 @@ export class ApiUrls
     static readonly COMMENT_CONTROLLLER = `${this.BASE}/comment`;
     static readonly REACTION_CONTROLLER = `${this.BASE}/reaction`;
     static readonly HISTORY_CONTROLLER = `${this.BASE}/history`;
+    static readonly SUBSCRIBE_CONTROLLER = `${this.BASE}/subscribe`;
+    static readonly UPLOAD_CONTROLLER = `${this.BASE}/upload`;
 
     //authService
     static readonly LOGIN = `${this.BASE}/auth/login`;
@@ -14,11 +16,11 @@ export class ApiUrls
     static readonly AUTH = `${this.BASE}/auth`;
 
     //videoService
-
     static readonly CATEGORIES = `${this.VIDEO_CONTROLLER}/categories`;
     static readonly UPLOAD = `${this.VIDEO_CONTROLLER}/upload`;
     static readonly VIDEOSSECTIONS = `${this.VIDEO_CONTROLLER}/sections`;
     static readonly PLAY = `${this.VIDEO_CONTROLLER}/play`;
+
 
 
     //commentService
@@ -29,13 +31,15 @@ export class ApiUrls
 
 
     //historyService
-
     static readonly LIKEDVIDEOS = `${this.HISTORY_CONTROLLER}/liked`;
+    static readonly GETUSERHISTORYFORTODAY = `${this.HISTORY_CONTROLLER}/today`;//Same as ADDVIDTOHISTORY but i did not want to cause confusion
+    static readonly GETUSERHISTORYPASTTODAY = `${this.HISTORY_CONTROLLER}/past`;
+    static readonly DELETEUSERWATCHHISTORYALL = `${this.HISTORY_CONTROLLER}/past`;
+    static readonly DELETEINDIVIDUALVIDEORECORD = `${this.HISTORY_CONTROLLER}/invdividual`;
 
-    static readonly GETUSERHISTORYFORTODAY = `${this.HISTORY_CONTROLLER}/today`//Same as ADDVIDTOHISTORY but i did not want to cause confusion
-    static readonly GETUSERHISTORYPASTTODAY = `${this.HISTORY_CONTROLLER}/past`
-    static readonly DELETEUSERWATCHHISTORYALL = `${this.HISTORY_CONTROLLER}/past`
-    static readonly DELETEINDIVIDUALVIDEORECORD = `${this.HISTORY_CONTROLLER}/invdividual`
+
+
+
 
   }
 

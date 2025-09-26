@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
-import { AuthService } from '../auth.service';
+import { AuthService } from '../services/auth.service';
 import { WatchHistoryVideoInfo } from '../models/watch-history-video-info';
 import { concat, concatMap, filter, map, Observable, Subject, switchMap, takeUntil } from 'rxjs';
 import { DataCosntans } from '../dataconstants';
-import { NavigationService } from '../navigation.service';
+import { NavigationService } from '../services/navigation.service';
 import { Router } from '@angular/router';
-import { HistoryService } from '../history.service';
+import { HistoryService } from '../services/history.service';
 
 @Component({
   selector: 'app-watch-history',

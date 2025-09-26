@@ -325,7 +325,7 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             if (user == null)
             {
-                _logger.LogInformation($"The user tried to change his password but have an invalid email address that does not exist in the db , the email in mind is ${email}");
+                _logger.LogInformation($"The user tried to change his password but has an invalid email address that does not exist in the db , the email in mind is ${email}");
 
                 return NotFound(new
                 { message = "Wrong email , this one does not exist on the records" });

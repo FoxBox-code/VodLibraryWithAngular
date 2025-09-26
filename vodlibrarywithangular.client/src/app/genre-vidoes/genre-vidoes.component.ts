@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { DataCosntans } from '../dataconstants';
 import { VideoWindow } from '../models/video-window';
-import { VideoService } from '../video.service';
+import { VideoService } from '../services/video.service';
 
 @Component({
   selector: 'app-genre-vidoes',

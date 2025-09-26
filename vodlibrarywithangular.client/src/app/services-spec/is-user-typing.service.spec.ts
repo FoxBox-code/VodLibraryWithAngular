@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { IsUserTypingService } from './is-user-typing.service';
+import { IsUserTypingService } from '../services/is-user-typing.service';
 
 describe('IsUserTypingService', () => {
   let service: IsUserTypingService;

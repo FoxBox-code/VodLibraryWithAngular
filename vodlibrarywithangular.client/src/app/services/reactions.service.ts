@@ -1,13 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from './auth.service';
-import { Reaction } from './models/reaction';
+import { Reaction } from '../models/reaction';
 import { Observable } from 'rxjs';
-import { ApiUrls } from './api-URLS';
-import { userCommentReactions } from './models/userCommentReactions';
-import { CommentReactionResponse } from './models/comment-reaction-response';
-import { UserReplyReactions } from './models/user-replies-reactions';
-import { ReplyLikeDislikeCountUpdateDTO } from './models/replyLikeDislikeCountUpdateDTO';
+import { ApiUrls } from '../api-URLS';
+import { userCommentReactions } from '../models/userCommentReactions';
+import { CommentReactionResponse } from '../models/comment-reaction-response';
+import { UserReplyReactions } from '../models/user-replies-reactions';
+import { ReplyLikeDislikeCountUpdateDTO } from '../models/replyLikeDislikeCountUpdateDTO';
 
 @Injectable({
   providedIn: 'root'

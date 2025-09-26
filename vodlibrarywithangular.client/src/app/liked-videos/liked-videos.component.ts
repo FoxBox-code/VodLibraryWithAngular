@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
-import { VideoService } from '../video.service';
-import { AuthService } from '../auth.service';
+import { VideoService } from '../services/video.service';
+import { AuthService } from '../services/auth.service';
 import { VideoWindow } from '../models/video-window';
-import { PlaylistService } from '../playlist.service';
+import { PlaylistService } from '../services/playlist.service';
 import { ChangeDetectionStrategy } from '@angular/core';
 import { ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';

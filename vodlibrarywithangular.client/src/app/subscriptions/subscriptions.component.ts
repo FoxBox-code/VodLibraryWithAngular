@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
-import { VideoService } from '../video.service';
+import { VideoService } from '../services/video.service';
 import { VideoWindow } from '../models/video-window';
 import { every, filter, map, Observable, Subject, switchMap } from 'rxjs';
-import { AuthService } from '../auth.service';
+import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
-import { NavigationService } from '../navigation.service';
+import { NavigationService } from '../services/navigation.service';
 import { DataCosntans } from '../dataconstants';
+import { SubscriptionService } from '../services/subscription.service';
 
 @Component({
   selector: 'app-subscriptions',
@@ -25,7 +26,9 @@ export class SubscriptionsComponent
 
 
 
-  constructor(private videoService : VideoService, private authService : AuthService, private router : Router , private navigationService : NavigationService  )
+  constructor(private videoService : VideoService, private authService : AuthService, private router : Router , private navigationService : NavigationService,
+    private subscriptionService : SubscriptionService
+    )
   {
     this.userId$ = this.authService.getUserIdAsObservable();
   }
@@ -38,7 +41,7 @@ export class SubscriptionsComponent
       filter((userId) => userId !== null),
 
       switchMap((userId)=>
-        this.videoService.getUserVideosFromSubscribers()
+        this.subscriptionService.getUserVideosFromSubscribers()
       .pipe(
         map(videos => ({userId , videos}))
       )

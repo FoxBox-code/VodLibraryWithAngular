@@ -18,9 +18,11 @@ namespace VodLibraryWithAngular.Server.Controllers
         private readonly ApplicationDbContext _dbContext;
         private readonly ILogger<CommentController> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
-        public CommentController(ApplicationDbContext dbContext)
+        public CommentController(ApplicationDbContext dbContext, UserManager<ApplicationUser> _userManager, ILogger<CommentController> _logger)
         {
             _dbContext = dbContext;
+            this._userManager = _userManager;
+            this._logger = _logger;
         }
 
         [HttpGet("{videoId}")]

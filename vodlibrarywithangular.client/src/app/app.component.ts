@@ -1,15 +1,16 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit, Query } from '@angular/core';
 import { UploadComponent } from './upload/upload.component';
-import { AuthService } from './auth.service';
+import { AuthService } from './services/auth.service';
 import { Observable } from 'rxjs';
 import { NavigationEnd, NavigationStart, Router } from '@angular/router';
 import { FormControl } from '@angular/forms';
-import { VideoService } from './video.service';
+import { VideoService } from './services/video.service';
 import { Category } from './models/category';
 import { ProfilesFollowingDTO } from './models/profiles-followingDTO';
 import { DataCosntans } from './dataconstants';
-import { IsUserTypingService } from './is-user-typing.service';
+import { IsUserTypingService } from './services/is-user-typing.service';
+import { SubscriptionService } from './services/subscription.service';
 
 
 
@@ -20,7 +21,11 @@ import { IsUserTypingService } from './is-user-typing.service';
   styleUrl: './app.component.scss'
 })
 export class AppComponent implements OnInit {
-  constructor(private http: HttpClient, private authService : AuthService, private router : Router, private videoService : VideoService, private isUserTypingService : IsUserTypingService)
+  constructor(private http: HttpClient, private authService : AuthService,
+     private router : Router, private videoService : VideoService,
+     private isUserTypingService : IsUserTypingService,
+     private subscriptionService : SubscriptionService
+    )
   {
     this.userNameDynamic$ = this.authService.getUserNameAsOservable();
     this.userId$ = this.authService.getUserIdAsObservable();
@@ -176,7 +181,7 @@ export class AppComponent implements OnInit {
   }
   private getUserSubscribersFromServer()
   {
-    this.authService.getUserFollowing()
+    this.subscriptionService.getUserFollowing()
     .subscribe(
       {
         next : (following) =>

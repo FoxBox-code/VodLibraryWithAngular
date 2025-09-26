@@ -2,14 +2,11 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using NuGet.Protocol;
-using System.Security.Claims;
 using VodLibraryWithAngular.Server.Data;
 using VodLibraryWithAngular.Server.Data.Models;
 using VodLibraryWithAngular.Server.DataConstants;
 using VodLibraryWithAngular.Server.Interfaces;
 using VodLibraryWithAngular.Server.Models;
-using VodLibraryWithAngular.Server.Services;
 
 
 namespace VodLibraryWithAngular.Server.Controllers
@@ -19,27 +16,22 @@ namespace VodLibraryWithAngular.Server.Controllers
     public class VideoController : ControllerBase
     {
         private readonly ApplicationDbContext _dbContext;
-        private readonly IWebHostEnvironment _environment;
         private readonly ILogger<VideoController> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IFileNameSanitizer _fileNameSanitizer;
-        private readonly VideoFileRenditionsService _videoFileRenditionsService;
         private readonly IDTOTransformer _dtoTransformer;
 
-
-
         public VideoController(ApplicationDbContext context,
-            IWebHostEnvironment enviroment, ILogger<VideoController> logger,
-            UserManager<ApplicationUser> userManager, IFileNameSanitizer fileNameSanitizer,
-            VideoFileRenditionsService videoFileService, IDTOTransformer dTOTransformer)
+             ILogger<VideoController> logger,
+            UserManager<ApplicationUser> userManager,
+            IDTOTransformer dTOTransformer)
         {
             _dbContext = context;
-            _environment = enviroment;
             _logger = logger;
             _userManager = userManager;
-            _fileNameSanitizer = fileNameSanitizer;
-            _videoFileRenditionsService = videoFileService;
             _dtoTransformer = dTOTransformer;
+
+
+
         }
 
         [HttpGet("categories")]
@@ -63,152 +55,6 @@ namespace VodLibraryWithAngular.Server.Controllers
             }
 
         }
-
-        [Authorize]
-        [HttpPost("upload")]
-        [RequestSizeLimit(209715200)] //200MB
-        public async Task<IActionResult> UploadVideo([FromForm] VideoUploadDTO videoUploadForm)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new { message = "Invalid Model", error = ModelState.Values.SelectMany(e => e.Errors).Select(e => e.ErrorMessage) });
-            }
-
-            try
-            {
-
-                string videoPath = Path.Combine(_environment.WebRootPath, "videos", Guid.NewGuid() + _fileNameSanitizer.SanitizeFileNameFromUrl(videoUploadForm.VideoFile.FileName));
-                string thumbnail = Path.Combine(_environment.WebRootPath, "thumbnail", Guid.NewGuid() + _fileNameSanitizer.SanitizeFileNameFromUrl(videoUploadForm.ImageFile.FileName)); // Guid.NewGuid generates unique names in order to prevent colliding
-
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Unauthorized("You are not authorized to upload videos!");
-                }
-
-                using (FileStream videoStream = new FileStream(videoPath, FileMode.Create))
-                {
-                    await videoUploadForm.VideoFile.CopyToAsync(videoStream);
-                }
-
-
-
-                //using (FileStream imageStream = new FileStream(thumbnail, FileMode.Create))
-                //{
-                //    await videoUploadForm.ImageFile.CopyToAsync(imageStream);
-                //} use library ImageSharp to format the given image from the user to selected sizes 
-
-                using Image image = await SixLabors.ImageSharp.Image.LoadAsync(videoUploadForm.ImageFile.OpenReadStream());
-                image.Mutate(x => x.Resize(480, 360));
-
-                await using FileStream outPutStream = new FileStream(thumbnail, FileMode.Create);
-                await image.SaveAsJpegAsync(outPutStream);//We only work with JPegs for now
-
-                var mediaInfo = await Xabe.FFmpeg.FFmpeg.GetMediaInfo(videoPath); // NO IDEA HOW THIS LIBRARY WORKS
-                var videoDuration = mediaInfo.VideoStreams.First().Duration;
-
-                VideoRecord video = new VideoRecord()
-                {
-                    Title = videoUploadForm.Title,
-                    Description = videoUploadForm.Description,
-                    CategoryId = videoUploadForm.CategoryId,
-                    VideoPath = videoPath,
-                    ImagePath = thumbnail,
-                    Uploaded = DateTime.UtcNow,
-                    Views = 0,
-                    CommentsCount = 0,
-                    ReplyCount = 0,
-                    Length = videoDuration,
-                    VideoOwnerId = userId,
-
-
-
-                };
-
-                Category category = await _dbContext.Categories.FirstOrDefaultAsync(x => x.Id == video.CategoryId);
-
-                if (category == null)
-                {
-                    _logger.LogInformation($"The added video was made with an unknown category id {video.CategoryId}");
-                    return BadRequest(new
-                    {
-                        message = "Unable to create video invalid category"
-                    });
-                }
-
-                category.VideosCount++;
-
-                await _dbContext.VideoRecords.AddAsync(video);
-                await _dbContext.SaveChangesAsync();
-
-
-                VideoRecord? latestVideo = await _dbContext.VideoRecords.Include(v => v.VideoOwner).FirstOrDefaultAsync(v => v.VideoOwnerId == userId && v.Uploaded == video.Uploaded);
-
-                if (latestVideo == null)
-                {
-                    _logger.LogError($"The video the user uploaded {video.ToJson()} was created in the db but retrieving it with the user id and the uploaded date was not successful");
-                    return BadRequest("Video failed to add");
-                }
-
-                _ = Task.Run(async () =>
-                {
-
-                    await _videoFileRenditionsService.RenditionUploadedVideo(latestVideo);
-
-                });
-
-
-                VideoWindowDTO videoWindowDTO = _dtoTransformer.CreateVideoWindowDTOFromVideoRecord(latestVideo);
-
-
-                return Ok(new
-                {
-                    Status = video.Status,
-                    videoId = video.Id
-                }
-                );
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Failed to post video to VODLibrary", error = ex.Message });
-            }
-
-        }
-
-        [HttpGet("polling/videoStatus")]
-        public async Task<IActionResult> GetStatusForVideo([FromQuery] int videoId)
-        {
-            _logger.LogInformation($"Entering getStatusForvideos with {videoId}");
-            var video = await _dbContext.VideoRecords.Include(x => x.VideoRenditions).FirstOrDefaultAsync(x => x.Id == videoId);
-
-            if (video == null)
-            {
-                _logger.LogInformation($"During GetStatusForVideo the video requested with id {videoId} was not found");
-                return NotFound("Video was not found");
-            }
-            else if (video.Status != VideoStatusEnum.Complete)
-            {
-                return Ok(new
-                { status = video.Status });
-
-            }
-
-            VideoWindowDTO videoWindowDTO = _dtoTransformer.CreateVideoWindowDTOFromVideoRecord(video);
-
-
-            return Ok(new { status = video.Status, videWindowDto = videoWindowDTO });
-
-
-
-
-        }
-
-
-
-
-
-
 
         [HttpGet("sections")]
         public async Task<IActionResult> GetMainMenuVideos() //getVideosSection
@@ -244,24 +90,6 @@ namespace VodLibraryWithAngular.Server.Controllers
             }
 
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         [HttpGet("play/{videoId}")]
         public async Task<IActionResult> GetCurrentVideo(int videoId) //getCurrentVideo
@@ -364,16 +192,6 @@ namespace VodLibraryWithAngular.Server.Controllers
 
         }
 
-
-
-
-
-
-
-
-
-
-
         [HttpPatch("play/{videoId}/updateViews")]
         public async Task<IActionResult> UpdateViews(int videoId)
         {
@@ -390,15 +208,6 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             return Ok();
         }
-
-
-
-
-
-
-
-
-
 
 
         [HttpGet("user-profile/{userId}")]
@@ -427,207 +236,7 @@ namespace VodLibraryWithAngular.Server.Controllers
 
         }
 
-        [HttpGet("get-video-window")]////This is a HARDCODED API request to see visually how the poping element will in Upload Component
-        public async Task<IActionResult> GetVideoWindow()
-        {
-            VideoRecord video = await _dbContext.VideoRecords.Include(v => v.VideoOwner).FirstAsync(v => v.Id == 14);
 
-            VideoWindowDTO res = _dtoTransformer.CreateVideoWindowDTOFromVideoRecord(video);
-
-            return Ok(res);
-        }
-
-        [HttpGet("search")]
-        public async Task<IActionResult> SearchVideo([FromQuery] string query)
-        {
-            List<VideoRecord> allVideos = await _dbContext.VideoRecords.Include(v => v.VideoOwner).ToListAsync();
-
-            string[] querySplitted = query.ToLower().Split(" ");
-            List<VideoWindowDTO> result = new List<VideoWindowDTO>();
-            HashSet<string> queryHashSet = new HashSet<string>(querySplitted);
-
-            foreach (var video in allVideos)
-            {
-                if (4 >= Levenshtein(query.ToLower(), video.Title.ToLower()))
-                    result.Add(_dtoTransformer.CreateVideoWindowDTOFromVideoRecord(video));
-
-                else
-                {
-                    string[] titleSplited = video.Title.ToLower().Split(" ", StringSplitOptions.RemoveEmptyEntries);
-
-                    foreach (var prefix in titleSplited)
-                    {
-                        if (queryHashSet.Contains(prefix))
-                        {
-                            result.Add(_dtoTransformer.CreateVideoWindowDTOFromVideoRecord(video));
-                        }
-                    }
-                }
-
-
-            }
-
-            if (result.Count == 0)
-            {
-                foreach (var video in allVideos)
-                {
-
-                    if (2 >= Levenshtein(video.Title.Split(" ").First(), querySplitted[0]))
-                        result.Add(_dtoTransformer.CreateVideoWindowDTOFromVideoRecord(video));
-
-                }
-            }
-
-
-            return Ok(result);
-
-
-
-        }
-
-
-        private int Levenshtein(string a, string b)
-        {
-            if (a == b) return 0;
-            if (a.Length == 0) return b.Length;
-            if (b.Length == 0) return a.Length;
-
-            var costs = new int[b.Length + 1];
-            for (int j = 0; j <= b.Length; j++)
-                costs[j] = j;
-
-            for (int i = 1; i <= a.Length; i++)
-            {
-                costs[0] = i;
-                int nw = i - 1;
-                for (int j = 1; j <= b.Length; j++)
-                {
-                    int cj = Math.Min(
-                        1 + Math.Min(costs[j], costs[j - 1]),
-                        a[i - 1] == b[j - 1] ? nw : nw + 1);
-                    nw = costs[j];
-                    costs[j] = cj;
-                }
-            }
-
-            return costs[b.Length];
-        }
-
-
-
-
-
-
-
-
-
-        [Authorize]
-        [HttpGet("subscribers")]
-        public async Task<IActionResult> GetUserFollowing()
-        {
-            string userId = _userManager.GetUserId(User);
-
-            var queryResult = await _dbContext.SubScribers.Include(x => x.Subscribed).Where(s => s.FollowerId == userId).ToListAsync();
-
-            Console.WriteLine("ARE WE EVEN HERERERERERE!!!!!!!!!!!");
-
-            List<ProfilesFollowingDTO> following = queryResult.Select(q => new ProfilesFollowingDTO
-            {
-                Id = q.SubscribedId,
-                UserName = q.SubscribedUserName,
-                SubscribedOn = q.SubscribedOn,
-                UesrImageIcon = $"{Request.Scheme}://{Request.Host}/ProfilePics/ProfileIcons/{Path.GetFileName(q.Subscribed.profilePic)}"
-
-            })
-            .ToList();
-
-            return Ok(following);
-
-        }
-
-
-        [Authorize]
-        [HttpPost("subscribe")]
-        public async Task<IActionResult> SubscribeUserToVideoOwner([FromBody] SubscribingDTO body)
-        {
-            Subscriber subscribe = await _dbContext.SubScribers.FirstOrDefaultAsync(x => x.FollowerId == body.FollowerId && x.SubscribedId == body.SubscribedToId);
-
-            if (subscribe != null)
-            {
-                return BadRequest(new
-                {
-                    message = "Duplicate detected user already subbed to content creator"
-                });
-            }
-
-            subscribe = new Subscriber()
-            {
-                FollowerId = body.FollowerId,
-                FollowerUserName = body.FollowerUserName,
-                SubscribedId = body.SubscribedToId,
-                SubscribedUserName = body.SubscribedToUserName,
-                SubscribedOn = DateTime.UtcNow
-
-            };
-
-            await _dbContext.SubScribers.AddAsync(subscribe);
-            await _dbContext.SaveChangesAsync();
-
-            return Ok();
-        }
-
-        [Authorize]
-        [HttpDelete("subscribe")]
-        public async Task<IActionResult> UnSubscribeUserToVideoOwner([FromQuery] SubscribingDTO body)
-        {
-            Console.WriteLine(body.ToJson());
-            Subscriber subscriber = _dbContext.SubScribers.FirstOrDefault(x => x.FollowerId == body.FollowerId && x.SubscribedId == body.SubscribedToId);
-
-            if (subscriber == null)
-            {
-                return BadRequest(new
-                {
-                    message = "Could not find meta data for the provided un subscription"
-                });
-
-            }
-
-            _dbContext.Remove(subscriber);
-            await _dbContext.SaveChangesAsync();
-
-            return Ok();
-
-        }
-
-        [Authorize]
-        [HttpGet("subscriptions")]
-        public async Task<IActionResult> GetUserVideosFromSubscribers()
-        {
-            string userId = _userManager.GetUserId(User);
-
-            var subs = await _dbContext.SubScribers.Where(s => s.FollowerId == userId)
-                .Select(x => new { x.SubscribedId })
-                .ToListAsync();
-
-            List<VideoWindowDTO> videos = new List<VideoWindowDTO>();
-
-            foreach (var sub in subs)
-            {
-                List<VideoRecord> vods = await _dbContext.VideoRecords.Where(x => x.VideoOwnerId == sub.SubscribedId).ToListAsync();
-
-                List<VideoWindowDTO> dtos = vods.Select(x => _dtoTransformer.CreateVideoWindowDTOFromVideoRecord(x)).ToList();
-
-                videos.AddRange(dtos);
-
-            }
-
-            videos.Sort((a, b) =>
-            {
-                return b.Uploaded.CompareTo(a.Uploaded);
-            });
-
-            return Ok(videos);
-        }
 
         [Authorize]
         [HttpGet("collection")]
@@ -730,11 +339,147 @@ namespace VodLibraryWithAngular.Server.Controllers
         }
 
 
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchVideo([FromQuery] string query)
+        {
+            List<VideoRecord> allVideos = await _dbContext.VideoRecords.Include(v => v.VideoOwner).ToListAsync();
+
+            string[] querySplitted = query.ToLower().Split(" ");
+            List<VideoWindowDTO> result = new List<VideoWindowDTO>();
+            HashSet<string> queryHashSet = new HashSet<string>(querySplitted);
+
+            foreach (var video in allVideos)
+            {
+                if (4 >= Levenshtein(query.ToLower(), video.Title.ToLower()))
+                    result.Add(_dtoTransformer.CreateVideoWindowDTOFromVideoRecord(video));
+
+                else
+                {
+                    string[] titleSplited = video.Title.ToLower().Split(" ", StringSplitOptions.RemoveEmptyEntries);
+
+                    foreach (var prefix in titleSplited)
+                    {
+                        if (queryHashSet.Contains(prefix))
+                        {
+                            result.Add(_dtoTransformer.CreateVideoWindowDTOFromVideoRecord(video));
+                        }
+                    }
+                }
+
+
+            }
+
+            if (result.Count == 0)
+            {
+                foreach (var video in allVideos)
+                {
+
+                    if (2 >= Levenshtein(video.Title.Split(" ").First(), querySplitted[0]))
+                        result.Add(_dtoTransformer.CreateVideoWindowDTOFromVideoRecord(video));
+
+                }
+            }
+
+
+            return Ok(result);
+
+
+
+        }
+
+
+        private int Levenshtein(string a, string b)
+        {
+            if (a == b) return 0;
+            if (a.Length == 0) return b.Length;
+            if (b.Length == 0) return a.Length;
+
+            var costs = new int[b.Length + 1];
+            for (int j = 0; j <= b.Length; j++)
+                costs[j] = j;
+
+            for (int i = 1; i <= a.Length; i++)
+            {
+                costs[0] = i;
+                int nw = i - 1;
+                for (int j = 1; j <= b.Length; j++)
+                {
+                    int cj = Math.Min(
+                        1 + Math.Min(costs[j], costs[j - 1]),
+                        a[i - 1] == b[j - 1] ? nw : nw + 1);
+                    nw = costs[j];
+                    costs[j] = cj;
+                }
+            }
+
+            return costs[b.Length];
+        }
 
 
 
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

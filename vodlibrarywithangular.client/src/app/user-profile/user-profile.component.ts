@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute, Router} from '@angular/router';
-import { VideoService } from '../video.service';
+import { VideoService } from '../services/video.service';
 import { VideoWindow } from '../models/video-window';
 
 @Component({

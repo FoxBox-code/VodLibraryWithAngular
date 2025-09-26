@@ -1,24 +1,24 @@
 import { Injectable,inject } from '@angular/core';
 import { BehaviorSubject, Observable, retry } from 'rxjs';
-import { Category } from './models/category';
+import { Category } from '../models/category';
 import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams, HttpParamsOptions, HttpRequest } from '@angular/common/http';
-import { ApiUrls } from './api-URLS';
+import { ApiUrls } from '../api-URLS';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
-import { CategoryWithVideos } from './models/category-with-videos';
-import { PlayVideo } from './models/play-video';
-import { VideoComment } from './models/videoComment';
+import { CategoryWithVideos } from '../models/category-with-videos';
+import { PlayVideo } from '../models/play-video';
+import { VideoComment } from '../models/videoComment';
 
-import { Reaction } from './models/reaction';
+import { Reaction } from '../models/reaction';
 
-import { VideoWindow } from './models/video-window';
-import { WatchHistoryVideoInfo } from './models/watch-history-video-info';
+import { VideoWindow } from '../models/video-window';
+import { WatchHistoryVideoInfo } from '../models/watch-history-video-info';
 import { FormGroup } from '@angular/forms';
-import { EditVideoFormControls } from './models/EditVideoFormControls';
-import { SubscribingDTO } from './models/subscribingDTO';
-import { VideoLikeDislikeCountDTO } from './models/video-like-dislike-countDTO';
-import { CategoryStatsDTO } from './models/categorystatsDTO';
-import { UploadServerMessageResponse } from './models/uploadServerMessageResponse';
+import { EditVideoFormControls } from '../models/EditVideoFormControls';
+import { SubscribingDTO } from '../models/subscribingDTO';
+import { VideoLikeDislikeCountDTO } from '../models/video-like-dislike-countDTO';
+import { CategoryStatsDTO } from '../models/categorystatsDTO';
+import { UploadServerMessageResponse } from '../models/uploadServerMessageResponse';
 
 
 @Injectable({
@@ -93,26 +93,7 @@ export class VideoService
   //     return this.httpClient.post<any>(`${ApiUrls.UPLOAD}`, formData, {headers});
   // }
 
-  uploadVideoNew(formData : FormData) : Observable<UploadServerMessageResponse>
-  {
-    const token = this.authService.getLocalStorageToken();
-    console.log(`Current token : ${token}`);
 
-    const headers = new HttpHeaders(
-    {
-      Authorization : `Bearer ${token}`
-    });
-    console.log(`Header loggin ${headers.get('Authorization')}`);
-
-
-    return this.httpClient.post<UploadServerMessageResponse>(`${ApiUrls.UPLOAD}`, formData, {headers});
-  }
-
-  getStatusForVideo(videoId : number) : Observable<any>
-  {
-    const params = {videoId : videoId}
-    return this.httpClient.get<any>(`${ApiUrls.VIDEO_CONTROLLER}/polling/videoStatus`, {params})
-  }
 
 
 
@@ -253,52 +234,7 @@ export class VideoService
 
 
 
-  subscribeUserToVideoOwner(userId : string, followerUserNameProp : string , videoOwnerId : string , subscribedToUserNameProp : string)
-  {
-    const headers = this.getHttpHeaders();
 
-    const subscribingDTO : SubscribingDTO =
-    {
-        followerId : userId,
-        followerUserName : followerUserNameProp,
-        subscribedToId : videoOwnerId,
-        subscribedToUserName : subscribedToUserNameProp
-
-    }
-
-    return this.httpClient.post(`${ApiUrls.VIDEO_CONTROLLER}/subscribe`, subscribingDTO , {headers})
-  }
-
-  unSubscribeUserToVideoOwner(userId : string, followerUserNameProp : string , videoOwnerId : string , subscribedToUserNameProp : string)
-  {
-      const headers = this.getHttpHeaders();
-
-       const subscribingDTO : SubscribingDTO =
-    {
-        followerId : userId,
-        followerUserName : followerUserNameProp,
-        subscribedToId : videoOwnerId,
-        subscribedToUserName : subscribedToUserNameProp
-
-    }
-
-    const params : HttpParams = new HttpParams()
-    .set('followerId', userId)
-    .set('followerUserName', followerUserNameProp)
-    .set('subscribedToId', videoOwnerId)
-    .set('subscribedToUserName', subscribedToUserNameProp);
-
-
-    console.log(params);
-    return this.httpClient.delete(`${ApiUrls.VIDEO_CONTROLLER}/subscribe`, {headers,params});
-  }
-
-  getUserVideosFromSubscribers() : Observable<VideoWindow[]>
-  {
-    const headers = this.getHttpHeaders();
-
-    return this.httpClient.get<VideoWindow[]>(`${ApiUrls.VIDEO_CONTROLLER}/subscriptions`, {headers});
-  }
 
   getLikedVideosCount() : Observable<number>
   {

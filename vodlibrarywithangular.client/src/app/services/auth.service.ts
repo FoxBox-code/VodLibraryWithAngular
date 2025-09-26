@@ -1,15 +1,15 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpRequest } from '@angular/common/http';
 import { Observable, Subject, catchError, switchMap, throwError, timestamp } from 'rxjs';
-import { Register } from './models/register';
-import { Login } from './models/login';
+import { Register } from '../models/register';
+import { Login } from '../models/login';
 import { BehaviorSubject } from 'rxjs';
 import {jwtDecode} from 'jwt-decode';
-import { ApiUrls } from './api-URLS';
-import { WatchHistoryVideoInfo } from './models/watch-history-video-info';
-import { ProfilesFollowingDTO } from './models/profiles-followingDTO';
-import { ConfirmValidEmailAnswer } from './models/confirmValidEmailAnswerDTO';
-import { ChangePasswordFromBody } from './models/changePasswordFromBody';
+import { ApiUrls } from '../api-URLS';
+import { WatchHistoryVideoInfo } from '../models/watch-history-video-info';
+import { ProfilesFollowingDTO } from '../models/profiles-followingDTO';
+import { ConfirmValidEmailAnswer } from '../models/confirmValidEmailAnswerDTO';
+import { ChangePasswordFromBody } from '../models/changePasswordFromBody';
 
 
 
@@ -177,16 +177,9 @@ export class AuthService
     return this.userIdSubject.asObservable();
   }
 
-  
-
-  getUserFollowing() : Observable<ProfilesFollowingDTO[]>
-  {
-    const headers = this.getHttpHeaders();
-
-    return this.httpClient.get<ProfilesFollowingDTO[]>(`${ApiUrls.VIDEO_CONTROLLER}/subscribers`, {headers})
 
 
-  }
+
 
   public getHttpHeaders() : HttpHeaders
   {

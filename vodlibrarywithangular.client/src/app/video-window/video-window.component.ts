@@ -1,9 +1,9 @@
 import { Component, Input } from '@angular/core';
 import { VideoWindow } from '../models/video-window';
 import { concatWith, Observable } from 'rxjs';
-import { AuthService } from '../auth.service';
+import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
-import { VideoService } from '../video.service';
+import { VideoService } from '../services/video.service';
 
 
 @Component({

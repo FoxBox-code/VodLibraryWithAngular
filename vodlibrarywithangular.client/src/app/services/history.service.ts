@@ -2,9 +2,9 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { AuthService } from './auth.service';
 import { Observable } from 'rxjs';
-import { VideoWindow } from './models/video-window';
-import { ApiUrls } from './api-URLS';
-import { WatchHistoryVideoInfo } from './models/watch-history-video-info';
+import { VideoWindow } from '../models/video-window';
+import { ApiUrls } from '../api-URLS';
+import { WatchHistoryVideoInfo } from '../models/watch-history-video-info';
 
 @Injectable({
   providedIn: 'root'

@@ -101,7 +101,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddScoped<DataMigrationService>(); //This places our migration service in the DI container for a blueprint on how to use it
 builder.Services.AddScoped<IFileNameSanitizer, FileNameSanitizer>();
-builder.Services.AddScoped<VideoFileRenditionsService>();
+builder.Services.AddScoped<IVideoFileRenditionsService, VideoFileRenditionsService>();
 builder.Services.AddScoped<IDTOTransformer, DTOTransformer>();
 
 var app = builder.Build();

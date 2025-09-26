@@ -1,13 +1,13 @@
 import { Component, ElementRef, HostListener, Inject, inject, ViewChild} from '@angular/core';
-import { VideoService } from '../video.service';
+import { VideoService } from '../services/video.service';
 import { PlayVideo } from '../models/play-video';
 import { ActivatedRoute } from '@angular/router';
 import { FormGroup, FormBuilder, Validators, RequiredValidator } from '@angular/forms';
-import { AuthService } from '../auth.service';
+import { AuthService } from '../services/auth.service';
 import { BehaviorSubject, firstValueFrom, interval, Observable, of, pipe, Subject } from 'rxjs';
 import { take, takeUntil, timeout } from 'rxjs/operators';
 
-import { NavigationService } from '../navigation.service';
+import { NavigationService } from '../services/navigation.service';
 import { Router } from '@angular/router';
 import { AddCommentDTO } from '../models/add-CommentDTO';
 import { VideoComment } from '../models/videoComment';
@@ -19,16 +19,17 @@ import { WatchHistoryVideoInfo } from '../models/watch-history-video-info';
 import { ProfilesFollowingDTO } from '../models/profiles-followingDTO';
 import { VideoWindow } from '../models/video-window';
 import { PlayListMapper } from '../models/playListMaper';
-import { PlaylistService } from '../playlist.service';
+import { PlaylistService } from '../services/playlist.service';
 import { VideoLikeDislikeCountDTO } from '../models/video-like-dislike-countDTO';
 import { CategoryStatsDTO } from '../models/categorystatsDTO';
 import { DataCosntans } from '../dataconstants';
-import { IsUserTypingService } from '../is-user-typing.service';
+import { IsUserTypingService } from '../services/is-user-typing.service';
 import DOMPurify from 'dompurify';
 import { Title } from '@angular/platform-browser';
-import { CommentService } from '../comment.service';
-import { ReactionsService } from '../reactions.service';
-import { HistoryService } from '../history.service';
+import { CommentService } from '../services/comment.service';
+import { ReactionsService } from '../services/reactions.service';
+import { HistoryService } from '../services/history.service';
+import { SubscriptionService } from '../services/subscription.service';
 
 
 type TooltipKey = 'playPause' | 'volume' | 'fullscreen' | 'volumeBar';
@@ -207,7 +208,8 @@ export class PlayVideoComponent
 
 
 
-    constructor(private videoService : VideoService,
+    constructor(
+      private videoService : VideoService,
       private activatedRoute:ActivatedRoute,
       private formBuilder : FormBuilder,
       private authService : AuthService,
@@ -216,7 +218,8 @@ export class PlayVideoComponent
       private titleService : Title,
       private commentService : CommentService,
       private reactionService : ReactionsService,
-      private historyService : HistoryService
+      private historyService : HistoryService,
+      private subscriptionService : SubscriptionService
 
 
 
@@ -1934,7 +1937,7 @@ export class PlayVideoComponent
               this.authService.updateSubjectForUserFollowing(this.userFollowing);
               sessionStorage.setItem('userFollowing', JSON.stringify(this.userFollowing))
 
-              this.videoService.subscribeUserToVideoOwner(theCurrentUserId , userName, subscribingTo, videoOwner)
+              this.subscriptionService.subscribeUserToVideoOwner(theCurrentUserId , userName, subscribingTo, videoOwner)
               .subscribe(
                 {
                     next : () =>
@@ -1975,7 +1978,7 @@ export class PlayVideoComponent
             this.hasUserSubscribedToVideoOwner = false;
 
             if(theCurrentUserId && userName && subscribingTo && videoOwner)
-                this.videoService.unSubscribeUserToVideoOwner(theCurrentUserId , userName, subscribingTo, videoOwner)
+                this.subscriptionService.unSubscribeUserToVideoOwner(theCurrentUserId , userName, subscribingTo, videoOwner)
                 .subscribe({
                   next : () =>
                   {

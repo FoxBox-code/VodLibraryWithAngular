@@ -1,8 +1,8 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { VideoWindow } from '../models/video-window';
-import { VideoService } from '../video.service';
+import { VideoService } from '../services/video.service';
 import { ChangeDetectionStrategy } from '@angular/core';
-import { HistoryService } from '../history.service';
+import { HistoryService } from '../services/history.service';
 
 @Component({
   selector: 'app-playlist',

@@ -1,14 +1,14 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { PlaylistService } from '../playlist.service';
+import { PlaylistService } from '../services/playlist.service';
 import { VideoWindowMini } from '../models/videoWindowMini';
 import { VideoWindow } from '../models/video-window';
 import { ActivatedRoute, Router } from '@angular/router';
-import { VideoService } from '../video.service';
+import { VideoService } from '../services/video.service';
 import { PlayVideo } from '../models/play-video';
 import { PlayListMapper } from '../models/playListMaper';
 import { LinkList } from '../utility/linkedListImplementation';
 import { Observable } from 'rxjs';
-import { HistoryService } from '../history.service';
+import { HistoryService } from '../services/history.service';
 
 @Component({
   selector: 'app-playlistmini',

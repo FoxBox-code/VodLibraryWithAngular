@@ -1,7 +1,7 @@
 import { Component, ElementRef, ViewChild} from '@angular/core';
 import { FormGroup, FormBuilder, Validators, FormControl } from '@angular/forms';
 import { EditVideoDataDTO } from '../models/edit-Video-DataDTO';
-import { VideoService } from '../video.service';
+import { VideoService } from '../services/video.service';
 import { Observable, combineLatest, filter, of, switchMap, throwError } from 'rxjs';
 import { VideoWindow } from '../models/video-window';
 import { Category } from '../models/category';
@@ -9,8 +9,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { DataCosntans } from '../dataconstants';
 import { EditVideoFormDTO } from '../models/EditVideoFormDTO';
 import { EditVideoFormControls } from '../models/EditVideoFormControls';
-import { AuthService } from '../auth.service';
-import { EditService } from '../edit.service';
+import { AuthService } from '../services/auth.service';
+import { EditService } from '../services/edit.service';
 @Component({
   selector: 'app-edit-page',
   standalone: false,
