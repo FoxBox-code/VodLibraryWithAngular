@@ -5,6 +5,7 @@ import { concat, concatMap, filter, map, Observable, Subject, switchMap, takeUnt
 import { DataCosntans } from '../dataconstants';
 import { NavigationService } from '../navigation.service';
 import { Router } from '@angular/router';
+import { HistoryService } from '../history.service';
 
 @Component({
   selector: 'app-watch-history',
@@ -26,7 +27,7 @@ export class WatchHistoryComponent
 
     private destroy$ = new Subject<void>();
 
-    constructor(private authService : AuthService, private navigationService : NavigationService, private router : Router)
+    constructor(private authService : AuthService, private navigationService : NavigationService, private router : Router, private historyService : HistoryService)
     {
         const datete = new Date();
 
@@ -74,10 +75,10 @@ export class WatchHistoryComponent
         filter((userId)=> userId !== null),
 
         switchMap((userId) =>
-          this.authService.getUserTodaysWatchHistory()
+          this.historyService.getUserWatchHistoryForToday()
         .pipe(
           concatMap((todayHistory)=>
-            this.authService.getUserPastTodaysWatchHistory()
+            this.historyService.getUserWatchHistoryPastToday()
           .pipe(
             map(pastHistory => ({userId , todayHistory, pastHistory}))
           )
@@ -117,7 +118,7 @@ export class WatchHistoryComponent
 
     deleteUserWatchHistory()
     {
-        this.authService.deleteUserWatchHistory()
+        this.historyService.deleteUserWatchHistoryAll()
         .subscribe(
           {
             next : (response) =>
@@ -147,7 +148,7 @@ export class WatchHistoryComponent
 
     deleteIndividuaVideoRecordFromHistoryTODAY(primaryKeyId : number)
     {
-        this.authService.deleteUserIndivudalVideoRecord(primaryKeyId)
+        this.historyService.deleteIndividualVideoRecord(primaryKeyId)
         .subscribe(
           {
             next : (response) =>
@@ -170,7 +171,7 @@ export class WatchHistoryComponent
 
     deleteIndividuaVideoRecordFromHistoryPAST(primaryKeyId : number, dayIndex : number , videoIndex : number)//fuck typescript and its stupid overload apporach
     {
-        this.authService.deleteUserIndivudalVideoRecord(primaryKeyId)
+        this.historyService.deleteIndividualVideoRecord(primaryKeyId)
         .subscribe(
           {
             next : (response) =>

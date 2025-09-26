@@ -8,6 +8,7 @@ import { PlayVideo } from '../models/play-video';
 import { PlayListMapper } from '../models/playListMaper';
 import { LinkList } from '../utility/linkedListImplementation';
 import { Observable } from 'rxjs';
+import { HistoryService } from '../history.service';
 
 @Component({
   selector: 'app-playlistmini',
@@ -29,7 +30,7 @@ export class PlaylistminiComponent
 
 
 
-  constructor(private playListService : PlaylistService, private activatedRoute : ActivatedRoute, private router : Router, private videoService : VideoService)
+  constructor(private playListService : PlaylistService, private activatedRoute : ActivatedRoute, private router : Router, private videoService : VideoService, private historyService : HistoryService)
   {
     const value = sessionStorage.getItem('likePlayList');
     if(value)
@@ -117,7 +118,7 @@ export class PlaylistminiComponent
 
       if(urlVideoId !== videoId)
       {
-          this.videoService.deleteLikedVideoFromHistory(videoId).subscribe(
+          this.historyService.deleteLikedVideoFromHistory(videoId).subscribe(
         {
           next : () => console.log("Server removed like successfully")
         }

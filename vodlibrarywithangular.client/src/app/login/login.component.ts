@@ -4,6 +4,7 @@ import { Login } from '../models/login';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { NavigationExtras, Params, Router } from '@angular/router';
 import { NavigationService } from '../navigation.service';
+import { HistoryService } from '../history.service';
 
 @Component({
   selector: 'app-login',
@@ -32,7 +33,7 @@ export class LoginComponent
     emailOrPasswordWrongError : string | null = null;
     failedLogInAttempt : boolean = false;
 
-    constructor(private authService : AuthService, formBuilder : FormBuilder, navigationService : NavigationService)
+    constructor(private authService : AuthService, formBuilder : FormBuilder, navigationService : NavigationService, private historyService : HistoryService)
     {
       this.loginForm = formBuilder.group(
         {
@@ -102,7 +103,7 @@ export class LoginComponent
               this.authService.setLocalStorageToken(result.token);
 
               //to nested subscriptions this needs a rewrite
-              this.authService.getUserTodaysWatchHistory()
+              this.historyService.getUserWatchHistoryForToday()
               .subscribe(
                 {
                   next : (data) =>
@@ -152,7 +153,7 @@ export class LoginComponent
               // const navigationExtra : NavigationExtras = {};
 
               this.router.navigate(this.navigationAdress.path , {queryParams, replaceUrl : true});
-              
+
             }
 
 

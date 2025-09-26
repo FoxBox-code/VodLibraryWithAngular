@@ -282,7 +282,7 @@ export class PlayVideoComponent
         if(this.loadPlayList === "true")
         {
           this.playListService.getLikedListMini().subscribe(data => this.playListMapper = data)
-          this.historyService.getUsersLikedVideosHistory()
+          this.historyService.getUserLikedHistory()
           .subscribe(
             {
               next : (list) =>
@@ -360,7 +360,7 @@ export class PlayVideoComponent
                               const exists = history.find(h => h.videoId == this.selectedVideoId)
 
 
-                              this.historyService.addUpdateUserWatchHistory(this.selectedVideoId)
+                              this.historyService.addVideoToUsersWatchHistory(this.selectedVideoId)
                                 .subscribe(
                                 {
                                     next : (data) =>
@@ -2001,14 +2001,18 @@ export class PlayVideoComponent
             this.authService.updateSubjectForUserFollowing(filteredCurrentSubList);
           }
 
-          formatNum(views : number)
+          formatNum(views? : number)
           {
 
-            if(Math.floor(views / 1_000_000) > 0)
+            if(views)
+            {
+              if(Math.floor(views / 1_000_000) > 0)
               return Math.floor(views / 1_000_000) + 'M'
 
-            else if(Math.floor(views / 1_000) > 0)
-              return Math.floor(views / 1_000) + 'K'
+              else if(Math.floor(views / 1_000) > 0)
+                return Math.floor(views / 1_000) + 'K'
+            }
+
 
             return views
           }

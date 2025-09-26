@@ -232,11 +232,7 @@ export class VideoService
     this.selectedVideoSubcjet.next(null);
   }
 
-  getEditVideoInfo(videoId : number) : Observable<VideoWindow>
-  {
-      const headers = this.getHttpHeaders();
-      return this.httpClient.get<VideoWindow>(`${ApiUrls.VIDEO_CONTROLLER}/edit/${videoId}`, {headers});
-  }
+
 
   private getHttpHeaders() : HttpHeaders
   {
@@ -251,30 +247,11 @@ export class VideoService
     return headers;
   }
 
-  patchEditVideo(videoId : number ,formGroup : FormGroup<EditVideoFormControls> , newImageFile : string | undefined) : Observable<VideoWindow>
-  {
-    const headers = this.getHttpHeaders();
 
-    const payload =
-    {
-      title : formGroup.value.Title ?? null,
-      description : formGroup.value.Description ?? null,
-      categoryId : formGroup.value.CategoryId ?? null,
-      newImageString : newImageFile ?? null
-    }
-      console.log("Sending PATCH payload:", JSON.stringify(payload, null, 2));
 
-    return this.httpClient.patch<VideoWindow>(`${ApiUrls.VIDEO_CONTROLLER}/edit/${videoId}`, payload ,{headers})
-  }
 
-  deleteVideo(videoId : number)
-  {
-    const headers = this.getHttpHeaders();
 
-    return this.httpClient.delete(`${ApiUrls.VIDEO_CONTROLLER}/delete/${videoId}`,{headers})
-  }
 
-  
 
   subscribeUserToVideoOwner(userId : string, followerUserNameProp : string , videoOwnerId : string , subscribedToUserNameProp : string)
   {

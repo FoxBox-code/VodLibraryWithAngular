@@ -141,7 +141,7 @@ export class AppComponent implements OnInit {
   {
     const userInput = this.searchBar.value.trim();
 
-    if(userInput)//redundant  dnant check probably
+    if(userInput)//redundant  dont check probably
     {
         this.router.navigate(['/search-page'], {
           queryParams: { query: userInput }

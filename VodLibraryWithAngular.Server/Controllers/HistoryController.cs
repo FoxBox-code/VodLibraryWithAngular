@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VodLibraryWithAngular.Server.Data;
 using VodLibraryWithAngular.Server.Data.Models;
+using VodLibraryWithAngular.Server.Interfaces;
 using VodLibraryWithAngular.Server.Models;
-using VodLibraryWithAngular.Server.Services;
 
 namespace VodLibraryWithAngular.Server.Controllers
 {
@@ -15,9 +15,9 @@ namespace VodLibraryWithAngular.Server.Controllers
     {
         private readonly ApplicationDbContext _dbContext;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly DTOTransformer _dtoTransformer;
+        private readonly IDTOTransformer _dtoTransformer;
 
-        public HistoryController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, DTOTransformer dTOTransformer)
+        public HistoryController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IDTOTransformer dTOTransformer)
         {
             _dbContext = dbContext;
             _userManager = userManager;
@@ -68,15 +68,9 @@ namespace VodLibraryWithAngular.Server.Controllers
             return Ok(collection);
         }
 
-
-
-
-
-
-
         [Authorize]
         [HttpDelete("liked/{videoId}")]
-        public async Task<IActionResult> RemoveVideoLikeFromHistory(int videoId)//deleteLikedVideoFromHistory
+        public async Task<IActionResult> DeleteLikedVideoFromHistory(int videoId)//deleteLikedVideoFromHistory
         {
             string userId = _userManager.GetUserId(User);
 
@@ -102,7 +96,7 @@ namespace VodLibraryWithAngular.Server.Controllers
 
 
         [Authorize]
-        [HttpPost("history/{videoId}")]
+        [HttpPost("{videoId}")]
         public async Task<IActionResult> AddVideoToUsersWatchHistory(int videoId)
         {
             string userId = _userManager.GetUserId(User);
@@ -148,7 +142,7 @@ namespace VodLibraryWithAngular.Server.Controllers
 
 
         [Authorize]
-        [HttpGet("history")]
+        [HttpGet("today")]
         public async Task<IActionResult> GetUserWatchHistoryForToday()
         {
             string userId = _userManager.GetUserId(User);
@@ -184,7 +178,7 @@ namespace VodLibraryWithAngular.Server.Controllers
         }
 
         [Authorize]
-        [HttpGet("past/history")]
+        [HttpGet("past")]
         public async Task<IActionResult> GetUserWatchHistoryPastToday()//THIS MIGHT NEED A LOGIC rEWRITE
         {
             string userId = _userManager.GetUserId(User);
@@ -244,7 +238,7 @@ namespace VodLibraryWithAngular.Server.Controllers
         }
 
         [Authorize]
-        [HttpDelete("past/history")]
+        [HttpDelete("past")]
         public async Task<IActionResult> DeleteUserWatchHistoryAll()
         {
             string userId = _userManager.GetUserId(User);
@@ -261,7 +255,7 @@ namespace VodLibraryWithAngular.Server.Controllers
         }
 
         [Authorize]
-        [HttpDelete("history/{primaryKeyId}")]
+        [HttpDelete("invdividual/{primaryKeyId}")]
         public async Task<IActionResult> DeleteIndividualVideoRecord(int primaryKeyId)
         {
             var historyRecord = await _dbContext.UserWatchHistories.FirstOrDefaultAsync(x => x.Id == primaryKeyId);
@@ -282,5 +276,36 @@ namespace VodLibraryWithAngular.Server.Controllers
                 message = "Video was successfully removed from user's history record"
             });
         }
+
+
+        [Authorize]
+        [HttpGet("you")]
+        public async Task<IActionResult> GetUserHistoryForYouPage()
+        {
+            string userId = _userManager.GetUserId(User);
+
+            List<UserWatchHistory> history = await _dbContext.UserWatchHistories.Where(h => h.UserId == userId)
+                .Include(h => h.Video)
+                .OrderByDescending(h => h.WatchedOn)
+                .Take(10)
+                .ToListAsync();
+
+            if (history.Count == 0)
+            {
+                return NotFound(new
+                {
+                    message = "No history"
+                });
+            }
+
+            List<VideoWindowDTO> videoWindowDTOs = history.Select(h => _dtoTransformer.CreateVideoWindowDTOFromVideoRecord(h.Video)).ToList();
+
+            return Ok(videoWindowDTOs);
+        }
+
+
+
+
+
     }
 }

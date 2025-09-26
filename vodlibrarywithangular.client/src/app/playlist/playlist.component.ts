@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { VideoWindow } from '../models/video-window';
 import { VideoService } from '../video.service';
 import { ChangeDetectionStrategy } from '@angular/core';
+import { HistoryService } from '../history.service';
 
 @Component({
   selector: 'app-playlist',
@@ -15,7 +16,7 @@ export class PlaylistComponent
 {
   @Input() playList : VideoWindow[] | null = null;
   @Output() elementRemoved = new EventEmitter<VideoWindow[]>()
-  constructor(private videoService : VideoService, )
+  constructor(private videoService : VideoService, private history: HistoryService)
   {
 
   }
@@ -23,7 +24,7 @@ export class PlaylistComponent
 
   deleteLikedVideoFromHistroy(videoId : number)
     {
-        this.videoService.deleteLikedVideoFromHistory(videoId)
+        this.history.deleteLikedVideoFromHistory(videoId)
         .subscribe(
           {
             next : (data) =>

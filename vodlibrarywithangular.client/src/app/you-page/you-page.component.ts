@@ -6,6 +6,7 @@ import { VideoWindow } from '../models/video-window';
 import { NavigationService } from '../navigation.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DataCosntans } from '../dataconstants';
+import { HistoryService } from '../history.service';
 
 @Component({
   selector: 'app-you-page',
@@ -32,7 +33,7 @@ export class YouPageComponent
 
 
 
-    constructor(private authService : AuthService, private videoService : VideoService, private navigationService : NavigationService, private router : Router)
+    constructor(private authService : AuthService, private videoService : VideoService, private navigationService : NavigationService, private router : Router, private historyService : HistoryService)
     {
       this.userId$ = this.authService.getUserIdAsObservable();
     }
@@ -53,8 +54,8 @@ export class YouPageComponent
           forkJoin(
             {
               userId$ : of(usersId),
-              history$ : this.videoService.getUserHistoryForYouPage(),
-              likes$ : this.videoService.getUsersLikedVideosHistory(),
+              history$ : this.historyService.getUserHistoryForYouPage(),
+              likes$ : this.historyService.getUserLikedHistory(),
               totalLikedVideos$ : this.videoService.getLikedVideosCount()
             }
           )

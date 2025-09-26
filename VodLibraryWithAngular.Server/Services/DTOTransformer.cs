@@ -1,11 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using VodLibraryWithAngular.Server.Data;
 using VodLibraryWithAngular.Server.Data.Models;
+using VodLibraryWithAngular.Server.Interfaces;
 using VodLibraryWithAngular.Server.Models;
 
 namespace VodLibraryWithAngular.Server.Services
 {
-    public class DTOTransformer
+    public class DTOTransformer : IDTOTransformer
     {
         private readonly ApplicationDbContext _dbContext;
         private readonly IHttpContextAccessor _httpContextAccessor;

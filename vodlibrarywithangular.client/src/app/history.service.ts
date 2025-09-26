@@ -17,7 +17,7 @@ export class HistoryService
 
   }
 
-  getUsersLikedVideosHistory(take? : number) : Observable<VideoWindow[]>
+   getUserLikedHistory(take? : number) : Observable<VideoWindow[]>
     {
       const token = this.authService.getLocalStorageToken();
       const headers = this.authService.getHttpHeaders();
@@ -38,13 +38,51 @@ export class HistoryService
         return this.httpClient.delete<{message : string}>(`${ApiUrls.LIKEDVIDEOS}/${videoId}`,{headers})
     }
 
-    addUpdateUserWatchHistory(videoId : number) : Observable<WatchHistoryVideoInfo>
+    addVideoToUsersWatchHistory(videoId : number) : Observable<WatchHistoryVideoInfo>
     {
-      
+
       const headers = this.authService.getHttpHeaders();
 
 
 
-      return this.httpClient.post<WatchHistoryVideoInfo>(`${ApiUrls.ADDVODTOHISTORY}/${videoId}`,null,{headers});
+      return this.httpClient.post<WatchHistoryVideoInfo>(`${ApiUrls.HISTORY_CONTROLLER}/${videoId}`,null,{headers});
+    }
+
+    getUserHistoryForYouPage() : Observable<VideoWindow[]>
+  {
+      const headers = this.authService.getHttpHeaders();
+
+      return this.httpClient.get<VideoWindow[]>(`${ApiUrls.HISTORY_CONTROLLER}/you`, {headers})
+  }
+
+
+  getUserWatchHistoryForToday() : Observable<WatchHistoryVideoInfo[]>
+    {
+
+          const headers = this.authService.getHttpHeaders();
+      return this.httpClient.get<WatchHistoryVideoInfo[]>(`${ApiUrls.GETUSERHISTORYFORTODAY}`,{headers})
+    }
+
+    getUserWatchHistoryPastToday() : Observable<WatchHistoryVideoInfo[][]>
+    {
+
+          const headers = this.authService.getHttpHeaders();
+      return this.httpClient.get<WatchHistoryVideoInfo[][]>(`${ApiUrls.GETUSERHISTORYPASTTODAY}`, {headers})
+    }
+
+    deleteUserWatchHistoryAll() : Observable<{message : string}>
+    {
+
+          const headers = this.authService.getHttpHeaders();
+
+         return this.httpClient.delete<{message : string}>(`${ApiUrls.DELETEUSERWATCHHISTORYALL}`, {headers})
+    }
+
+    deleteIndividualVideoRecord(primaryKeyId : number) : Observable<{message : string}>
+    {
+
+          const headers = this.authService.getHttpHeaders();
+
+          return this.httpClient.delete<{message : string}>(`${ApiUrls.DELETEINDIVIDUALVIDEORECORD}/${primaryKeyId}`, {headers})
     }
 }

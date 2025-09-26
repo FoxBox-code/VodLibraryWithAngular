@@ -10,6 +10,7 @@ import { DataCosntans } from '../dataconstants';
 import { EditVideoFormDTO } from '../models/EditVideoFormDTO';
 import { EditVideoFormControls } from '../models/EditVideoFormControls';
 import { AuthService } from '../auth.service';
+import { EditService } from '../edit.service';
 @Component({
   selector: 'app-edit-page',
   standalone: false,
@@ -46,7 +47,7 @@ export class EditPageComponent
     @ViewChild('descriptionArea') descriptionArea! : ElementRef<HTMLTextAreaElement>
 
     constructor(private formBuilder : FormBuilder, private videoService : VideoService, private activatedRoute : ActivatedRoute,
-      private router : Router, private authService : AuthService)
+      private router : Router, private authService : AuthService, private editService : EditService)
     {
 
 
@@ -56,7 +57,7 @@ export class EditPageComponent
 
       this.categories$ = videoService.categories$;
 
-      //moster of a code , combineLatest times to the completion of two async observables , we need this because in order to laod the form this needs to be done
+      //monster of a code , combineLatest times to the completion of two async observables , we need this because in order to laod the form this needs to be done
       // combineLatest([
       //   this.selectedVideo$.pipe(switchMap(video =>
       //   {
@@ -119,7 +120,7 @@ export class EditPageComponent
           if(!urlParam)
               return console.error('Unable to get video id from the page url ')
 
-          this.videoService.getEditVideoInfo(parseInt(urlParam,10)).subscribe(
+          this.editService.getEditVideoInfo(parseInt(urlParam,10)).subscribe(
             {
               next : (data) =>
               {
@@ -332,7 +333,7 @@ export class EditPageComponent
         if(this.editVideoMetaDataForm && videoId)
         {
 
-            this.videoService.patchEditVideo(parseInt(videoId, 10),this.editVideoMetaDataForm, this.newImageFile)
+            this.editService.patchEditVideo(parseInt(videoId, 10),this.editVideoMetaDataForm, this.newImageFile)
             .subscribe(
               {
                 next : (changedVideo) =>
@@ -381,7 +382,7 @@ export class EditPageComponent
     {
       window.alert("deleting video button activated");
 
-      this.videoService.deleteVideo(videoId)
+      this.editService.deleteVideo(videoId)
       .subscribe
       (
         {
