@@ -1,10 +1,8 @@
 ﻿namespace VodLibraryWithAngular.Server.QueryHttpParams
 {
-    public class CommentParams
+    public class SortCommentParams
     {
-        public int Take { get; set; }
-        public int Skip { get; set; }
-
+        public int commentsToFetchAndSort { get; set; }
         public string sortType { get; set; }
 
     }

@@ -1,27 +1,32 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace VodLibraryWithAngular.Server.Models
+﻿namespace VodLibraryWithAngular.Server.Models
 {
     public class CommentDTO
     {
-        public int Id { get; set; }
 
-        public string UserName { get; set; }
+        public required int Id { get; set; }
 
-        [Required]
-        public string UserId { get; set; }
 
-        public string UserIcon { get; set; }
+        public required string UserName { get; set; }
 
-        public string Description { get; set; }
 
-        public int VideoRecordId { get; set; }
+        public required string UserId { get; set; }
 
-        public DateTime Uploaded { get; set; }
+
+        public required string UserIcon { get; set; }
+
+
+        public required string Description { get; set; }
+
+
+        public required int VideoRecordId { get; set; }
+
+
+        public required DateTime Uploaded { get; set; }
 
         public int Likes { get; set; }
 
         public int DisLikes { get; set; }
+
 
         public int RepliesCount { get; set; }
 

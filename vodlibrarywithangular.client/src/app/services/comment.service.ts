@@ -2,11 +2,12 @@ import { Injectable } from '@angular/core';
 import { AddCommentDTO } from '../models/add-CommentDTO';
 import { BehaviorSubject, catchError, Observable, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { ApiUrls } from '../api-URLS';
 import { Reply } from '../models/reply';
 import { ReplyForm } from '../models/reply-form';
 import { VideoComment } from '../models/videoComment';
+import { commentCriteria } from '../types/comments-type';
 
 @Injectable({
   providedIn: 'root'
@@ -17,11 +18,19 @@ export class CommentService
   public commentRepliesSubject : {[commentId:number] : BehaviorSubject<Reply[]>} = {};
   public didWeTookRepliesCorrecty = false;
 
+  private videoCommentsSubject = new BehaviorSubject<VideoComment[]>([]);
+  public videoComments$ = this.videoCommentsSubject.asObservable();
+
+  takeCommentCount = 10;
+  skipCommentCount = 0;
+
+  public commentSortType  : commentCriteria = "newest";
+
   constructor(private authService : AuthService, private httpClient: HttpClient,) { }
 
 
 
-  addComment(comment : AddCommentDTO) : Observable<AddCommentDTO>
+  addComment(comment : AddCommentDTO) : void
     {
       const token = this.authService.getLocalStorageToken();
       console.log(`Current token : ${token}`);
@@ -30,7 +39,7 @@ export class CommentService
 
       console.log(`Header loggin ${headers.get('Authorization')}`);
 
-        return this.httpClient.post<AddCommentDTO>(`${ApiUrls.ADDCOMMENT}`, comment, {headers})
+         this.httpClient.post<VideoComment>(`${ApiUrls.ADDCOMMENT}`, comment, {headers})
         .pipe(catchError((error)=>
           {
             console.error("Failed to add a comments to the database",
@@ -42,14 +51,26 @@ export class CommentService
 
             return throwError(() => new Error("The server failed to add the coment of the user to the video"))
 
-          }))
-    }
-    getVideoComments(videoId : number, takeCommentCount : number, skipCommentCount : number)//loadcomments
-      {
-          const params : {[key : string]: number  }=
+          })
+        ).subscribe(
+          {
+            next : (newComment) =>
             {
-              'Take' : takeCommentCount,
-              'Skip' : skipCommentCount
+              newComment.uploaded = new Date(newComment.uploaded);
+              const currComments = this.videoCommentsSubject.value;
+              const newCollectionVideoComments = [newComment , ...currComments];
+              this.videoCommentsSubject.next(newCollectionVideoComments)
+            }
+          }
+        )
+    }
+    getVideoComments(videoId : number, )//loadcomments
+      {
+          const params : {[key : string]: number | string  }=
+            {
+              'Take' : this.takeCommentCount,
+              'Skip' : this.skipCommentCount,
+              'sortType' : this.commentSortType
             };
 
           return this.httpClient.get<VideoComment[]>(`${ApiUrls.COMMENT_CONTROLLLER}/${videoId}`, {params})
@@ -65,6 +86,31 @@ export class CommentService
             return throwError(()=> new Error("Could not get the comments from the selected video"))
 
           }))
+          .subscribe
+          (
+            {
+              next : (newComments) =>
+              {
+                  const currentComments = this.videoCommentsSubject.getValue();
+                    newComments = newComments.map(x => (
+                      {
+                        ...x,
+                        uploaded : new Date(x.uploaded)
+                      }
+                    ))
+
+                    const upDatedComments : VideoComment[] = [...currentComments , ...newComments];
+                    this.videoCommentsSubject.next(upDatedComments);
+                    this.skipCommentCount +=this.takeCommentCount;
+
+                    console.log(this.videoCommentsSubject.value);
+              },
+              error : (err) =>
+              {
+                  console.error(`Failed to get the comments for ${videoId} `, err);
+              }
+            }
+          )
       }
 
     addComment5000(comment : AddCommentDTO) : Observable<AddCommentDTO>
@@ -183,4 +229,55 @@ export class CommentService
           {
 
           }
+
+          sortComments(videoId : number, criteria : 'popular' | 'newest',)
+          {
+
+            this.commentSortType = criteria;
+            const params =
+            {
+              'sortType' : criteria,
+              'commentsToFetchAndSort': this.countOfCurrentlyPulledComments()
+            }
+              return this.httpClient.get<VideoComment[]>(`${ApiUrls.COMMENT_CONTROLLLER}/${videoId}/sort`, {params})
+              .subscribe(
+                {
+                  next : (comments) =>
+                  {
+                    comments = comments.map(comment =>
+                    {
+                      comment.uploaded = new Date(comment.uploaded);
+
+                      return comment;
+                    }
+                    )
+                    this.videoCommentsSubject.next(comments);
+                  },
+                  error : (err) =>
+                  {
+                      console.error("Back end failed to sort the comments", err);
+                  }
+                }
+              )
+
+
+          }
+
+          countOfCurrentlyPulledComments() : number
+          {
+            return this.videoCommentsSubject.value.length;
+          }
+
+          updateVideoCommentsSubjectBehavior(upDatedComments : VideoComment[])
+          {
+            this.videoCommentsSubject.next(upDatedComments);
+          }
+
+          clearCommentsState()
+          {
+            this.videoCommentsSubject.next([]);
+            this.skipCommentCount = 0;
+          }
+
+
 }

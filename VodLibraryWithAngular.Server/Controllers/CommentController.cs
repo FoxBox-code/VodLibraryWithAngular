@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using VodLibraryWithAngular.Server.Data;
 using VodLibraryWithAngular.Server.Data.Models;
@@ -26,17 +25,31 @@ namespace VodLibraryWithAngular.Server.Controllers
         }
 
         [HttpGet("{videoId}")]
-        public async Task<IActionResult> GetVideoComments(int videoId, [FromQuery] CommentParams par)//getcomment or loadcomment
+        public async Task<IActionResult> GetVideoComments(int videoId, [FromQuery] CommentParams par) //getcomment or loadcomment
         {
+
             try
             {
                 int take = par.Take;
                 int skip = par.Skip;
 
-                List<CommentDTO> comments = await _dbContext.Comments
-                    .Where(c => c.VideoRecordId == videoId)
-                    .Include(c => c.User)
-                    .AsNoTracking()
+                IQueryable<Comment> commentQuary;
+
+                if (par.sortType == "newest")
+                {
+                    commentQuary = CommentsByNewest(videoId);
+                }
+                else if (par.sortType == "popular")
+                {
+                    commentQuary = CommentsByPopular(videoId);
+                }
+                else
+                {
+                    _logger.LogError($"No comment sort type was pointed, the given type from query was ${par.sortType} and it does not match, error happened at GetVideoComments with ${videoId}");
+                    return BadRequest("No valid video sort type was given");
+                }
+
+                List<CommentDTO> comments = await commentQuary
                     .Skip(skip)
                     .Take(take)
                     .Select(c => new CommentDTO()
@@ -52,15 +65,14 @@ namespace VodLibraryWithAngular.Server.Controllers
                         DisLikes = c.LikesDisLikes.Count(x => !x.Like),
                         RepliesCount = c.Replies.Count(r => r.CommentId == c.Id),
                     })
-                    .OrderByDescending(x => x.Likes)
-                    .ThenByDescending(x => x.RepliesCount)
                     .ToListAsync();
 
 
-                if (comments.IsNullOrEmpty())
-                {
-                    return BadRequest("No comments were found for this video");
-                }
+
+
+
+
+
 
                 return Ok(comments);
             }
@@ -87,6 +99,89 @@ namespace VodLibraryWithAngular.Server.Controllers
 
         }
 
+        private IQueryable<Comment> CommentsByNewest(int videoId)
+        {
+            IOrderedQueryable<Comment> comments = _dbContext.Comments.Where(c => c.VideoRecordId == videoId)
+                   .AsNoTracking()
+                   .OrderByDescending(x => x.Uploaded);
+
+            return comments;
+        }
+
+        private IQueryable<Comment> CommentsByPopular(int videoId)
+        {
+            IOrderedQueryable<Comment> comments = _dbContext.Comments.Where(c => c.VideoRecordId == videoId)
+                .AsNoTracking()
+                .OrderByDescending(c => c.LikesDisLikes.Count(x => x.Like))
+                .ThenByDescending(c => c.Replies.Count);
+
+            return comments;
+        }
+
+        [HttpGet("{videoId}/sort")]
+        public async Task<IActionResult> SortVideoComments(int videoId, [FromQuery] SortCommentParams par)
+        {
+            string sortingType = par.sortType;
+            int take = par.commentsToFetchAndSort;
+
+            List<CommentDTO> comments = new List<CommentDTO>();
+
+            switch (sortingType)
+            {
+                case "newest":
+                    comments = await _dbContext.Comments.Where(c => c.VideoRecordId == videoId)
+                   .AsNoTracking()
+                   .OrderByDescending(x => x.Uploaded)
+                   .Take(take)
+                   .Select(c => new CommentDTO
+                   {
+                       Id = c.Id,
+                       UserName = c.UserName,
+                       UserId = c.UserId,
+                       UserIcon = $"{Request.Scheme}://{Request.Host}/ProfilePics/ProfileIcons/{Path.GetFileName(c.User.profilePic)}",
+                       Description = c.Description,
+                       VideoRecordId = c.VideoRecordId,
+                       Uploaded = c.Uploaded,
+                       Likes = c.LikesDisLikes.Count(x => x.Like),
+                       DisLikes = c.LikesDisLikes.Count(x => !x.Like),
+                       RepliesCount = c.Replies.Count(r => r.CommentId == c.Id),
+                   })
+                   .ToListAsync();
+
+                    break;
+
+                case "popular":
+                    comments = await _dbContext.Comments.Where(c => c.VideoRecordId == videoId)
+                    .AsNoTracking()
+                    .OrderByDescending(c => c.LikesDisLikes.Count(x => x.Like))
+                    .ThenByDescending(c => c.Replies.Count)
+                    .Take(take)
+                    .Select(c => new CommentDTO
+                    {
+                        Id = c.Id,
+                        UserName = c.UserName,
+                        UserId = c.UserId,
+                        UserIcon = $"{Request.Scheme}://{Request.Host}/ProfilePics/ProfileIcons/{Path.GetFileName(c.User.profilePic)}",
+                        Description = c.Description,
+                        VideoRecordId = c.VideoRecordId,
+                        Uploaded = c.Uploaded,
+                        Likes = c.LikesDisLikes.Count(x => x.Like),
+                        DisLikes = c.LikesDisLikes.Count(x => !x.Like),
+                        RepliesCount = c.Replies.Count(r => r.CommentId == c.Id),
+                    }
+                    ).ToListAsync();
+                    break;
+                default:
+                    _logger.LogError("No sorting option was selected for comments");
+
+                    break;
+
+            }
+
+
+            return Ok(comments);
+        }
+
         [Authorize]
         [HttpPost("addComment")]
         public async Task<IActionResult> AddComment([FromBody] AddCommentDTO model)
@@ -111,9 +206,9 @@ namespace VodLibraryWithAngular.Server.Controllers
                 return Unauthorized("You are not authorized to comment on  videos!");
             }
 
-            string? userId = _userManager.GetUserId(User);//Adding Id to the comments for profile page link
+            var user = await _userManager.GetUserAsync(User);
 
-            if (userId == null)
+            if (user == null)
             {
                 return Unauthorized(new
                 {
@@ -124,7 +219,7 @@ namespace VodLibraryWithAngular.Server.Controllers
             Comment addedComment = new Comment()
             {
                 UserName = userName,
-                UserId = userId,
+                UserId = user.Id,
                 Description = model.Description,
                 VideoRecordId = model.VideoRecordId,
                 RepliesCount = 0,
@@ -137,7 +232,19 @@ namespace VodLibraryWithAngular.Server.Controllers
             await _dbContext.Comments.AddAsync(addedComment);
             await _dbContext.SaveChangesAsync();
 
-            return Ok(model);
+            CommentDTO commentDTO = new CommentDTO()
+            {
+                Id = addedComment.Id,
+                UserName = userName,
+                UserId = user.Id,
+                Description = model.Description,
+                VideoRecordId = model.VideoRecordId,
+                Uploaded = addedComment.Uploaded,
+                UserIcon = $"{Request.Scheme}://{Request.Host}/ProfilePics/ProfileIcons/{Path.GetFileName(user.profilePic)}",
+                RepliesCount = 0
+            };
+
+            return Ok(commentDTO);
 
 
         }

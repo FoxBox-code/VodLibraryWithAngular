@@ -107,6 +107,7 @@ namespace VodLibraryWithAngular.Server.Controllers
                 .FirstOrDefaultAsync(x => x.Id == videoId);
 
 
+
                 if (video == null)
                 {
                     _logger.LogError($"The video that was suppose to play with id {videoId} was not found in the data base");
