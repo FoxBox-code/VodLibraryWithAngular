@@ -5,7 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { FormGroup, FormBuilder, Validators, RequiredValidator } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
 import { BehaviorSubject, firstValueFrom, interval, Observable, of, pipe, Subject } from 'rxjs';
-import { take, takeUntil, timeout } from 'rxjs/operators';
+import { first, map, take, takeUntil, timeout } from 'rxjs/operators';
 
 import { NavigationService } from '../services/navigation.service';
 import { Router } from '@angular/router';
@@ -30,6 +30,8 @@ import { CommentService } from '../services/comment.service';
 import { ReactionsService } from '../services/reactions.service';
 import { HistoryService } from '../services/history.service';
 import { SubscriptionService } from '../services/subscription.service';
+import { FormattingService } from '../services/formatting.service';
+import { commentCriteria } from '../types/comments-type';
 
 
 type TooltipKey = 'playPause' | 'volume' | 'fullscreen' | 'volumeBar';
@@ -157,13 +159,14 @@ export class PlayVideoComponent
     userWatchedEnoughTimeForViewToCount : boolean = false;
 
     userVideoReaction? : Reaction;
-    likeDislike : VideoLikeDislikeCountDTO | null = null;
+      likeDislikeCounter : VideoLikeDislikeCountDTO | null = null;
 
-    public videoCommentsSubject = new BehaviorSubject<VideoComment[]>([]);
-    public videoComments$$ = this.videoCommentsSubject.asObservable();
+    // public videoCommentsSubject = new BehaviorSubject<VideoComment[]>([]);
+    // public videoComments$$ = this.videoCommentsSubject.asObservable();
+    public videoComments$$ = new Observable<VideoComment[]>();
 
     public sortMenuOpen : boolean = false;
-    public criteria : 'popular' | 'newest' = 'newest';
+    public commentSortCriteria : commentCriteria = 'newest';
     public userFollowing$ : Observable<ProfilesFollowingDTO[] | null> ;
     public userFollowing : ProfilesFollowingDTO[] = [];
     public hasUserSubscribedToVideoOwner : boolean = false;
@@ -179,8 +182,7 @@ export class PlayVideoComponent
 
     public categoryStats : CategoryStatsDTO | null = null;
 
-    takeCommentCount = 10;
-    skipCommentCount = 0;
+
 
 
 
@@ -219,7 +221,8 @@ export class PlayVideoComponent
       private commentService : CommentService,
       private reactionService : ReactionsService,
       private historyService : HistoryService,
-      private subscriptionService : SubscriptionService
+      private subscriptionService : SubscriptionService,
+      private formattingService : FormattingService
 
 
 
@@ -257,6 +260,8 @@ export class PlayVideoComponent
 
   ngOnInit() : void
   {
+    this.videoComments$$ = this.commentService.videoComments$;
+
         this.activatedRoute.params.subscribe(
           {
             next : (params) =>
@@ -272,10 +277,8 @@ export class PlayVideoComponent
           }
         )
 
-        this.loadLikeDislikeCount()
+        this.SetUpVideoLikeDislikes();
 
-        if(this.userName)
-            this.loadReactions();
 
 
 
@@ -312,6 +315,15 @@ export class PlayVideoComponent
 
     }
 
+  private async SetUpVideoLikeDislikes() : Promise<void>
+  {
+    await this.loadLikeDislikeCount();
+
+
+    if (this.userName)
+      this.loadUserVideoReaction();
+  }
+
     ngAfterViewInit()
     {
         this.videoPlayerEventListiners()
@@ -331,6 +343,8 @@ export class PlayVideoComponent
 
       this.subjectDestroy$.next();
       this.subjectDestroy$.complete();
+
+      this.commentService.clearCommentsState();
     }
 
     private videoPlayerEventListiners()
@@ -608,6 +622,7 @@ export class PlayVideoComponent
         this.videoIconAtCenterCurrent = null;
       }, 500);
     }
+
     private setUpIntersection()
     {
         this.intersectionObserver = new IntersectionObserver((entry)=>
@@ -615,8 +630,8 @@ export class PlayVideoComponent
           if(entry[0].isIntersecting)
           {
             console.log("WE MADE CONTACT")
-            const sometehign = this.videoCommentsSubject.getValue();
-            if(sometehign.length !== this.selectedVideo?.commentCount)
+            const countOfCurrentlyPulledComments = this.commentService.countOfCurrentlyPulledComments();
+            if(countOfCurrentlyPulledComments !== this.selectedVideo?.commentCount)
               this.loadComments();
           }
         },
@@ -645,28 +660,7 @@ export class PlayVideoComponent
 
     convertVideoTotalSecondsDurationToTimeFormat(totalSeconds : number)
     {
-      let hours : number = 0;
-
-      totalSeconds = totalSeconds/60/60;
-
-      hours = Math.floor(totalSeconds);
-
-      totalSeconds = totalSeconds - hours;
-
-      let minutes : number = 0;
-
-      totalSeconds = totalSeconds * 60;
-      minutes = Math.floor(totalSeconds);
-
-      totalSeconds = totalSeconds - minutes;
-
-      let seconds : number = 0 ;
-
-      totalSeconds = totalSeconds * 60;
-
-      seconds = Math.floor(totalSeconds);
-
-      return `${hours === 0 ? '' : `${hours}:`}${minutes === 0 ? '0:' : `${minutes}:`}${seconds < 10 ? `0${seconds}` : seconds}`
+      return this.formattingService.convertVideoTotalSecondsDurationToTimeFormat(totalSeconds);
 
     }
 
@@ -922,7 +916,7 @@ export class PlayVideoComponent
             {
                 this.titleService.setTitle(result.title);
                 this.selectedVideo = result;
-                this.splitedDescription = this.sanitizeAndFormatDescriptiongone(result.description);
+
 
                 for (const resolution in result.videoRenditions) {
                   if (result.videoRenditions.hasOwnProperty(resolution)) {
@@ -943,51 +937,14 @@ export class PlayVideoComponent
    }
 
 
-   sanitizeAndFormatDescriptiongone(raw: string): string[]
-   {
-    const lines = raw.split('\n');
-
-    // return lines.map(line =>
-    // {
-
-    //   const regex = /(https?:\/\/[^\s]+)|(?<!\d)(\d{1,2}:\d{2}(?::\d{2})?)(?!\d)/g;
-
-    //   // line = line.replace(regex, (match , link , timestamp) =>
-    //   // {
-    //   //   if(link)
-    //   //   {
-    //   //     match = `<a href="${link}" target="_blank" rel="noopener noreferrer">${link}</a>`
-    //   //   }
-    //   //   else if(timestamp)
-    //   //   {
-    //   //     // match = `<span style="color: white;" class="timeStamp">${timestamp}</span>`
-    //   //     match = `<span data-class="timeStamp" style="color: white;">${timestamp}</span>`;
-
-    //   //   }
-    //   //   return match
-    //   // });
 
 
-
-    //   line =  DOMPurify.sanitize(line,
-    //     {
-    //       ALLOWED_TAGS : ['a'],
-    //       ALLOWED_ATTR : ['href', 'target', 'rel']
-    //     }
-    //   )
-
-    //   return line
-
-
-
-    // });
-
-    return lines;
-
-  }
-
-  sanitizeAndFormatDescription(text: string): CommentSegment[][] //THIS SHIT IS COMPLETELY BROKEN it loops 1000000times
+  sanitizeAndFormatDescription(text?: string): CommentSegment[][] | null
   {
+    if(text == undefined)
+    {
+      return null;
+    }
   const regex = /(https?:\/\/[^\s]+)|(?<!\d)(\d{1,2}:\d{2}(?::\d{2})?)(?!\d)/;
 
   // Split by lines first
@@ -1151,13 +1108,12 @@ export class PlayVideoComponent
 
     addComment()
     {
-        if(this.commentForm.invalid)
+        if(this.commentForm.invalid && this.userName === null)
         {
             console.error("Invalid commonet form ");
-
+            return;
         }
-        else
-        {
+
           let addCommentDTO: AddCommentDTO =
           {
             userName: '',  // default empty string
@@ -1166,52 +1122,21 @@ export class PlayVideoComponent
             // initialize other properties as needed
 
           };
+          addCommentDTO.userName = this.userName as string ;
+
+          addCommentDTO.description = this.commentForm.value.Comment;
+          addCommentDTO.videoRecordId = this.selectedVideoId;
 
 
-          if(this.userName !== null)
-            {
-              addCommentDTO.userName = this.userName ;
-            }
-              addCommentDTO.description = this.commentForm.value.Comment;
-              addCommentDTO.videoRecordId = this.selectedVideoId;
+            this.commentService.addComment(addCommentDTO);
 
-
-                this.commentService.addComment(addCommentDTO).subscribe(
-                {
-                  next : (result) =>
-                  {
-                    console.log(`User ${result.userName} commented : ${result.description}`);
-                    this.commentsCountSubject.next(this.commentsCountSubject.value + 1);
-
-
-                    if(this.autoLoadComments)
-                      {
-                        this.loadComments();
-                      }
-                  },
-                  error : (error) => console.error(`User ${addCommentDTO.userName} failed to upload comment ${error}`)
-                });
-
-                // this.videoService.addComment5000(addCommentDTO)
-                // .subscribe(
-                //   {
-                //     next : () => console.log("Commented 5000 times "),
-                //     error : (err) => console.log(`5000messages returned an error ${err.message}`)
-                //   }
-                // )
-
-
-
-              this.commentForm.reset();
-            }
-
-
+            this.commentForm.reset();
     }
 
     addCommentReaction(commentId : number, reaction : boolean, individualComment?: HTMLElement)
     {
       this.selectedComment = commentId;
-      this.userNameAsObservable.subscribe(next => console.log(`Printing whats inside userName as observable ${next}`))
+
       if(this.userName === null)
         {
 
@@ -1236,6 +1161,16 @@ export class PlayVideoComponent
       }
     }
 
+
+
+
+
+
+
+
+
+
+
     leaveLogInMessage()
     {
         this.selectedComment = 0;
@@ -1248,7 +1183,7 @@ export class PlayVideoComponent
         .subscribe(result => {
         this.reactionService.userCommentReactions[commentId] = result.like;
         this.userCommentReactions = this.reactionService.userCommentReactions;
-        this.updateCommentCounts(commentId, result.likeCount, result.dislikeCount);
+        this.updateCommentReactionsCounts(commentId, result.likeCount, result.dislikeCount);
     });
     }
     private deleteCommentReaction(commentId : number)
@@ -1257,7 +1192,7 @@ export class PlayVideoComponent
         .subscribe(result => {
         delete this.reactionService.userCommentReactions[commentId];
         this.userCommentReactions = this.reactionService.userCommentReactions;
-        this.updateCommentCounts(commentId, result.likeCount, result.dislikeCount);
+        this.updateCommentReactionsCounts(commentId, result.likeCount, result.dislikeCount);
     });
     }
     private updateCommentReaction(commentId: number, reaction: boolean)
@@ -1267,11 +1202,11 @@ export class PlayVideoComponent
       this.reactionService.userCommentReactions[commentId] = result.like;
       this.userCommentReactions = this.reactionService.userCommentReactions;
 
-      this.updateCommentCounts(commentId, result.likeCount, result.dislikeCount);
+      this.updateCommentReactionsCounts(commentId, result.likeCount, result.dislikeCount);
       });
     }
 
-    private updateCommentCounts(commentId: number, likeCount: number, dislikeCount: number)
+    private updateCommentReactionsCounts(commentId: number, likeCount: number, dislikeCount: number)
     {
       const comment = this.findComment(commentId);
       if (comment)
@@ -1284,119 +1219,118 @@ export class PlayVideoComponent
 
 
 
-    findComment(commentId: number) : VideoComment | undefined //REMOVE THIS LATER
+    findComment(commentId: number) : VideoComment | undefined
     {
-      const comments = this.videoCommentsSubject.getValue();
-      return comments.find(c => c.id === commentId);
+      let comment : VideoComment | undefined;
+
+      this.videoComments$$
+      .pipe(
+        first(),
+        map(found => found.find(c => c.id === commentId))
+
+      ).subscribe(
+        {
+          next : (found) =>
+          comment = found
+        }
+      )
+
+      return comment;
     }
 
     loadComments()//THIS WOULD BE SO MUCH BETTER IF I REWRITE IT
     {
-        if(this.selectedVideo && !this.checkIfAllCommentsWereLoadedAlread(this.videoCommentsSubject.getValue().length, this.selectedVideo!.commentCount))
+        if(this.selectedVideo && !this.checkIfAllCommentsWereLoadedAlready(this.commentService.countOfCurrentlyPulledComments(), this.selectedVideo!.commentCount))
         {
-                  this.autoLoadComments = true;
-              this.commentService.getVideoComments(this.selectedVideoId, this.takeCommentCount, this.skipCommentCount).subscribe(
-            {
-                next : (result) =>
-                {
-                    const currentComments = this.videoCommentsSubject.getValue();
-                    result = result.map(x => (
-                      {
-                        ...x,
-                        uploaded : new Date(x.uploaded)
-                      }
-                    ))
-
-                    const upDatedComments : VideoComment[] = [...currentComments , ...result];
-                    this.videoCommentsSubject.next(upDatedComments);
-                    this.skipCommentCount +=this.takeCommentCount;
-
-                },
-                error : (error) =>
-                {
-                    console.error("Could not retrive the commets from the server", error);
-
-                }
-            });
+              this.autoLoadComments = true;
+              this.commentService.getVideoComments(this.selectedVideoId,);
 
 
 
 
-              var userId : string | null = null;
-              this.userNameAsObservable.subscribe((data)=>
-                {
-                  userId = data;
-
-                  if(userId !== null)
-              {
-                  this.reactionService.getUserCommentLikesDislikes(this.selectedVideoId)
-                  .subscribe
-                  (
-                    {
-                      next : (data) =>
-                      {
-                          for(var commentReaction of data)
-                          {
-
-                            this.reactionService.userCommentReactions[commentReaction.commentId] = commentReaction.like;
-                            this.userCommentReactions = this.reactionService.userCommentReactions;
-                          }
-
-                      }
-                      ,
-                      error : (error) =>
-                      {
-                          console.error(`Error while getting the userCommentReactions`, error)
-                      }
-
-                    }
-                  )
-              }
-                })
-         }
-
-         setTimeout(() =>
-          {
-              const commentContainer = this.commentContainer.nativeElement;
-
-              console.log(`DID THIS MORON LOAD`)
-
-          if(commentContainer)
-          {
-            console.log(`Check if the comment element is actually rendered ${commentContainer}`)
-
-            commentContainer.addEventListener('click', (event) =>
-            {
-                const target = event.target
-                if(target instanceof HTMLElement)
-                {
-                    console.log(`target instance of ${target}`);
-                    console.log(target.getAttribute('data-class'));
-                    console.log(`call this once`)
-                    if(target.classList.contains('timestamp'))
-                    {
-                      if(target.textContent)
-                      {
-
-                        const forwardVideoToTime = this.formatTimeStampToTotalSeconds(target.textContent);
-
-                        if(forwardVideoToTime)
-                        {
-                          this.videoElement.nativeElement.scrollIntoView({behavior : 'instant', block : 'start'});
-                          this.videoElement.nativeElement.currentTime = forwardVideoToTime;
-                        }
-
-                      }
-                    }
-                }
-            })
+              this.GetUserReactions();//possibly has to be async and executed after commentService is done
           }
-         }, 50);//slight delay giving the dom time to render the comment container
+
+         this.ThisCreatesAnEventListinerForTHeTimeStamps();//slight delay giving the dom time to render the comment container NOTE THIS needs to be heavily re written probably into request animation frame
 
 
     }
 
-    checkIfAllCommentsWereLoadedAlread(currentCommentCollectionCount: number , totalFoundInVideo : number)
+  private ThisCreatesAnEventListinerForTHeTimeStamps()
+  {
+    setTimeout(() =>
+    {
+      const commentContainer = this.commentContainer.nativeElement;
+
+      console.log(`DID THIS MORON LOAD`);
+
+      if (commentContainer)
+      {
+        console.log(`Check if the comment element is actually rendered ${commentContainer}`);
+
+        commentContainer.addEventListener('click', (event) =>
+        {
+          const target = event.target;
+          if (target instanceof HTMLElement)
+          {
+            console.log(`target instance of ${target}`);
+            console.log(target.getAttribute('data-class'));
+            console.log(`call this once`);
+            if (target.classList.contains('timestamp'))
+            {
+              if (target.textContent)
+              {
+
+                const forwardVideoToTime = this.formatTimeStampToTotalSeconds(target.textContent);
+
+                if (forwardVideoToTime)
+                {
+                  this.videoElement.nativeElement.scrollIntoView({ behavior: 'instant', block: 'start' });
+                  this.videoElement.nativeElement.currentTime = forwardVideoToTime;
+                }
+
+              }
+            }
+          }
+        });
+      }
+    }, 50);
+  }
+
+  private GetUserReactions()
+  {
+    var userId: string | null = null;
+    this.userNameAsObservable.subscribe((data) =>
+    {
+      userId = data;
+
+      if (userId !== null)
+      {
+        this.reactionService.getUserCommentLikesDislikes(this.selectedVideoId)
+          .subscribe(
+            {
+              next: (data) =>
+              {
+                for (var commentReaction of data)
+                {
+
+                  this.reactionService.userCommentReactions[commentReaction.commentId] = commentReaction.like;
+                  this.userCommentReactions = this.reactionService.userCommentReactions;
+                }
+
+              },
+
+              error: (error) =>
+              {
+                console.error(`Error while getting the userCommentReactions`, error);
+              }
+            }
+          );
+      }
+    });
+  }
+
+    checkIfAllCommentsWereLoadedAlready(currentCommentCollectionCount: number , totalFoundInVideo : number)
     {
         return currentCommentCollectionCount == totalFoundInVideo;
     }
@@ -1692,14 +1626,23 @@ export class PlayVideoComponent
 
     increaseClientSideCommentReplyCount(commentId : number| undefined)
   {
-    const comments = this.videoCommentsSubject.getValue();
+    let comments : VideoComment[] = [];
+    this.videoComments$$.pipe(take(1)).subscribe(
+      {
+        next : (theComments) =>
+          {
+            comments = theComments
+          }
+      }
+     );
 
     const upDatedComments = comments.map(comment =>
       comment.id === commentId ? {...comment, repliesCount : comment.repliesCount + 1} : comment
     );
 
 
-    this.videoCommentsSubject.next(upDatedComments);
+
+    this.commentService.updateVideoCommentsSubjectBehavior(upDatedComments);
   }
 
     updateLocalyCommentReplyOnUser(commentId : number)
@@ -1716,11 +1659,11 @@ export class PlayVideoComponent
         )
     }
 
-    loadReactions()
+    private loadUserVideoReaction()
     {
 
 
-      this.reactionService.getVideoReactions(this.selectedVideoId)
+      this.reactionService.GetCurrentUserVideoReaction(this.selectedVideoId)
       .subscribe(data =>
       {
           this.userVideoReaction = data;
@@ -1731,28 +1674,42 @@ export class PlayVideoComponent
 
 
 
-    loadLikeDislikeCount()
+    private loadLikeDislikeCount() : Promise<void>
     {
       const videoIdFromUrl = parseInt(this.activatedRoute.snapshot.paramMap.get('id') ?? '-1');
 
-      this.videoService.getVideoLikesDislikeCount(videoIdFromUrl)
-      .subscribe(
+      const res = this.videoService.getVideoLikesDislikeCount(videoIdFromUrl)
+
+
+      return new Promise<void>((resolve, reject)=>
+      {
+          console.log("were inside the promise of loadLikeDislikeCount");
+          res.subscribe(
         {
           next : (data) =>
           {
-            this.likeDislike = data;
+            this.likeDislikeCounter = data;
 
-            console.log(this.likeDislike);
-            console.log(`Like ${this.likeDislike.likes}`);
-            console.log(`Dislike ${this.likeDislike.dislikes}`);
+            console.log(this.likeDislikeCounter);
+            console.log(`Like ${this.likeDislikeCounter.likes}`);
+            console.log(`Dislike ${this.likeDislikeCounter.dislikes}`);
           },
           error : (err) =>
           {
-            console.error(err)
-          }
-        }
-      )
-    }
+            console.error("I think loading getVideoLikesDislikeCount API gave an error ",err)
+            reject(err);
+          },
+          complete : ()=> console.log("loadLikeDislike finished")
+        })
+
+        resolve();
+      })
+
+
+
+
+      }
+
 
     areaAutoGrowth(event : Event) :  void
     {
@@ -1770,27 +1727,14 @@ export class PlayVideoComponent
     {
         this.sortMenuOpen = !this.sortMenuOpen;
 
-        this.videoComments$$?.subscribe(
-          {
-            next : (data) =>
-            {
-              if(criteria === 'newest')
-              {
 
-                data = data.sort((a,b)=> b.uploaded.getTime() - a.uploaded.getTime());
-              }
-              else if(criteria === 'popular')
-              {
-                data = data.sort((a,b)=> b.likes - a.likes);
-              }
-
-              this.commentService.sortCommentsForBehaviorSubject(data);
-
-            }
-          }
-        )
+        this.commentService.sortComments(this.selectedVideoId, criteria);
 
     }
+
+
+
+
 
     commentRevealDateMouseHover(mouseEntered : boolean, commentId : number)
     {
@@ -1840,7 +1784,7 @@ export class PlayVideoComponent
       }
     }
 
-    async addReaction(reactionClicked : string)
+    async addVideoReaction(reactionClicked : string)
     {
         var currentUser : string | null = null;
         currentUser = await firstValueFrom(this.userNameAsObservable)
@@ -1852,67 +1796,45 @@ export class PlayVideoComponent
             return;
         }
 
-
-        if(this.userVideoReaction?.reaction === reactionClicked)
-          {
-
-            this.reactionService.deleteVideoReaction(this.selectedVideoId)
-            .subscribe(
-              {
-                next : (data) =>
+        if(this.userVideoReaction)
+        this.reactionService.updateUserVideoReaction(this.selectedVideoId , this.userVideoReaction, reactionClicked)
+        .subscribe(
                 {
-                    this.userVideoReaction = data;
-                    this.likeDislike!.likes = data.likeCount;
-                    this.likeDislike!.dislikes = data.disLikeCount;
+                  next : (data) =>
+                  {
+
+                      this.reactionService.clientSideLikeDisklikeIncrementation(this.userVideoReaction!, reactionClicked, this.likeDislikeCounter!);
+                      this.userVideoReaction = data;
+
+
+                  }
+                  ,
+                  error : (err) =>
+                  {
+                    console.error("Error while deleting", err)
+                  }
 
                 }
-                ,
-                error : (err) =>
-                {
-                  console.error("Error while deleting", err)
-                }
+              )
 
-              }
-            )
-          }
-          else
-          {
-            this.reactionService.addOrUpdateVideoReaction(this.selectedVideoId, reactionClicked)
-            .subscribe(
-              {
-                next : (data) =>
-                {
-                  this.userVideoReaction = data;
-                  this.likeDislike!.likes = data.likeCount;
-                  this.likeDislike!.dislikes = data.disLikeCount;
 
-                }
-                ,
-                error : (err) =>
-                {
-                  console.error("Error while reacting", err)
-                }
-              }
-            )
-
-          }
         }
 
 
 
-        public subscribeToUser()
+        public subscribeToUser()//needs to change don t know how
         {
           const subscribingTo = this.selectedVideo?.videoOwnerId;
           const theCurrentUserId = this.authService.getUserIdFromToken();
-
           const userName = this.authService.getUserNameFromToken();
+          const videoOwner = this.selectedVideo?.videoOwnerName;
+
 
           if(userName === null)
           {
             this.unRegisteredUserWantsToSubscribe = true;
             return;
           }
-          const videoOwner = this.selectedVideo?.videoOwnerName;
 
           if(!this.hasUserSubscribedToVideoOwner)
           {
@@ -2007,74 +1929,22 @@ export class PlayVideoComponent
           formatNum(views? : number)
           {
 
-            if(views)
-            {
-              if(Math.floor(views / 1_000_000) > 0)
-              return Math.floor(views / 1_000_000) + 'M'
-
-              else if(Math.floor(views / 1_000) > 0)
-                return Math.floor(views / 1_000) + 'K'
-            }
-
-
-            return views
+            return this.formattingService.formatNum(views);
           }
-
-
 
           formatDateTimeReWrite(date : Date) : string
           {
-            const Now = new Date();
 
-            const gapInMs = Now.getTime() - date.getTime();
-
-
-            const gapInMinutes = Math.floor(gapInMs/1000/60);
-            if(gapInMinutes < 60)
-            {
-              return  gapInMinutes === 1 ? gapInMinutes + ' minute ago' : gapInMinutes + ' minutes ago';
-            }
-
-            const gapInHrs = Math.floor(gapInMinutes / 60)
-            if(gapInHrs < 24)
-            {
-              return gapInHrs === 1 ? gapInHrs + ' hour ago' : gapInHrs + ' hours ago';
-            }
-
-            const gapInDays = Math.floor(gapInHrs / 24);
-            if(gapInDays < 31)
-            {
-               return gapInDays === 1 ? gapInDays + ' day ago' : gapInDays + ' days ago';
-            }
-
-            let month = (Now.getFullYear() - date.getFullYear()) * 12;
-            month += Now.getMonth() - date.getMonth();
-            if(Now.getDate() < date.getDate()) month--;
-
-            if(month < 12)
-            {
-              return month > 1 ? month + ' months ago' : month + ' month ago';
-            }
-
-            const gapInYears = Math.floor(month / 12)
-            let answer = gapInYears > 1 ? gapInYears + ' years ago' : gapInYears + ' year ago';
-            const moduleDivisior = month % 12;
-
-            if(moduleDivisior > 0)
-            {
-              let concat = moduleDivisior > 1 ? moduleDivisior + ' months ago' : moduleDivisior + ' month ago';
-              answer = answer + concat;
-            }
-            return answer;
+            return this.formattingService.formatDateTimeReWrite(date);
 
           }
 
+        }
 
 
 
 
 
-  }
 
 
 

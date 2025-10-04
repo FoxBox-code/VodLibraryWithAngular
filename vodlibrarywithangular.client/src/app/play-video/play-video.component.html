@@ -143,9 +143,9 @@
 
 
 
-                                    <div class="reaction" *ngIf="likeDislike">
-                                          <button type="button" [class.choosenOne]="userVideoReaction?.reaction === 'Like'" (click)="addReaction('Like')">Likes  : {{likeDislike.likes}}</button>
-                                          <button type="button" [class.choosenOne]="userVideoReaction?.reaction === 'Dislike'" (click)="addReaction('Dislike')">DisLikes : {{likeDislike.dislikes}}</button>
+                                    <div class="reaction" *ngIf="likeDislikeCounter">
+                                          <button type="button" [class.choosenOne]="userVideoReaction?.reaction === 'Like'" (click)="addVideoReaction('Like')">Likes  : {{likeDislikeCounter.likes}}</button>
+                                          <button type="button" [class.choosenOne]="userVideoReaction?.reaction === 'Dislike'" (click)="addVideoReaction('Dislike')">DisLikes : {{likeDislikeCounter.dislikes}}</button>
                                     </div>
 
                               </div>
@@ -175,8 +175,28 @@
 
                     <!-- <pre><p>{{selectedVideo?.description}}</p></pre> -->
 
-                    <div *ngFor="let line of splitedDescription">
-                      <p [innerHTML]="line" style="margin: 0;"></p>
+
+
+                    <div *ngFor="let line of sanitizeAndFormatDescription(selectedVideo?.description)">
+                      <p>
+                        <ng-container *ngFor="let segment of line">
+                          <ng-container [ngSwitch]="segment.type">
+
+                            <a *ngSwitchCase="'link'" [href]="segment.value" target="_blank">
+                              {{ segment.value }}
+                            </a>
+
+                            <span *ngSwitchCase="'timestamp'" class="timestamp" [attr.data-time]="segment.value">
+                              {{ segment.value }}
+                            </span>
+
+                            <span *ngSwitchDefault>
+                              {{ segment.value + ' ' }}
+                            </span>
+
+                          </ng-container>
+                        </ng-container>
+                      </p>
                     </div>
 
 

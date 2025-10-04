@@ -52,7 +52,7 @@ export class VideoService
   private selectedVideoSubcjet = new BehaviorSubject<VideoWindow | null>(null);
   public  selectedVideo$ = this.selectedVideoSubcjet.asObservable();
 
-
+  
 
 
 
@@ -77,23 +77,6 @@ export class VideoService
 
 
   }
-
-  // uploadVideo(formData : FormData) : Observable<any>  //The original uploadVideo , we must change it to work with the new rendition system
-  // {
-  //   const token = this.authService.getLocalStorageToken();
-  //   console.log(`Current token : ${token}`);
-
-  //   const headers = new HttpHeaders(
-  //   {
-  //     Authorization : `Bearer ${token}`
-  //   });
-  //   console.log(`Header loggin ${headers.get('Authorization')}`);
-
-
-  //     return this.httpClient.post<any>(`${ApiUrls.UPLOAD}`, formData, {headers});
-  // }
-
-
 
 
 
@@ -215,18 +198,7 @@ export class VideoService
 
 
 
-  private getHttpHeaders() : HttpHeaders
-  {
-    const token = this.authService.getLocalStorageToken();
-    const headers = new HttpHeaders
-    (
-      {
-        Authorization : `Bearer ${token}`
-      }
-    )
 
-    return headers;
-  }
 
 
 
@@ -238,7 +210,7 @@ export class VideoService
 
   getLikedVideosCount() : Observable<number>
   {
-    const headers = this.getHttpHeaders();
+    const headers = this.authService.getHttpHeaders();
 
     return this.httpClient.get<number>(`${ApiUrls.VIDEO_CONTROLLER}/collection`, {headers});
   }
@@ -267,10 +239,6 @@ export class VideoService
     }
     return this.httpClient.get<string>(`${ApiUrls.VIDEO_CONTROLLER}`, {params});
   }
-
-
-
-
 
 
 

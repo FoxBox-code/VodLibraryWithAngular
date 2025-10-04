@@ -22,14 +22,10 @@ namespace VodLibraryWithAngular.Server.Controllers
         }
 
         [Authorize]
-        [HttpGet("{videoId}/reactions")]//THIS METHOD MIGHT NEED TO BE FIXED , were using user id without an authentication , plus even normal users should be able to get the count of the likes/dislikes 
-        public async Task<IActionResult> GetCurrentVideoReactions(int videoId) //getVideoReactions
+        [HttpGet("{videoId}/reactions")]
+        public async Task<IActionResult> GetCurrentUserVideoReaction(int videoId) //getVideoReactions
         {
-            int likeCount = await _dbContext.VideoLikesDislikes
-                .CountAsync(x => x.VideoId == videoId && x.Liked);
 
-            int dislikeCount = await _dbContext.VideoLikesDislikes
-                .CountAsync(x => x.VideoId == videoId && !x.Liked);
 
 
             string? userId = _userManager.GetUserId(User);
@@ -42,9 +38,8 @@ namespace VodLibraryWithAngular.Server.Controllers
             var result = new ReactionResponseDto
             {
                 VideoId = videoId,
-                LikeCount = likeCount,
-                DisLikeCount = dislikeCount,
                 Reaction = userReact
+
             };
 
             return Ok(result);
@@ -198,17 +193,14 @@ namespace VodLibraryWithAngular.Server.Controllers
 
             await _dbContext.SaveChangesAsync();
 
-            var likeCount = await _dbContext.VideoLikesDislikes
-                .CountAsync(x => x.VideoId == videoId && x.Liked == true);
-            var disLikeCount = await _dbContext.VideoLikesDislikes
-                .CountAsync(x => x.VideoId == videoId && x.Liked == false);
+
+
             var userCurrentReaction = dto.ReactionType;
 
             return Ok(new ReactionResponseDto
             {
                 VideoId = videoId,
-                LikeCount = likeCount,
-                DisLikeCount = disLikeCount,
+
                 Reaction = userCurrentReaction
             });
         }
@@ -251,8 +243,7 @@ namespace VodLibraryWithAngular.Server.Controllers
             return Ok(new ReactionResponseDto
             {
                 VideoId = videoId,
-                LikeCount = likeCount,
-                DisLikeCount = disLikeCount,
+
                 Reaction = reaction
             });
         }
