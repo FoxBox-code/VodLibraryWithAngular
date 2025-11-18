@@ -19,7 +19,7 @@ export class EditService {
   getEditVideoInfo(videoId : number) : Observable<VideoWindow>
     {
         const headers = this.authService.getHttpHeaders();
-        return this.httpClient.get<VideoWindow>(`${ApiUrls.VIDEO_CONTROLLER}/edit/${videoId}`, {headers});
+        return this.httpClient.get<VideoWindow>(`${ApiUrls.EDIT_CONTROLLER}/edit/${videoId}`, {headers});
     }
 
     patchEditVideo(videoId : number ,formGroup : FormGroup<EditVideoFormControls> , newImageFile : string | undefined) : Observable<VideoWindow>
@@ -35,13 +35,13 @@ export class EditService {
         }
           console.log("Sending PATCH payload:", JSON.stringify(payload, null, 2));
 
-        return this.httpClient.patch<VideoWindow>(`${ApiUrls.VIDEO_CONTROLLER}/edit/${videoId}`, payload ,{headers})
+        return this.httpClient.patch<VideoWindow>(`${ApiUrls.EDIT_CONTROLLER}/edit/${videoId}`, payload ,{headers})
       }
 
       deleteVideo(videoId : number)
   {
     const headers = this.authService.getHttpHeaders();
 
-    return this.httpClient.delete(`${ApiUrls.VIDEO_CONTROLLER}/delete/${videoId}`,{headers})
+    return this.httpClient.delete(`${ApiUrls.EDIT_CONTROLLER}/delete/${videoId}`,{headers})
   }
 }

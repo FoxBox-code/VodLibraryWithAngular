@@ -672,6 +672,8 @@ export class PlayVideoComponent
 
         this.applyResolutionChangeToVideo(selectedRes)
 
+        this.videoSelectedSource = selectedRes;
+
         return selectedRes;
     }
     videoPlayBackSpeed(videoElement : HTMLVideoElement , event : Event)
@@ -766,7 +768,7 @@ export class PlayVideoComponent
         {
           this.selectedVideo!.spriteSheetIndex = spriteIndex;
           this.selectedVideo!.spriteSheet =
-            `${this.selectedVideo!.spriteSheetBasePath}/sprite_${spriteIndex}.jpg`;
+            `${this.selectedVideo!.spriteSheetBasePath}/spriteSheet${spriteIndex}.jpg`;
 
           console.log(this.selectedVideo!.spriteSheet);
         }

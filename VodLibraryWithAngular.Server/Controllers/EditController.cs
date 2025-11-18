@@ -231,7 +231,8 @@ namespace VodLibraryWithAngular.Server.Controllers
             if (renditions.Length > 0)
             {
                 string renditionFolder = Path.GetDirectoryName(renditions[0].RenditionPath);
-                Directory.Delete(renditionFolder, true);
+                if (Directory.Exists(renditionFolder))
+                    Directory.Delete(renditionFolder, true);
             }
 
 

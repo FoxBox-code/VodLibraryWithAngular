@@ -83,7 +83,8 @@ namespace VodLibraryWithAngular.Server.Services
 
         }
 
-        private (string input, string outPut) CreatePaths(int videoId, string videoTitle, string videoPath)
+        //This was private but had to make it publllic for dataMigraion service
+        public (string input, string outPut) CreatePaths(int videoId, string videoTitle, string videoPath)
         {
 
             string folder = IFileNameSanitizer.CleanFolderOrFileName($"VideoId{videoId} {videoTitle.TrimEnd()}");
@@ -118,9 +119,9 @@ namespace VodLibraryWithAngular.Server.Services
             return renditionsPaths.Values.First();
         }
 
-        private async Task<string> GenerateFramesForVideo(VideoRecord video, string renditionPath)
+        public async Task<string> GenerateFramesForVideo(VideoRecord video, string renditionFilePath)
         {
-            string renditionFolder = Path.GetDirectoryName(renditionPath);
+            string renditionFolder = Path.GetDirectoryName(renditionFilePath);
 
             string outPutDirectory = Path.Combine(renditionFolder, "Thumbnail Frames");
 
@@ -139,9 +140,9 @@ namespace VodLibraryWithAngular.Server.Services
             return outPutDirectory;
         }
 
-        private async Task GenerateSpriteSheetsForVideo(VideoRecord video, string renditionPath, string framesPath, ApplicationDbContext context)
+        public async Task GenerateSpriteSheetsForVideo(VideoRecord video, string renditionFilePath, string framesPath, ApplicationDbContext? context)
         {
-            string renditionFolder = Path.GetDirectoryName(renditionPath);
+            string renditionFolder = Path.GetDirectoryName(renditionFilePath);
             string spriteSheetFolder = Path.Combine(renditionFolder, "Sprite Sheets");
 
             Directory.CreateDirectory(spriteSheetFolder);
@@ -171,16 +172,21 @@ namespace VodLibraryWithAngular.Server.Services
 
             }
 
-            int numberOfSprites = video.Length.Seconds / 50;
-            VideoSpriteMetaData spriteSheet = new VideoSpriteMetaData()
-            {
-                Name = $"{video.Title} spriteSheet",
-                VideoRecordId = video.Id,
-                DirectoryPath = spriteSheetFolder,
-                NumberOfSprites = numberOfSprites,
-            };
 
-            await context.VideoSpritesMetaData.AddAsync(spriteSheet);
+            if (context != null)
+            {
+                int numberOfSprites = video.Length.Seconds / 50;
+                VideoSpriteMetaData spriteSheet = new VideoSpriteMetaData()
+                {
+                    Name = $"{video.Title} spriteSheet",
+                    VideoRecordId = video.Id,
+                    DirectoryPath = spriteSheetFolder,
+                    NumberOfSprites = numberOfSprites,
+                };
+
+                await context.VideoSpritesMetaData.AddAsync(spriteSheet);
+            }
+
 
         }
     }

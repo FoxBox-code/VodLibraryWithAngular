@@ -1,0 +1,17 @@
+bin/
+obj/
+node_modules/
+.vscode/
+.vs/
+*.db
+*.md
+*.mp4
+*.jpg
+*.png
+ffmpeg/
+Uploads/
+Build/
+Logs/
+Migrations/
+scratch/
+wwwroot/

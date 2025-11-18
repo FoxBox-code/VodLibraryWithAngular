@@ -9,6 +9,7 @@ export class ApiUrls
     static readonly HISTORY_CONTROLLER = `${this.BASE}/history`;
     static readonly SUBSCRIBE_CONTROLLER = `${this.BASE}/subscribe`;
     static readonly UPLOAD_CONTROLLER = `${this.BASE}/upload`;
+    static readonly EDIT_CONTROLLER = `${this.BASE}/edit`
 
     //authService
     static readonly LOGIN = `${this.BASE}/auth/login`;

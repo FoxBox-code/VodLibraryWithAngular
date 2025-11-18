@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    container_name: vodlibrary_db
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: vodlibrary
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  server:
+    build:
+      context: ./VodLibraryWithAngular.Server
+      dockerfile: Dockerfile
+    container_name: vodlibrary_server
+    depends_on:
+      - db
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=vodlibrary;Username=admin;Password=admin123
+    ports:
+      - "7156:8080"
+
+  client:
+    build:
+      context: ./vodlibrarywithangular.client
+      dockerfile: Dockerfile
+    container_name: vodlibrary_client
+    depends_on:
+      - server
+    ports:
+      - "4200:80"
+
+volumes:
+  postgres_data:

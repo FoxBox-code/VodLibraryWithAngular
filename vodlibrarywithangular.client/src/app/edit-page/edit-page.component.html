@@ -90,7 +90,7 @@
         <button type="button" (click)="openUpDeleteForm()">Delete video
         </button>
 
-          <input type="text" *ngIf="deleteVideoInputEnabled" [value]="deleteInputValue" (input)="deleteInputValidation($event)" #tareget>
+          <input type="text" *ngIf="deleteVideoInputEnabled" placeholder="type DELETE" [value]="deleteInputValue" (input)="deleteInputValidation($event)" #tareget>
           <button [disabled]="deleteValidationConfirmed === false" *ngIf="deleteVideoInputEnabled"  class="confirm-delete-button" (click)="deleteVideo(video.id)">DELETE</button>
 
       </div>

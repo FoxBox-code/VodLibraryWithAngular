@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using VodLibraryWithAngular.Server.Data;
 using VodLibraryWithAngular.Server.Data.Models;
+using VodLibraryWithAngular.Server.Interfaces;
+
 
 namespace VodLibraryWithAngular.Server
 {
@@ -9,11 +11,19 @@ namespace VodLibraryWithAngular.Server
         private ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private ILogger<DataMigrationService> _logger;
-        public DataMigrationService(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment, ILogger<DataMigrationService> logger)
+        private IVideoFileRenditionsService _video_file_rendition_service;
+
+        public DataMigrationService(ApplicationDbContext context,
+            IWebHostEnvironment webHostEnvironment,
+            ILogger<DataMigrationService> logger,
+            IVideoFileRenditionsService _video_file_rendition_service
+            )
         {
             _context = context;
             _webHostEnvironment = webHostEnvironment;
             _logger = logger;
+            this._video_file_rendition_service = _video_file_rendition_service;
+
         }
 
 
@@ -368,5 +378,224 @@ namespace VodLibraryWithAngular.Server
             await _context.SaveChangesAsync();
         }
 
+
+        public async Task QuickFunction()
+        {
+            int[] id = { 12, 13, 14 };
+
+            List<VideoRecord> videoRecords = await _context.VideoRecords.Where(x => id.Contains(x.Id)).ToListAsync();
+
+            string path = "C:\\stuff\\ASP.NetCore with Angular\\VodLibraryWithAngular\\VodLibraryWithAngular.Server\\wwwroot\\videos";
+
+            foreach (var item in videoRecords)
+            {
+                string name = item.VideoPath.Split('\\').Last();
+
+                item.VideoPath = Path.Combine(path, name);
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+
+        //For some reason the videos and renditions got deleted, this function will restore them back
+        //public async Task RestoreVideosAndRenditions()
+        //{
+        //    List<VideoRecord> videos = await _context.VideoRecords.AsNoTracking().ToListAsync();
+
+
+
+
+        //    string videosPath = @"C:\stuff\ASP.NetCore with Angular\backUp for videos";
+        //    int guidLength = 36;
+
+
+        //    foreach (VideoRecord video in videos)
+        //    {
+        //        string path = video.VideoPath;
+
+        //        _logger.LogInformation($"{path}");
+
+        //        string[] arr = path.Split('\\').ToArray();
+
+        //        string name = arr.Last().Substring(guidLength);
+
+
+
+        //        string currentVideoPath = Path.Combine(videosPath, name);
+
+        //        try
+        //        {
+        //            if (File.Exists(currentVideoPath))
+        //            {
+        //                string directory = Path.GetDirectoryName(path);
+
+        //                Directory.CreateDirectory(directory);
+        //                File.Copy(currentVideoPath, path, true);
+        //                _logger.LogInformation("Video " + name + " Should now be at " + path);
+
+        //                var (input, output) = _video_file_rendition_service.CreatePaths(video.Id, video.Title, directory);
+
+        //                await VideoRenditionEncoder.EncodeMp4VariantsAsync(path, output);
+        //            }
+        //            else
+        //            {
+        //                _logger.LogWarning("Video file with the given name was not found " + name);
+        //            }
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            _logger.LogError(ex, "I don t know something went wrong in the RestoreVideosAndRenditions");
+        //        }
+
+
+
+
+        //    }
+
+
+
+
+
+
+
+
+        //}
+
+
+        //For some reason video frames and sprite sheets were removed 
+        //public async Task RestoreVideoFramesAndSpriteSheets()
+        //{
+        //    List<VideoRecord> videos = await _context.VideoRecords
+        //        .Include(v => v.VideoSpriteMetaData)
+        //        .Include(v => v.VideoRenditions)
+        //        .AsNoTracking()
+        //        .ToListAsync();
+
+
+        //    foreach (VideoRecord video in videos)
+        //    {
+        //        var videoRendition = video.VideoRenditions.ToArray();
+
+        //        string videoRenditionFilePath = videoRendition.Last().RenditionPath;
+
+
+
+        //        string? videoRenditionDirectory = Path.GetDirectoryName(videoRenditionFilePath);
+
+        //        if (!Directory.Exists(videoRenditionDirectory))
+        //        {
+        //            _logger.LogWarning($"{video.Title} is being skipped video rendition path was empty");
+        //            continue;
+        //        }
+
+
+        //        string framesPath = await _video_file_rendition_service.GenerateFramesForVideo(video, videoRenditionFilePath);
+
+
+        //        await _video_file_rendition_service.GenerateSpriteSheetsForVideo(video, videoRenditionFilePath, framesPath, null);
+
+
+
+
+
+        //    }
+
+
+
+
+        //}
+
+        //public async Task RestoreSpecificVideos()
+        //{
+
+
+
+        //    string backUpVideosPath = @"C:\stuff\ASP.NetCore with Angular\backUp for videos";
+
+        //    Dictionary<string, string> keyValues = new Dictionary<string, string>()
+        //    {
+        //        { "C:\\stuff\\ASP.NetCore with Angular\\VodLibraryWithAngular\\VodLibraryWithAngular.Server\\wwwroot\\videos\\514768cd-7600-4ae6-ba85-00aded44a77d-UFC317-Pelea-Gratis_-Topuria-vs-Holloway.mp4"
+        //        , Path.Combine(backUpVideosPath, "#UFC317 Pelea Gratis_ Topuria vs Holloway.mp4")},
+
+        //        { "C:\\stuff\\ASP.NetCore with Angular\\VodLibraryWithAngular\\VodLibraryWithAngular.Server\\wwwroot\\videos\\1ddc2ef1-7879-49f6-80e8-1b0c9046f3fcBrainf--k-in-100-Seconds.mp4"
+        //        , Path.Combine(backUpVideosPath, "Brainf＊＊k in 100 Seconds.mp4")},
+
+        //        {"C:\\stuff\\ASP.NetCore with Angular\\VodLibraryWithAngular\\VodLibraryWithAngular.Server\\wwwroot\\videos\\6bd2cfea-16f5-4f80-ba17-f08f8d42889bBONEZ-MC---RAF-Camora---500-PS--prod--by-The-Cratez---RAF-Camora-.mp4"
+        //        ,Path.Combine(backUpVideosPath, "BONEZ MC & RAF Camora - 500 PS (prod. by The Cratez & RAF Camora).mp4")},
+
+        //        {"C:\\stuff\\ASP.NetCore with Angular\\VodLibraryWithAngular\\VodLibraryWithAngular.Server\\wwwroot\\videos\\31c16c9a-2a52-4a61-809f-7b815976c9adWorld-of-Warcraft_-The-Burning-Crusade-Cinematic-Trailer.mp4"
+        //        ,Path.Combine(backUpVideosPath, "World of Warcraft_ Warlords of Draenor Cinematic.mp4")}
+
+        //    };
+
+
+        //    foreach (var packt in keyValues)
+        //    {
+
+        //        if (File.Exists(packt.Value))
+        //        {
+        //            File.Copy(packt.Value, packt.Key, true);
+
+        //            _logger.LogInformation($"Video should be there now at {packt.Key}");
+
+
+        //        }
+        //        else
+        //        {
+        //            _logger.LogError($"Video was not located at this path {packt.Value}");
+        //        }
+        //    }
+
+
+
+
+        //}
+
+        //public async Task FUCKKME()
+        //{
+        //    int[] ids = { 30, 39, 44, 52 };
+
+        //    List<VideoRecord> videos = await _context.VideoRecords.Include(x => x.VideoRenditions).Include(x => x.VideoSpriteMetaData).Where(x => ids.Contains(x.Id)).ToListAsync();
+
+        //    foreach (VideoRecord video in videos)
+        //    {
+
+
+        //        var renditionFilePath = video.VideoRenditions.ToArray().Last().RenditionPath;
+
+        //        var renditionFolderPath = Path.GetDirectoryName(renditionFilePath);
+
+        //        var (input, output) = _video_file_rendition_service.CreatePaths(video.Id, video.Title, video.VideoPath);
+
+        //        Directory.CreateDirectory(renditionFolderPath);
+
+
+
+        //        await VideoRenditionEncoder.EncodeMp4VariantsAsync(video.VideoPath, renditionFolderPath);
+
+
+
+        //        string? videoRenditionDirectory = Path.GetDirectoryName(renditionFilePath);
+
+        //        if (!Directory.Exists(videoRenditionDirectory))
+        //        {
+        //            _logger.LogWarning($"{video.Title} is being skipped video rendition path was empty");
+        //            continue;
+        //        }
+
+
+        //        string framesPath = await _video_file_rendition_service.GenerateFramesForVideo(video, renditionFilePath);
+
+
+        //        await _video_file_rendition_service.GenerateSpriteSheetsForVideo(video, renditionFilePath, framesPath, null);
+
+        //    }
+
+
+        //}
+
     }
+
+
 }
