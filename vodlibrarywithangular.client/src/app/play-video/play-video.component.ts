@@ -663,16 +663,17 @@ export class PlayVideoComponent
       return this.formattingService.convertVideoTotalSecondsDurationToTimeFormat(totalSeconds);
 
     }
-
+    resolutionChangeDetection : string | null  = null;//just a temp fix on the video re-render
     videoResolutionChange(event : Event)
     {
         const selectElement = event.target as HTMLSelectElement
 
         const selectedRes = selectElement.value;
 
+        this.videoSelectedSource = selectedRes;
+        this.resolutionChangeDetection = selectedRes;
         this.applyResolutionChangeToVideo(selectedRes)
 
-        this.videoSelectedSource = selectedRes;
 
         return selectedRes;
     }
@@ -692,7 +693,17 @@ export class PlayVideoComponent
 
       const videoPaused = video.paused;
 
-      video.src = this.selectedVideo!.videoRenditions[selectedRes];
+      try
+      {
+          video.src = this.selectedVideo!.videoRenditions[selectedRes];
+          this.selectedVideo!.videoPath = this.selectedVideo!.videoRenditions[selectedRes];
+      }
+      catch(error)
+      {
+        console.log("something happened in apply resolution changes", error);
+      }
+
+
 
       video.currentTime = videoTime;
 
@@ -702,6 +713,7 @@ export class PlayVideoComponent
       }
 
     }
+
 
     videoLoadMetaData(videoElement : HTMLVideoElement)
     {
@@ -713,11 +725,18 @@ export class PlayVideoComponent
             videoElement.playbackRate = 1
 
         //theres a chance that select quality is still not rendered on the screen to set a default value
+            if(this.resolutionChangeDetection === null)
+            {
+              const firstKey = Object.keys(this.selectedVideo!.videoRenditions)[0];
+              selectQualityVideo.value = firstKey;
 
-            const firstKey = Object.keys(this.selectedVideo!.videoRenditions)[0];
-            selectQualityVideo.value = firstKey;
+              this.videoSelectedSource = firstKey
+            }
+            else
+            {
+              this.videoSelectedSource = this.resolutionChangeDetection;
+            }
 
-            this.videoSelectedSource = firstKey
             console.log(`Whats inside this trash variable videoSelectedSource ${this.videoSelectedSource}`);
 
 
