@@ -13,3 +13,22 @@ Entertainment
 
 Education
 <img src="Screen_Shots/app_5_pic.png" width="100%" />
+
+
+
+Register route
+
+<img src="Screen_Shots/app_6_pic.png" width="100%" />
+
+Login route
+<img src="Screen_Shots/app_7_pic.png" width="100%" />
+
+
+Video Player
+<img src="Screen_Shots/app_8_pic.png" width="100%" />
+
+
+Full Screen selected
+<img src="Screen_Shots/app_9_pic.png" width="100%" />
+
+
